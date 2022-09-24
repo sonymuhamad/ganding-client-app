@@ -8,7 +8,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { openConfirmModal } from "@mantine/modals";
 
 
-const BaseLayout = ({ outlet, navlink, asideContent }) => {
+const BaseLayout = ({ outlet, navlink }) => {
 
     const { classes } = appshellStyle()
     const auth = useContext(AuthContext)
@@ -140,17 +140,6 @@ const BaseLayout = ({ outlet, navlink, asideContent }) => {
 
                     </Navbar>
                 }
-
-                aside={
-                    asideContent ?
-                        <MediaQuery smallerThan="sm" styles={{ display: 'none' }}>
-                            <Aside p="md" hiddenBreakpoint="sm" hidden width={{ sm: 200, lg: 300 }}>
-                                <Text>Application sidebar</Text>
-                            </Aside>
-                        </MediaQuery>
-                        : null
-                }
-
             >
 
                 {outlet}

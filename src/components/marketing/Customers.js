@@ -13,7 +13,7 @@ import { customTableStyle } from '../../services/External'
 import BreadCrumb from '../BreadCrumb'
 import { AuthContext } from '../../context/AuthContext'
 import { SuccessNotif } from '../notifications/Notifications'
-import { Get, Post } from '../../services/Request'
+import { useRequest } from '../../hooks/useRequest'
 
 
 createTheme(
@@ -102,7 +102,7 @@ const Customers = () => {
     const [opened, setOpened] = useState(false)
     const [visible, setVisible] = useState(false)
     const [dataCustomer, setDataCustomer] = useState([])
-
+    const { Get, Post } = useRequest()
 
     const fetch = async () => {
         try {
@@ -114,10 +114,7 @@ const Customers = () => {
 
             setDataCustomer(data_customers)
         } catch (e) {
-            if (e.message.status === 401) {
-                auth.resetToken(auth.user.token, location.pathname)
-                // expired token handle
-            }
+
         }
     }
 
@@ -139,10 +136,7 @@ const Customers = () => {
             setOpened((o) => !o)
         } catch (e) {
             form.setErrors({ ...e.message.data })
-            if (e.message.status === 401) {
-                auth.resetToken(token, location.pathname)
-                // expired token handle
-            }
+
         } finally {
             setVisible((v) => !v)
         }
@@ -178,9 +172,7 @@ const Customers = () => {
 
         <>
             <Group position='apart' >
-
                 <BreadCrumb links={breadcrumb} />
-
                 <Button
                     radius='md'
                     size='sm'
@@ -189,7 +181,7 @@ const Customers = () => {
                     leftIcon={<IconPlus stroke={2} size={20} />}
                     onClick={() => setOpened(true)} >
                     <Text size='md' >
-                        Customer
+                        New Customer
                     </Text>
                 </Button>
             </Group>

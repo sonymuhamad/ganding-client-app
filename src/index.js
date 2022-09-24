@@ -16,6 +16,9 @@ import Customers from './components/marketing/Customers'
 import Customer from './components/marketing/Customer';
 import DeliveryNote from './components/marketing/DeliveryNote'
 import DeliverySchedule from './components/marketing/DeliverySchedule'
+import NewSalesOrder from './components/marketing/NewSalesOrder';
+import DetailSalesOrder from './components/marketing/DetailSalesOrder';
+
 
 import BasePurchasing from './components/purchasing/BasePurchasing';
 import PurchasingDashboard from './components/purchasing/PurchasingDashboard'
@@ -38,101 +41,6 @@ import ReportSalesOrder from './components/plant-manager/report/ReportSalesOrder
 import MaterialReceipt from './components/plant-manager/report/MaterialReceipt'
 import ManagerDashboard from './components/plant-manager/ManagerDashboard'
 import Users from './components/plant-manager/Users'
-
-import { createTheme } from 'react-data-table-component';
-
-
-createTheme(
-  'blues',
-  {
-    text: {
-      primary: '#f1f3f5',
-      secondary: '#f1f3f5',
-    },
-    background: {
-      default: '#e7f5ff',
-    },
-    context: {
-      background: '#cb4b16',
-      text: '#FFFFFF',
-    },
-    divider: {
-      default: '#073642',
-    },
-    button: {
-      default: '#2aa198',
-      hover: 'rgba(0,0,0,.08)',
-      focus: 'rgba(255,255,255,.12)',
-      disabled: 'rgba(255, 255, 255, .34)',
-    },
-    sortFocus: {
-      default: '#2aa198',
-    },
-  },
-  'dark',
-);
-
-
-createTheme(
-  'orange',
-  {
-    text: {
-      primary: '#f1f3f5',
-      secondary: '#f1f3f5',
-    },
-    background: {
-      default: '#fff4e6',
-    },
-    context: {
-      background: '#cb4b16',
-      text: '#FFFFFF',
-    },
-    divider: {
-      default: '#073642',
-    },
-    button: {
-      default: '#2aa198',
-      hover: 'rgba(0,0,0,.08)',
-      focus: 'rgba(255,255,255,.12)',
-      disabled: 'rgba(255, 255, 255, .34)',
-    },
-    sortFocus: {
-      default: '#2aa198',
-    },
-  },
-  'dark',
-);
-
-
-createTheme(
-  'green',
-  {
-    text: {
-      primary: '#f1f3f5',
-      secondary: '#f1f3f5',
-    },
-    background: {
-      default: '#ebfbee',
-    },
-    context: {
-      background: '#cb4b16',
-      text: '#FFFFFF',
-    },
-    divider: {
-      default: '#073642',
-    },
-    button: {
-      default: '#2aa198',
-      hover: 'rgba(0,0,0,.08)',
-      focus: 'rgba(255,255,255,.12)',
-      disabled: 'rgba(255, 255, 255, .34)',
-    },
-    sortFocus: {
-      default: '#2aa198',
-    },
-  },
-  'dark',
-);
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -167,7 +75,8 @@ root.render(
             <Route path='sales-order' element={<SalesOrder />} />
             <Route path='delivery-note' element={<DeliveryNote />} />
             <Route path='delivery-schedule' element={<DeliverySchedule />} />
-
+            <Route path='sales-order/new' element={<NewSalesOrder />} />
+            <Route path='sales-order/:salesOrderId' element={<DetailSalesOrder />} />
           </Route>
 
           <Route path='ppic' element={<BasePpic />} >

@@ -1,8 +1,7 @@
 import React, { useRef, useState, useEffect, useContext, useMemo } from "react";
 
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
-
-import { Aside, Text, MediaQuery, Box, Group, Modal, List, TextInput, Textarea, NumberInput, Button, LoadingOverlay, Loader, Collapse } from "@mantine/core";
+import { Aside, Text, MediaQuery, Box, Group, Modal, List, TextInput, Textarea, NumberInput, Button, LoadingOverlay, Highlight, Collapse, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useScrollLock } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
@@ -11,17 +10,39 @@ import { IconListSearch, IconUser, IconDeviceMobile, IconMapPin, IconAt, IconEdi
 
 import useScrollSpy from 'react-use-scrollspy'
 
-import DataTable from "react-data-table-component";
-
 import { SuccessNotif, FailedNotif } from "../notifications/Notifications";
 import { AuthContext } from "../../context/AuthContext";
 import { customerPageStyle } from "../../styles/customerPageStyle";
-import { Retrieve, Put, Delete } from "../../services/Request";
+import { useRequest } from "../../hooks/useRequest";
+import BaseTableExpanded from "../layout/BaseTableExpanded";
 import ExpandedSo from "../layout/ExpandedSo";
-import { customTableStyle } from "../../services/External";
-
+import ExpandedProduct from "../layout/ExpandedProduct";
+import BreadCrumb from "../BreadCrumb";
+import ExpandedDn from "../layout/ExpandedDn";
+import { useSection } from "../../hooks/useSection";
+import BaseAside from "../layout/BaseAside";
 
 const Customer = () => {
+
+    const { classes, cx } = customerPageStyle()
+    const [dataCustomer, setDataCustomer] = useState({})
+    const [buttonActive, setButtonActive] = useState('on_progress')
+    const { customerId } = useParams()
+    const location = useLocation()
+    const navigate = useNavigate()
+    const auth = useContext(AuthContext)
+    const [notAllowed, setNotAllowed] = useState(true)
+    const [editButton, setEditButton] = useState({ label: 'edit', color: 'blue' })
+    const [scrollLocked, setScrollLocked] = useScrollLock()
+    const [visible, setVisible] = useState(false)
+    const [on_progress_so, set_on_progress_so] = useState([])
+    const [pendingSo, setPendingSo] = useState([])
+    const [doneSo, setDoneSo] = useState([])
+    const [product, setProduct] = useState([])
+    const [deliveryNote, setDeliveryNote] = useState([])
+    const [breadcrumb, setBreadCrumb] = useState([])
+    const { Retrieve, Put, Delete } = useRequest()
+    const { sectionRefs, activeSection } = useSection()
 
     const links = [
         {
@@ -46,56 +67,6 @@ const Customer = () => {
         }
     ]
 
-    const { classes, cx } = customerPageStyle()
-
-    let i = -1
-    const sectionRefs = [
-        useRef(null),
-        useRef(null),
-        useRef(null),
-        useRef(null),
-    ]
-
-    const activeSection = useScrollSpy({
-        sectionElementRefs: sectionRefs,
-        offsetPx: -80
-    })
-
-    const items = links.map((item) => {
-        { i = i + 1 }
-        return (
-            <Box
-                component={'a'}
-                href={item.link}
-
-                key={item.label}
-                className={cx(classes.link, { [classes.linkActive]: activeSection === i })}
-                sx={(theme) => ({ paddingLeft: item.order * theme.spacing.md })}
-            >
-                {item.label}
-            </Box>
-        )
-    }
-    );
-
-    const [dataCustomer, setDataCustomer] = useState({})
-    const [buttonActive, setButtonActive] = useState('on_progress')
-    const { customerId } = useParams()
-    const location = useLocation()
-    const navigate = useNavigate()
-    const auth = useContext(AuthContext)
-    const [notAllowed, setNotAllowed] = useState(true)
-    const [editButton, setEditButton] = useState({ label: 'edit', color: 'blue' })
-    const [scrollLocked, setScrollLocked] = useScrollLock()
-    const [visible, setVisible] = useState(false)
-    const [on_progress_so, set_on_progress_so] = useState([])
-    const [pendingSo, setPendingSo] = useState([])
-    const [doneSo, setDoneSo] = useState([])
-    const [product, setProduct] = useState([])
-    const [deliveryNote, setDeliveryNote] = useState([])
-
-
-
     const openModal = () => openConfirmModal({
         title: `Delete Customer ${dataCustomer.name} `,
         children: (
@@ -110,7 +81,7 @@ const Customer = () => {
         onConfirm: () => handleDeleteCustomer(),
     });
 
-    const icons = [<IconUser />, <IconAt />, <IconDeviceMobile />, <IconMapPin />]
+
     const form = useForm(
         {
             initialValues: {
@@ -139,7 +110,6 @@ const Customer = () => {
 
         try {
             const customer = await Retrieve(customerId, auth.user.token, 'customer-detail')
-            console.log(customer)
             const salesorders = customer.marketing_salesorder_related
             let products = customer.ppic_product_related
             let deliverynotes = customer.ppic_deliverynotecustomer_related
@@ -179,7 +149,10 @@ const Customer = () => {
                     leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
                     color='teal.8'
                     variant='subtle'
-                    radius='md' >
+                    radius='md'
+                    component={Link}
+                    to={`/home/marketing/sales-order/${so.id}`}
+                >
                     Detail
                 </Button>
                 so['amountOfProduct'] = so.productorder_set.length
@@ -193,6 +166,20 @@ const Customer = () => {
                     }
                 }
             }
+            setBreadCrumb([
+                {
+                    path: '/home/marketing',
+                    label: 'Marketing'
+                },
+                {
+                    path: '/home/marketing/customers',
+                    label: 'Customers'
+                },
+                {
+                    path: `/home/marketing/customers/${customerId}`,
+                    label: `${customer.name}`
+                }
+            ])
 
             set_on_progress_so(on_progress)
             setDoneSo(done)
@@ -202,10 +189,6 @@ const Customer = () => {
             setProduct(products)
             setDeliveryNote(deliverynotes)
         } catch (e) {
-            if (e.message.status === 401) {
-                auth.resetToken(auth.user.token, location.pathname)
-                // expired token handle
-            }
 
         }
     }
@@ -213,10 +196,6 @@ const Customer = () => {
     useEffect(() => {
         fetch()
     }, [])
-
-    // console.log(on_progress_so, 'on progress so')
-    // console.log(pendingSo, 'pendingso')
-    // console.log(doneSo, 'doneso')
 
     const columnSo = useMemo(() => [
         // columns for sales order tables
@@ -306,6 +285,7 @@ const Customer = () => {
     ], [])
 
     const handleSubmit = async (data) => {
+        // handle edit customer
         setVisible((v) => !v)
         try {
             await Put(customerId, data, auth.user.token, 'customer')
@@ -338,27 +318,35 @@ const Customer = () => {
 
     return (
         <>
-            <MediaQuery smallerThan="sm" styles={{ display: 'none' }}>
-                <Aside p="md" hiddenBreakpoint="sm" hidden width={{ sm: 200, lg: 300 }}>
-                    <div>
-                        <Group mb="md">
-                            <IconListSearch size={18} stroke={1.5} />
-                            <Text>Table of contents</Text>
-                        </Group>
-                        {items}
-                    </div>
-                </Aside>
-            </MediaQuery>
 
-
-
-
+            <BaseAside links={links} activeSection={activeSection} />
             <LoadingOverlay visible={visible} overlayBlur={2} />
-            <section id='customer' ref={sectionRefs[0]} style={{ paddingTop: 50, marginTop: -75, marginBottom: 75 }} >
-                <h1 style={{ color: 'black' }} >
+            <BreadCrumb links={breadcrumb} />
 
-                    <a href="#customer" style={{ color: 'black' }} >Detail Customer</a>
-                </h1>
+            <section id='customer' ref={sectionRefs[0]} className={classes.section} >
+
+                <Title className={classes.title}>
+                    <a href="#customer" className={classes.a_href} >
+                        Detail Customer
+                    </a>
+                </Title>
+
+                <p style={{ lineHeight: 1.55 }} >
+                    <Highlight
+                        align="left"
+                        highlight={['sales order', 'delivery']}
+                        highlightStyles={(theme) => ({
+                            backgroundImage: theme.fn.linearGradient(45, theme.colors.dark[5], theme.colors.gray[9]),
+                            fontWeight: 800,
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            fontSize: 16
+                        })}
+                    >
+                        Customer who have sales order or delivery data cannot be deleted
+                    </Highlight>
+                </p>
+
                 <Group position="right" >
                     <Button.Group>
 
@@ -400,7 +388,7 @@ const Customer = () => {
 
                 <form onSubmit={form.onSubmit(handleSubmit)} id='formEdit' >
                     <TextInput
-                        icon={<IconUser size={15} stroke={2} />}
+                        icon={<IconUser />}
                         m='xs'
                         radius='md'
                         label='Name'
@@ -411,7 +399,7 @@ const Customer = () => {
                     />
 
                     <TextInput
-                        icon={<IconAt size={15} stroke={2} />}
+                        icon={<IconAt />}
                         m='xs'
                         radius='md'
                         label='Email'
@@ -421,7 +409,7 @@ const Customer = () => {
                     />
 
                     <NumberInput
-                        icon={<IconDeviceMobile size={15} stroke={2} />}
+                        icon={<IconDeviceMobile />}
                         m='xs' radius='md'
                         label='Phone'
                         readOnly={notAllowed}
@@ -430,7 +418,7 @@ const Customer = () => {
                     />
 
                     <Textarea
-                        icon={<IconMapPin size={20} stroke={2} />}
+                        icon={<IconMapPin />}
                         m='xs'
                         radius='md'
                         label='Address'
@@ -441,11 +429,12 @@ const Customer = () => {
                 </form>
             </section>
 
-            <section id='so' style={{ paddingTop: 50, marginTop: -75, marginBottom: 75 }} ref={sectionRefs[1]}  >
-                <h1 style={{ color: 'black' }} >
+            <section id='so' className={classes.section} ref={sectionRefs[1]}  >
 
-                    <a href="#so" style={{ color: 'black' }} >Sales Order</a>
-                </h1>
+                <Title className={classes.title} >
+                    <a href="#so" className={classes.a_href} >Sales Order</a>
+                </Title>
+
                 <Group position="apart" >
 
 
@@ -498,83 +487,70 @@ const Customer = () => {
                     in={buttonActive === 'on_progress'}
                     transitionDuration={500}
                 >
-                    <DataTable
-                        customStyles={customTableStyle}
-                        columns={columnSo}
+
+                    <BaseTableExpanded
+                        column={columnSo}
                         data={on_progress_so}
-                        expandableRows
-                        expandableRowsComponent={ExpandedSo}
-                        highlightOnHover={true}
-                        pagination
+                        expandComponent={ExpandedSo}
                     />
+
                 </Collapse>
 
                 <Collapse
                     in={buttonActive === 'pending'}
                     transitionDuration={500}
                 >
-                    <DataTable
-                        customStyles={customTableStyle}
-                        columns={columnSo}
+                    <BaseTableExpanded
+                        column={columnSo}
                         data={pendingSo}
-                        expandableRows
-                        expandableRowsComponent={ExpandedSo}
-                        highlightOnHover={true}
-                        pagination
+                        expandComponent={ExpandedSo}
                     />
+
                 </Collapse>
                 <Collapse
                     in={buttonActive === 'done'}
                     transitionDuration={500}
                 >
-                    <DataTable
-                        customStyles={customTableStyle}
-                        columns={columnSo}
+                    <BaseTableExpanded
+                        column={columnSo}
                         data={doneSo}
-                        expandableRows
-                        expandableRowsComponent={ExpandedSo}
-                        highlightOnHover={true}
-                        pagination
+                        expandComponent={ExpandedSo}
                     />
 
                 </Collapse>
 
-
-
             </section>
 
 
-            <section id='product' ref={sectionRefs[2]} style={{ paddingTop: 50, marginTop: -75, marginBottom: 75 }}>
-                <h1 style={{ color: 'black' }} >
-                    <a href="#product" style={{ color: 'black' }} >Product</a>
-                </h1>
+            <section id='product' ref={sectionRefs[2]} className={classes.section}>
 
-                <DataTable
-                    customStyles={customTableStyle}
-                    columns={columnProduct}
+                <Title className={classes.title} >
+                    <a href="#product" className={classes.a_href} >Product</a>
+                </Title>
+
+
+                <BaseTableExpanded
+                    column={columnProduct}
                     data={product}
-                    highlightOnHover={true}
-                    pagination
+                    expandComponent={ExpandedProduct}
                 />
+
 
             </section>
 
-            <section id='dn' ref={sectionRefs[3]} style={{ paddingTop: 50, marginTop: -75, marginBottom: 75 }} >
-                <h1 style={{ color: 'black' }} >
-                    <a href="#dn" style={{ color: 'black' }} >Delivery Note</a>
-                </h1>
+            <section id='dn' ref={sectionRefs[3]} className={classes.section} >
 
-                <DataTable
-                    customStyles={customTableStyle}
-                    columns={columnDeliveryNote}
+                <Title className={classes.title} >
+                    <a href="#dn" className={classes.a_href} >Delivery Note</a>
+                </Title>
+
+                <BaseTableExpanded
+                    column={columnDeliveryNote}
                     data={deliveryNote}
-                    highlightOnHover={true}
-                    pagination
+                    expandComponent={ExpandedDn}
                 />
 
             </section>
-
-
 
         </>
     )

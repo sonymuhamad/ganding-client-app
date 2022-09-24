@@ -1,11 +1,29 @@
 import React from "react";
-import { Aside, MediaQuery, Group, Text } from "@mantine/core";
+import { Aside, MediaQuery, Group, Text, Box } from "@mantine/core";
+import { asideStyle } from "../../styles/asideStyle";
+import { IconListSearch } from "@tabler/icons";
 
+export default function BaseAside({ links, activeSection }) {
 
+    const { classes, cx } = asideStyle()
 
-export default function BaseAside(props) {
+    let i = -1
+    const items = links.map((item) => {
+        { i = i + 1 }
+        return (
+            <Box
+                component={'a'}
+                href={item.link}
 
-    const items = []
+                key={item.label}
+                className={cx(classes.link, { [classes.linkActive]: activeSection === i })}
+                sx={(theme) => ({ paddingLeft: item.order * theme.spacing.md })}
+            >
+                {item.label}
+            </Box>
+        )
+    }
+    );
 
     return (
         <MediaQuery smallerThan="sm" styles={{ display: 'none' }}>

@@ -12,22 +12,22 @@ export default function ExpandedSo({ data }) {
 
                 return (
 
-                    <Group position="left" spacing='xs' >
-                        <TextInput icon={<IconAssembly size={15} stroke={2} />}
+                    <Group position="left" spacing='xs' key={product.id} >
+                        <TextInput icon={<IconAssembly />}
                             m='xs'
                             radius='md'
                             label='Product name'
                             value={product.product.name}
                             readOnly
                         />
-                        <TextInput icon={<IconChecklist size={15} stroke={2} />}
+                        <TextInput icon={<IconChecklist />}
                             m='xs'
                             radius='md'
                             label='Ordered'
                             readOnly
                             value={product.ordered}
                         />
-                        <TextInput icon={<IconPackgeExport size={15} stroke={2} />}
+                        <TextInput icon={<IconPackgeExport />}
                             m='xs'
                             readOnly
                             radius='md'
