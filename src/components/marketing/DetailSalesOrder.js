@@ -1,40 +1,61 @@
 import React, { useState, useEffect, useContext, useMemo } from "react";
 
-import { IconDotsCircleHorizontal, IconCodePlus, IconEdit, IconDownload, IconTrashX, IconAsterisk, IconCodeAsterix, IconCalendar, IconCalendarTime, IconCircleCheck } from "@tabler/icons";
-import { useParams } from "react-router-dom";
+import { IconDotsCircleHorizontal, IconEdit, IconDownload, IconTrashX, IconCodeAsterix, IconCalendar, IconCalendarTime, IconCircleCheck, IconCaretDown, IconCaretRight, IconX, IconCalendarEvent, IconTrash, IconCalendarPlus, IconSum, IconBarcode, IconUser, IconPencil, IconClock2 } from "@tabler/icons";
+
+import { useParams, Link } from "react-router-dom";
 import { useRequest } from "../../hooks/useRequest";
 import { AuthContext } from "../../context/AuthContext";
 import BaseTableExpanded from "../layout/BaseTableExpanded";
-import { Button, Group, TextInput, Checkbox, Title, Chip, Stack, Progress, Text } from "@mantine/core";
+import { Button, Group, TextInput, Checkbox, Title, Stack, Progress, Text, ActionIcon, Collapse, CloseButton, NumberInput, Center, NativeSelect, Tooltip, Mark } from "@mantine/core";
 import BreadCrumb from "../BreadCrumb";
 import { DatePicker } from "@mantine/dates";
-import ExpandedScheduleDelivery from "../layout/ExpandedScheduleDelivery";
 import { useSection } from "../../hooks/useSection";
 import { salesorderStyle } from "../../styles/salesorderStyle";
 import BaseAside from "../layout/BaseAside";
 import { useForm } from "@mantine/form";
+import { useScrollLock } from "@mantine/hooks";
+import { FailedNotif } from "../notifications/Notifications";
+import { SuccessNotif } from "../notifications/Notifications";
+import { openConfirmModal } from "@mantine/modals";
+import { useNavigate } from "react-router-dom";
+import ExpandedDeliveryNote from "../layout/ExpandedDeliveryNote";
 
 
 const DetailSalesOrder = () => {
 
-    const { Retrieve, Delete, Put } = useRequest()
     const params = useParams() // salesOrderId
-    const [salesOrder, setSalesOrder] = useState({})
-    const [productOrder, setProductOrder] = useState([])
-    const auth = useContext(AuthContext)
+    const navigate = useNavigate()
+    const [scrollLocked, setScrollLocked] = useScrollLock()
 
-    const { sectionRefs, activeSection } = useSection()
+    const auth = useContext(AuthContext)
     const { classes } = salesorderStyle()
+    const { sectionRefs, activeSection } = useSection()
+    const { Retrieve, Post, Delete, Put, Loading } = useRequest()
+
+    const [salesOrder, setSalesOrder] = useState({})
+    const [openButtonSo, setOpenButtonSo] = useState({ label: 'Edit', color: 'blue.6' })
+    const [disableEditSo, setDisableEditSo] = useState(true)
+
+    const [productOrder, setProductOrder] = useState([])
+    const [openButtonPo, setOpenButtonPo] = useState({ label: 'Edit', color: 'blue.6' })
+    const [open, setOpened] = useState([])
+    const [editAccess, setEditAcces] = useState(null)
+    const [action, setAction] = useState(0)
+    const [products, setProducts] = useState([])
+    const [deliveryNote, setDeliveryNote] = useState({})
 
     const form = useForm(
         {
             initialValues: {
+                id: '',
+                customer: '',
                 code: '',
                 fixed: '',
                 done: '',
                 date: '',
                 created: '',
                 presentage: '',
+                customerName: '',
             }
         }
     )
@@ -43,77 +64,53 @@ const DetailSalesOrder = () => {
         initialValues: {
             productorder_set: [
                 {
-                    name: '',
-                    code: '',
+                    sales_order: '',
+                    product: '',
                     ordered: '',
                     delivered: '',
+                    deliveryschedule_set: [
+                        {
+                            quantity: '',
+                            date: ''
+                        }
+                    ],
+                    done: '',
+                    id: '',
                 }
             ]
+        },
+        validate: {
+            productorder_set: {
+                deliveryschedule_set: {
+                    date: (value) => (value === '' ? 'This fields is required' : null)
+                }
+            }
         }
     })
 
-    const links = [
-        {
-            "label": "Detail Sales Order",
-            "link": "#sales-order",
-            "order": 1
-        },
-        {
-            "label": "Product Order",
-            "link": "#product-order",
-            "order": 1
-        },
-        {
-            "label": "Delivery Note",
-            "link": "#delivery-note",
-            "order": 1
-        }
-    ]
-    console.log({ ...productOrderForm.getInputProps(`productorder_set.0.product.name`) })
-    const columnProductOrder = useMemo(() => [
-        // columns for sales order tables
-        {
-            name: 'Product Name',
-            selector: row => {
-                console.log({ ...productOrderForm.getInputProps(`productorder_set.0`) }, 'from rowws')
-                console.log(row.index, 'from rowws')
-                return (<TextInput
-                    {...productOrderForm.getInputProps(`productorder_set.${row.index}.product.name`)}
-                    variant='unstyled'
-                />)
-            },
 
-            sortable: true,
+    const columnDeliveryNote = useMemo(() => [
+        // columns for product tables
+        {
+            name: 'Code',
+            selector: row => row.code,
         },
         {
-            name: 'Product Code',
-            selector: row =>
-                <TextInput
-                    {...productOrderForm.getInputProps(`productorder_set.${row.index}.product.code`)}
-                    variant='unstyled'
-                />,
+            name: 'Date',
+            selector: row => new Date(row.created).toLocaleString(),
+            sortable: true
         },
         {
-            name: 'Order',
-            selector: row =>
-                <TextInput
-                    {...productOrderForm.getInputProps(`productorder_set.${row.index}.ordered`)}
-                    variant='unstyled'
-                />,
-
+            name: 'Driver',
+            selector: row => row.driver.name,
         },
         {
-            name: 'Delivered',
-            selector: row =>
-                <TextInput
-                    {...productOrderForm.getInputProps(`productorder_set.${row.index}.delivered`)}
-                    variant='unstyled'
-                />,
-
+            name: 'Vehicle code',
+            selector: row => row.vehicle.license_part_number,
         },
         {
             name: '',
-            selector: row => row.button,
+            selector: row => row.buttonDetail,
             style: {
                 padding: 0,
             }
@@ -121,113 +118,545 @@ const DetailSalesOrder = () => {
 
     ], [])
 
+    const links = [
+        {
+            "label": "Detail sales order",
+            "link": "#sales-order",
+            "order": 1
+        },
+        {
+            "label": "Ordered products",
+            "link": "#product-order",
+            "order": 1
+        },
+        {
+            "label": "Delivery notes",
+            "link": "#delivery-note",
+            "order": 1
+        }
+    ]
+
+    const breadcrumb = [
+        {
+            path: '/home/marketing',
+            label: 'Marketing'
+        },
+        {
+            path: '/home/marketing/sales-order',
+            label: 'Sales order'
+        },
+        {
+            path: `/home/marketing/sales-order/${params.salesOrderId}`,
+            label: 'Detail'
+        }
+    ]
+
+
+    const handleEditSo = async (salesOrder) => {
+        salesOrder.date = salesOrder.date.toLocaleDateString('en-CA')
+        try {
+            const res = await Put(params.salesOrderId, salesOrder, auth.user.token, 'marketing/sales-order-management')
+            console.log(res)
+            SuccessNotif('Sales order has been updated')
+        } catch (e) {
+            form.setErrors({ ...e.message.data })
+            if (e.message.data) {
+                FailedNotif(e.message.data[0])
+            }
+        } finally {
+            await handleClickEditButton()
+            setAction(prev => prev + 1)
+        }
+    }
+
+    const handleDeleteSo = async () => {
+        try {
+            await Delete(params.salesOrderId, auth.user.token, 'marketing/sales-order-management')
+            SuccessNotif('Sales order has been deleted')
+            navigate('/home/marketing/sales-order')
+        } catch (e) {
+            if (e.message.data) {
+                FailedNotif(e.message.data[0])
+            }
+        }
+
+    }
+
+    const changeStatusSo = async () => {
+        const salesOrder = form.values
+        salesOrder.fixed = !salesOrder.fixed
+        salesOrder.date = salesOrder.date.toLocaleDateString('en-CA')
+        try {
+            await Put(salesOrder.id, salesOrder, auth.user.token, 'marketing/sales-order-management')
+            SuccessNotif('Sales order status has been changed')
+        } catch (e) {
+            FailedNotif('Update status failed')
+        } finally {
+            setAction(prev => prev + 1)
+        }
+    }
+
     useEffect(() => {
-        const fetch = async () => {
+        const fetch = async (retrieve, id, token) => {
 
             try {
-                const salesorder = await Retrieve(params.salesOrderId, auth.user.token, 'sales-order-list')
+                const salesorder = await retrieve(id, token, 'marketing/sales-order-list')
+
                 const po = salesorder.productorder_set.map((product, index) => {
                     return ({
                         ...product,
                         index: index,
-                        button:
-                            <Button
-                                leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                                color='teal.8'
-                                variant='subtle'
-                                radius='md' >
-                                Delete
-                            </Button>
+                        sales_order: params.salesOrderId,
+                        product: product.product.id,
+                        deliveryschedule_set: product.deliveryschedule_set.map(schedule => ({ ...schedule, date: new Date(schedule.date) }))
                     }
                     )
                 })
 
-                productOrderForm.setValues({ productorder_set: [...po] })
+                const deliveryNotes = salesorder.productorder_set.reduce((prev, current) => {
+                    let temp = { ...prev }
+
+                    for (const productDeliver of current.productdelivercustomer_set) {
+                        const idDn = productDeliver.delivery_note_customer.id
+                        const { delivery_note_customer, ...restProps } = productDeliver
+                        const { product } = current
+                        const pdeliver = { ...restProps, product: { ...product } }
+
+                        if (prev.hasOwnProperty(idDn)) {
+                            temp[idDn].productdelivercustomer_set.push(pdeliver)
+
+                        } else {
+                            temp[idDn] = { ...delivery_note_customer }
+
+                            temp[idDn]['buttonDetail'] = <Button
+
+                                leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
+                                color='teal.8'
+                                variant='subtle'
+                                radius='md'
+                                component={Link}
+                                to={`/home/marketing/delivery-note/${idDn}`}
+                            >
+                                Detail
+                            </Button>
+
+                            temp[idDn].productdelivercustomer_set = [pdeliver]
+                        }
+                    }
+                    return temp
+
+                }, {})
+
+                setDeliveryNote({ ...deliveryNotes })
+
+
+                const products = await retrieve(salesorder.customer.id, token, 'marketing/product-customer')
+                setProducts(products.ppic_product_related)
 
                 const created = new Date(salesorder.created)
-                setSalesOrder(
-                    {
-                        date: new Date(salesorder.date),
-                        timeCreated: created,
-                        dateCreated: created,
-                        fixed: salesorder.fixed,
-                        done: salesorder.done,
-                        code: salesorder.code
-                    }
-                )
+                const so = {
+                    id: salesorder.id,
+                    date: new Date(salesorder.date),
+                    fixed: salesorder.fixed,
+                    done: salesorder.done,
+                    created: created.toString(),
+                    code: salesorder.code,
+                    presentage: Math.round(((salesorder.productdelivered / salesorder.productordered) * 100) * 10) / 10,
+                    customer: salesorder.customer.id,
+                    customerName: salesorder.customer.name,
+                    productorder_set: []
+                }
+                form.setValues(so)
+                setSalesOrder(so)
 
+                productOrderForm.setFieldValue('productorder_set', [...po])
                 setProductOrder([...po])
-                form.setValues(
-                    {
-                        date: new Date(salesorder.date),
-                        fixed: salesorder.fixed,
-                        done: salesorder.done,
-                        created: created.toString(),
-                        code: salesorder.code,
-                        presentage: Math.round(((salesorder.productdelivered / salesorder.productordered) * 100) * 10) / 10
-                    }
-                )
 
+                form.resetDirty()
+                productOrderForm.resetDirty()
             } catch (e) {
-
+                console.log(e)
             }
 
         }
-        fetch()
-    }, [])
+        fetch(Retrieve, params.salesOrderId, auth.user.token)
+    }, [action])
+
+
+    const handleClickEditButton = async () => {
+        setOpenButtonSo((prev) => {
+            if (prev.color === 'blue.6') {
+                return { color: 'red.6', label: 'Cancel' }
+            } else if (prev.color === 'red.6') {
+                return { color: 'blue.6', label: 'Edit' }
+            }
+
+        })
+
+        setScrollLocked((l) => !l)
+        setDisableEditSo((t) => !t)
+    }
+
+    const openModalDeleteSo = () => openConfirmModal({
+        title: `Delete sales order`,
+        children: (
+            <Text size="sm">
+                Are you sure?, deleted data cannot be recovered.
+            </Text>
+        ),
+        radius: 'md',
+        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
+        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+        confirmProps: { radius: 'md' },
+        onConfirm: () => handleDeleteSo(),
+    })
+
+    const openModalChangeStatus = () => openConfirmModal({
+        title: `change status of sales order`,
+        children: (
+            <Text size="sm">
+                Are you sure?, status of sales order will changed.
+            </Text>
+        ),
+        radius: 'md',
+        labels: { confirm: 'Yes, change it', cancel: "No, don't change it" },
+        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+        confirmProps: { radius: 'md' },
+        onConfirm: () => changeStatusSo(),
+    })
+
+
+    const openModalDeletePo = (id, token, endpoint, index) => openConfirmModal({
+        title: `Delete Product Order`,
+        children: (
+            <Text size="sm">
+                Are you sure?, deleted data cannot be recovered.
+            </Text>
+        ),
+        radius: 'md',
+        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
+        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+        confirmProps: { radius: 'md' },
+        onConfirm: () => handleDeletePo(id, token, endpoint, index),
+    })
+
+    const handleSubmitPo = async () => {
+
+        const editedPo = productOrderForm.values.productorder_set.filter((po, index) => productOrderForm.isDirty(`productorder_set.${index}`))[0]
+
+        editedPo.deliveryschedule_set = editedPo.deliveryschedule_set.map((schedule) => ({ quantity: schedule.quantity, date: schedule.date.toLocaleDateString('en-CA') }))
+
+        try {
+            if (editedPo.id === '') {
+                await Post(editedPo, auth.user.token, 'marketing/product-order-management')
+                SuccessNotif('Product order has been added')
+            } else {
+                await Put(editedPo.id, editedPo, auth.user.token, 'marketing/product-order-management')
+                SuccessNotif('Product order has been updated')
+            }
+
+        } catch (e) {
+            form.setErrors({ ...e.message.data })
+
+            if (e.message.data.non_field_errors) {
+                FailedNotif(e.message.data.non_field_errors[0])
+            }
+            if (e.message.data.deliveryschedule_set) {
+                FailedNotif(e.message.data.deliveryschedule_set[0])
+            }
+
+            console.log(e)
+        } finally {
+            setAction(prev => prev + 1)
+            setOpenButtonPo((prev) => {
+                if (prev.color === 'blue.6') {
+                    return { color: 'red.6', label: 'Cancel' }
+                } else if (prev.color === 'red.6') {
+                    return { color: 'blue.6', label: 'Edit' }
+                }
+
+            })
+            setEditAcces(null)
+        }
+
+    }
+
+    const handleDeletePo = async (id, token, endpoint, index) => {
+
+        try {
+            if (id === '') {
+                productOrderForm.removeListItem(`productorder_set`, index)
+            } else {
+                await Delete(id, token, endpoint)
+                SuccessNotif('Product order has been updated')
+                setAction(prev => prev + 1)
+            }
+        } catch (e) {
+            FailedNotif(e.message.data[0])
+        }
+    }
+
+
+    const contentProductOrder = productOrderForm.values.productorder_set.map((po, index) => (
+
+
+        <div key={index} >
+            <Text size='xl' m='sm' >Product {index + 1}</Text>
+            <Button.Group style={{ float: 'right' }}  >
+                <Button
+                    size='xs'
+                    radius='md'
+                    color={openButtonPo.color}
+                    leftIcon={!editAccess ? <IconEdit /> : editAccess === index + 1 ? <IconX /> : <IconEdit />}
+                    disabled={!editAccess ? editAccess : editAccess !== index + 1}
+                    onClick={() => {
+                        setOpenButtonPo((prev) => {
+                            if (prev.color === 'blue.6') {
+                                return { color: 'red.6', label: 'Cancel' }
+                            } else if (prev.color === 'red.6') {
+                                return { color: 'blue.6', label: 'Edit' }
+                            }
+
+                        })
+                        setEditAcces(access => {
+                            if (!access) {
+                                return index + 1
+                            } else {
+                                return null
+                            }
+                        })
+                        if (productOrderForm.isDirty(`productorder_set.${index}`)) {
+                            productOrderForm.resetDirty(`productorder_set.${index}`)
+                            productOrderForm.setFieldValue('productorder_set', [...productOrder])
+                        }
+
+                    }}
+                >
+                    {!editAccess ? openButtonPo.label : editAccess === index + 1 ? openButtonPo.label : 'Edit'}
+                </Button>
+
+                <Button
+                    form='formEditProductOrder'
+                    size='xs'
+                    type='submit'
+                    color='blue.6'
+                    disabled={productOrderForm.isDirty(`productorder_set.${index}`) || productOrderForm.isDirty(`productorder_set.${index}.deliveryschedule_set`) ? false : true}
+                    leftIcon={<IconDownload />} >
+                    Save Changes</Button>
+
+                <Button
+                    size='xs'
+                    color='red.6'
+                    radius='md'
+                    disabled={!editAccess ? editAccess : true}
+
+                    onClick={() => openModalDeletePo(po.id, auth.user.token, 'marketing/product-order-management', index)}
+
+                    leftIcon={<IconTrashX />} >
+                    Delete</Button>
+
+            </Button.Group>
+
+            <NativeSelect
+                pt='lg'
+                label="Product Name"
+                placeholder="Please select product to order"
+                data={products.map(product => ({ value: product.id, label: product.name }))}
+                {...productOrderForm.getInputProps(`productorder_set.${index}.product`)}
+                icon={<IconPencil />}
+                disabled={!editAccess ? true : editAccess !== index + 1 ? true : productOrderForm.values.productorder_set[index].id !== ''}
+                required
+            />
+
+            <TextInput
+                label="Product Code"
+                placeholder=""
+                value={
+                    productOrderForm.values.productorder_set[index].product !== '' ?
+                        products.filter((product) => product.id == productOrderForm.values.productorder_set[index].product)[0].code
+                        : ''
+                }
+
+                readOnly
+                icon={<IconCodeAsterix />}
+                required
+            />
+
+            <NumberInput
+                {...productOrderForm.getInputProps(`productorder_set.${index}.ordered`)}
+                label='Ordered'
+                readOnly={!editAccess ? true : editAccess !== index + 1}
+                hideControls
+                required
+            />
+            <NumberInput
+                {...productOrderForm.getInputProps(`productorder_set.${index}.delivered`)}
+                label='Delivered'
+                readOnly
+                hideControls
+            />
+
+            <Tooltip label='Click to see schedule section' transition="slide-up" transitionDuration={300} withArrow >
+
+                <ActionIcon variant="outline" radius='lg'
+                    onClick={() => setOpened((prev) => [...prev, index + 1])}
+                    mt='xs'
+                    mb='xl'
+                    color='blue'
+                >
+                    {open.includes(index + 1) ? <IconCaretRight size={16} /> : <IconCaretDown size={16} />}
+                </ActionIcon>
+            </Tooltip>
+
+
+
+            <Collapse
+                in={open.includes(index + 1)}
+                key={index + 1}
+                mt='xs'
+                mb='xl'
+            >
+
+                <Group position="right" >
+                    <CloseButton title="Close schedule section" variant="outline" radius='xl' size="xl" onClick={() => setOpened((prev) => prev.filter(item => item !== index + 1))} iconSize={20} />
+                </Group>
+
+                {productOrderForm.values.productorder_set[index].deliveryschedule_set.map((schedule, i) =>
+                (
+
+                    <Group position="left" spacing='xs' key={i} >
+                        <NumberInput icon={<IconSum />}
+                            m='xs'
+                            radius='md'
+                            label='Quantity'
+                            {...productOrderForm.getInputProps(`productorder_set.${index}.deliveryschedule_set.${i}.quantity`)}
+                            readOnly={!editAccess ? !editAccess : editAccess !== index + 1}
+                            hideControls
+                            required
+                        />
+                        <DatePicker
+                            icon={<IconCalendarEvent />}
+                            disabled={!editAccess ? !editAccess : editAccess !== index + 1}
+                            label='Schedule date'
+                            {...productOrderForm.getInputProps(`productorder_set.${index}.deliveryschedule_set.${i}.date`)}
+                            clearable={false}
+                            required={true}
+                        />
+
+                        <ActionIcon
+                            mt='lg'
+                            style={{ display: !editAccess ? 'none' : editAccess !== index + 1 && 'none' }}
+                            color="red"
+                            onClick={() => {
+
+                                productOrderForm.removeListItem(`productorder_set.${index}.deliveryschedule_set`, i)
+                                const tes = `productorder_set.${index}.deliveryschedule_set`
+                                productOrderForm.setDirty({ [tes]: true })
+                            }
+                            }
+                        >
+
+                            <IconTrash />
+
+                        </ActionIcon>
+
+                    </Group>
+                )
+
+                )}
+
+                <Button
+                    radius='md'
+                    style={{ display: !editAccess ? 'none' : editAccess !== index + 1 && 'none' }}
+                    leftIcon={<IconCalendarPlus />}
+                    onClick={() =>
+                        productOrderForm.insertListItem(`productorder_set.${index}.deliveryschedule_set`, { quantity: '', date: '' })
+                    }
+                >
+                    Add schedule
+                </Button>
+
+
+            </Collapse>
+        </div>
+    ))
+
 
     return (
         <>
             <BaseAside links={links} activeSection={activeSection} />
-
+            <BreadCrumb links={breadcrumb} />
+            {<Loading />}
             <section id='sales-order' ref={sectionRefs[0]} className={classes.section} >
 
                 <Title className={classes.title}>
                     <a href="#sales-order" className={classes.a_href} >
-                        Detail Sales Order
+                        Detail sales order
                     </a>
                 </Title>
                 <p>
-                    Sales orders cannot be deleted if there are still products ordered
+                    This page contains every detail of sales order, all <Mark radius='md' color='teal'><a style={{ color: 'black' }} href='#product-order' >ordered products</a></Mark> and also <Mark radius='md' color='teal'><a style={{ color: 'black' }} href='#delivery-note' >delivery notes</a></Mark> related to this sales order
                 </p>
+                <p>
+                    Note : Sales order cannot be deleted if there is a product order or product delivery
+                </p>
+
 
                 <Group position="right" >
                     <Button.Group>
 
                         <Button
                             size='xs'
-
                             radius='md'
-                            leftIcon={<IconEdit />}
+                            color={openButtonSo.color}
+                            onClick={
+                                (event) => {
+                                    handleClickEditButton()
+                                    if (form.isDirty()) {
+                                        form.reset()
+                                        form.setValues({ ...salesOrder })
+                                    }
+                                }}
+                            leftIcon={disableEditSo ? <IconEdit /> : <IconX />}
                         >
-                            Edit
+                            {openButtonSo.label}
                         </Button>
 
                         <Button
-                            form='formEdit'
+                            form='formEditSo'
                             size='xs'
-                            color='blue'
+                            color='blue.6'
+                            type='submit'
+                            disabled={form.isDirty() ? disableEditSo : disableEditSo ? disableEditSo : !disableEditSo}
                             leftIcon={<IconDownload />} >
                             Save Changes</Button>
                         <Button
                             size='xs'
-                            color='red'
+                            color='red.6'
+                            disabled={!disableEditSo}
                             radius='md'
+                            onClick={openModalDeleteSo}
                             leftIcon={<IconTrashX />} >
                             Delete</Button>
                     </Button.Group>
                 </Group>
 
 
-                <form>
+                <form onSubmit={form.onSubmit(handleEditSo)} id='formEditSo'  >
 
                     <Stack spacing='xs' >
 
                         <TextInput
-                            icon={<IconCodeAsterix />}
-                            m='xs'
-                            label='Sales Order Code'
+                            icon={<IconUser />}
+                            label='Customer'
                             readOnly
+                            {...form.getInputProps('customerName')}
+                        />
+
+                        <TextInput
+                            icon={<IconCodeAsterix />}
+                            label='Sales Order Code'
+                            readOnly={disableEditSo}
                             {...form.getInputProps('code')}
                         />
 
@@ -241,7 +670,7 @@ const DetailSalesOrder = () => {
                         <DatePicker
                             label="Date"
                             {...form.getInputProps('date')}
-                            disabled
+                            disabled={disableEditSo}
                             clearable={false}
                             icon={<IconCalendar />}
                         />
@@ -268,7 +697,14 @@ const DetailSalesOrder = () => {
                                 />
 
                             </Checkbox.Group>
-                            <Button radius='md' leftIcon={<IconCircleCheck />} style={{ display: form.getInputProps('fixed').value && 'none' }} variant='outline' mt='xl' >Set to fix</Button>
+                            <Button
+                                radius='md'
+                                leftIcon={form.values.fixed ? <IconClock2 /> : <IconCircleCheck />}
+                                variant='outline'
+                                mt='xl'
+                                color={form.values.fixed ? 'red' : 'blue'}
+                                onClick={openModalChangeStatus}
+                            >{form.values.fixed ? 'Set to pending' : 'Set to fixed'}</Button>
                         </Group>
 
                         <Text size='sm' mt='md' >
@@ -295,17 +731,57 @@ const DetailSalesOrder = () => {
             <section id='product-order' ref={sectionRefs[1]} className={classes.section}>
                 <Title className={classes.title}>
                     <a href="#product-order" className={classes.a_href} >
-                        Ordered Products
+                        Ordered products
                     </a>
                 </Title>
-                <BaseTableExpanded
-                    column={columnProductOrder}
-                    data={productOrderForm.values.productorder_set}
-                    expandComponent={ExpandedScheduleDelivery}
-                />
+
+                <form onSubmit={productOrderForm.onSubmit(handleSubmitPo)} id='formEditProductOrder'  >
+
+                    {contentProductOrder}
+
+                </form>
+
+                <Center>
+                    <Button
+                        radius='md'
+                        leftIcon={<IconBarcode />}
+                        mt='lg'
+                        variant="gradient" gradient={{ from: 'indigo', to: 'cyan' }}
+                        onClick={() => {
+                            productOrderForm.insertListItem('productorder_set', {
+                                sales_order: params.salesOrderId,
+                                product: '',
+                                ordered: '',
+                                delivered: 0,
+                                deliveryschedule_set: [
+                                    {
+                                        quantity: '',
+                                        date: ''
+                                    }
+                                ],
+                                done: false,
+                                id: ''
+                            })
+                        }}
+                    >
+                        Add product order
+                    </Button>
+                </Center>
+
             </section>
 
             <section id='delivery-note' ref={sectionRefs[2]} className={classes.section} >
+                <Title className={classes.title}>
+                    <a href="#delivery-note" className={classes.a_href} >
+                        Delivery notes
+                    </a>
+                </Title>
+
+                <BaseTableExpanded
+                    column={columnDeliveryNote}
+                    data={Object.values(deliveryNote)}
+                    expandComponent={ExpandedDeliveryNote}
+                />
 
 
             </section>

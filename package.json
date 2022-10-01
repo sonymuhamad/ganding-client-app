@@ -5,6 +5,7 @@
   "dependencies": {
     "@emotion/react": "^11.10.4",
     "@fullcalendar/daygrid": "^5.11.3",
+    "@fullcalendar/list": "^5.11.3",
     "@fullcalendar/react": "^5.11.2",
     "@mantine/carousel": "^5.2.5",
     "@mantine/core": "^5.2.5",

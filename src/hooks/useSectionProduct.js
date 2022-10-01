@@ -2,10 +2,9 @@ import { useRef } from "react";
 import useScrollSpy from 'react-use-scrollspy'
 
 
-export const useSection = () => {
+export const useSectionProduct = () => {
 
     const sectionRefs = [
-        useRef(null),
         useRef(null),
         useRef(null),
         useRef(null),

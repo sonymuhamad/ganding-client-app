@@ -1,7 +1,7 @@
 import { createStyles } from "@mantine/core";
 
 
-export const customerPageStyle = createStyles((theme) => ({
+export const sectionStyle = createStyles((theme) => ({
     link: {
         ...theme.fn.focusStyles(),
         display: 'block',

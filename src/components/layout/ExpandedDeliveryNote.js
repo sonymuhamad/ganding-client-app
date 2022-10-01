@@ -1,10 +1,12 @@
 import React from "react";
-import { Group, Text, TextInput, Textarea } from "@mantine/core";
+import { Group, TextInput, Textarea } from "@mantine/core";
 import { IconNotes, IconAssembly, IconFileDollar, IconPackgeExport } from "@tabler/icons";
 
 
 
-export default function ExpandedDn({ data }) {
+export default function ExpandedDeliveryNote({ data }) {
+
+    console.log(data)
 
     return (
         <>
@@ -29,7 +31,7 @@ export default function ExpandedDn({ data }) {
                             m='xs'
                             radius='md'
                             label='Product'
-                            value={pdeliver.product_order.product.name}
+                            value={pdeliver.product.name}
                             readOnly
                         />
                         <TextInput icon={<IconPackgeExport />}
@@ -42,7 +44,7 @@ export default function ExpandedDn({ data }) {
                         <TextInput icon={<IconFileDollar />}
                             m='xs'
                             radius='md'
-                            label='Invoice status'
+                            label='Paid Status'
                             readOnly
                             value={pdeliver.paid ? 'Finished' : 'Pending'}
                         />

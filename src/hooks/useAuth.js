@@ -6,8 +6,8 @@ import { IconCheck, IconHandRock, IconAccessPointOff } from "@tabler/icons";
 import { AuthException, Url } from "../services/External";
 import { useParams } from "react-router-dom";
 
-const sign_in_url = `${Url}/sign-in/`
-const sign_out_url = `${Url}/sign-out/`
+const sign_in_url = `${Url}/plant-manager/sign-in/`
+const sign_out_url = `${Url}/plant-manager/sign-out/`
 
 
 export const useAuth = () => {

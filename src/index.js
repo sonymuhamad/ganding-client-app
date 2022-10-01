@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
@@ -15,9 +15,10 @@ import SalesOrder from './components/marketing/SalesOrder'
 import Customers from './components/marketing/Customers'
 import Customer from './components/marketing/Customer';
 import DeliveryNote from './components/marketing/DeliveryNote'
-import DeliverySchedule from './components/marketing/DeliverySchedule'
+import DetailProduct from './components/marketing/DetailProduct';
 import NewSalesOrder from './components/marketing/NewSalesOrder';
 import DetailSalesOrder from './components/marketing/DetailSalesOrder';
+import DetailDeliveryNote from './components/marketing/DetailDeliveryNote';
 
 
 import BasePurchasing from './components/purchasing/BasePurchasing';
@@ -69,14 +70,19 @@ root.render(
           <Route path='marketing' element={<BaseMarketing />}>
 
             <Route index element={<MarketingDashboard />} />
-            <Route path='customers' element={<Customers />} >
-            </Route>
+
+            <Route path='customers' element={<Customers />} />
+
+
             <Route path='customers/:customerId' element={<Customer />} />
-            <Route path='sales-order' element={<SalesOrder />} />
+            <Route path='customers/:customerId/:productId' element={<DetailProduct />} />
             <Route path='delivery-note' element={<DeliveryNote />} />
-            <Route path='delivery-schedule' element={<DeliverySchedule />} />
-            <Route path='sales-order/new' element={<NewSalesOrder />} />
+            <Route path='delivery-note/:deliverynoteId' element={<DetailDeliveryNote />} />
+
+            <Route path='sales-order' element={<SalesOrder />} />
             <Route path='sales-order/:salesOrderId' element={<DetailSalesOrder />} />
+            <Route path='sales-order/new' element={<NewSalesOrder />} />
+
           </Route>
 
           <Route path='ppic' element={<BasePpic />} >

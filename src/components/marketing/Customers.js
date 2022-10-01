@@ -74,11 +74,7 @@ const customerPageStyle = createStyles(() => ({
 
 const Customers = () => {
 
-    const navigate = useNavigate()
-    const location = useLocation()
-
     const { classes } = customerPageStyle()
-    const table = useRef()
     const form = useForm({
         initialValues: {
             name: '',
@@ -100,13 +96,12 @@ const Customers = () => {
     const auth = useContext(AuthContext)
 
     const [opened, setOpened] = useState(false)
-    const [visible, setVisible] = useState(false)
     const [dataCustomer, setDataCustomer] = useState([])
-    const { Get, Post } = useRequest()
+    const { Get, Post, Loading } = useRequest()
 
     const fetch = async () => {
         try {
-            let data_customers = await Get(auth.user.token, 'customer')
+            let data_customers = await Get(auth.user.token, 'marketing/customer')
 
             data_customers = data_customers.map((customer) => {
                 return ({ ...customer, detailButton: <Button component={Link} to={`/home/marketing/customers/${customer.id}`} leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />} color='teal.8' variant='subtle' radius='md' >Detail</Button> })
@@ -126,10 +121,9 @@ const Customers = () => {
         // add new customer handle
 
         const token = auth.user.token
-        setVisible((v) => !v)
 
         try {
-            await Post(data, token, 'customer')
+            await Post(data, token, 'marketing/customer')
             SuccessNotif(' Add new customer success 🤥')
             fetch()
             form.reset()
@@ -138,7 +132,6 @@ const Customers = () => {
             form.setErrors({ ...e.message.data })
 
         } finally {
-            setVisible((v) => !v)
         }
 
     }
@@ -173,18 +166,21 @@ const Customers = () => {
         <>
             <Group position='apart' >
                 <BreadCrumb links={breadcrumb} />
-                <Button
-                    radius='md'
-                    size='sm'
-                    color='blue.6'
-                    variant='outline'
-                    leftIcon={<IconPlus stroke={2} size={20} />}
-                    onClick={() => setOpened(true)} >
-                    <Text size='md' >
-                        New Customer
-                    </Text>
-                </Button>
             </Group>
+
+            <Button
+                radius='md'
+                size='sm'
+                color='blue.6'
+                variant='outline'
+                leftIcon={<IconPlus stroke={2} size={20} />}
+                onClick={() => setOpened(true)}
+            >
+                <Text size='md' >
+                    New Customer
+                </Text>
+            </Button>
+
             <Modal
                 opened={opened}
                 onClose={() => setOpened(false)}
@@ -195,7 +191,7 @@ const Customers = () => {
                 }
                 radius='md'
             >
-                <LoadingOverlay visible={visible} overlayBlur={2} />
+                <Loading />
                 <form onSubmit={form.onSubmit(handlesubmit)} >
 
                     <TextInput
@@ -249,7 +245,7 @@ const Customers = () => {
                         customStyles={customTableStyle}
                         highlightOnHover={true}
                         pagination
-
+                        dense
 
                     />
 

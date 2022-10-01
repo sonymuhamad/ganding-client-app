@@ -2,7 +2,7 @@ import React from "react";
 import { customTableStyle } from "../../services/External";
 import DataTable from "react-data-table-component";
 
-export default function BaseTableExpanded({ column, data, expandComponent }) {
+export default function BaseTableDefaultExpanded({ column, data, expandComponent }) {
 
     return (
         <>
@@ -11,6 +11,7 @@ export default function BaseTableExpanded({ column, data, expandComponent }) {
                 columns={[...column]}
                 data={[...data]}
                 expandableRows
+                expandableRowExpanded={row => row.id}
                 expandableRowsComponent={expandComponent}
                 highlightOnHover={true}
                 pagination

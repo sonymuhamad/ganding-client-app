@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext, useMemo } from "react";
 
-import { SegmentedControl, Button, Collapse, Group, Text } from "@mantine/core";
-import { IconDotsCircleHorizontal, IconPlus } from "@tabler/icons";
+import { SegmentedControl, Button, Collapse, Group, TextInput } from "@mantine/core";
+import { IconDotsCircleHorizontal, IconPlus, IconSearch } from "@tabler/icons";
 
 import { Link } from "react-router-dom";
 
@@ -10,10 +10,6 @@ import BreadCrumb from "../BreadCrumb";
 import { AuthContext } from "../../context/AuthContext";
 import { useRequest } from "../../hooks/useRequest";
 import ExpandedSo from "../layout/ExpandedSo";
-import { useSection } from "../../hooks/useSection";
-import BaseAside from "../layout/BaseAside";
-import { salesorderStyle } from "../../styles/salesorderStyle";
-
 
 
 export default function SalesOrder() {
@@ -23,6 +19,11 @@ export default function SalesOrder() {
     const [salesOrderProgress, setSalesOrderProgress] = useState([])
     const [salesOrderPending, setSalesOrderPending] = useState([])
     const [salesOrderDone, setSalesOrderDone] = useState([])
+    const [searchVal, setSearchVal] = useState('')
+    const [filteredSalesOrderProgress, setFilteredSalesOrderProgress] = useState([])
+    const [filteredSalesOrderPending, setFilteredSalesOrderPending] = useState([])
+    const [filteredSalesOrderDone, setFilteredSalesOrderDone] = useState([])
+
     const { Get } = useRequest()
 
     const breadcrumb = [
@@ -70,7 +71,7 @@ export default function SalesOrder() {
     useEffect(() => {
         const fetch = async (get, token) => {
             try {
-                const salesorders = await get(token, 'sales-order-list')
+                const salesorders = await get(token, 'marketing/sales-order-list')
                 let on_progress = []
                 let pending = []
                 let done = []
@@ -103,18 +104,40 @@ export default function SalesOrder() {
                 setSalesOrderDone(done)
                 setSalesOrderPending(pending)
                 setSalesOrderProgress(on_progress)
+                setFilteredSalesOrderDone(done)
+                setFilteredSalesOrderPending(pending)
+                setFilteredSalesOrderProgress(on_progress)
             } catch (e) {
                 console.log(e)
             }
         }
 
         fetch(Get, auth.user.token)
-    }, [])
+    }, [auth.user.token])
+
+    const handleSearch = (e) => {
+        const value = e.target.value
+        setSearchVal(value)
+        const valFiltered = value.toLowerCase()
+
+        const filteredDone = salesOrderDone.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
+
+        const filteredOnProgress = salesOrderProgress.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
+
+        const filteredPending = salesOrderPending.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
+
+        setFilteredSalesOrderDone(filteredDone)
+        setFilteredSalesOrderPending(filteredPending)
+        setFilteredSalesOrderProgress(filteredOnProgress)
+    }
 
 
     return (
         <>
             <BreadCrumb links={breadcrumb} />
+
+
+
 
             <Group position="apart" >
 
@@ -131,16 +154,25 @@ export default function SalesOrder() {
                     radius='md'
 
                 />
+                <Group>
 
-                <Button
-                    radius='md'
-                    leftIcon={<IconPlus />}
-                    component={Link}
-                    variant='outline'
-                    to='/home/marketing/sales-order/new'
-                >
-                    New Sales Order
-                </Button>
+                    <TextInput
+                        icon={<IconSearch />}
+                        placeholder='Search'
+                        value={searchVal}
+                        onChange={handleSearch}
+                        radius='md'
+                    />
+                    <Button
+                        radius='md'
+                        leftIcon={<IconPlus />}
+                        component={Link}
+                        variant='outline'
+                        to='/home/marketing/sales-order/new'
+                    >
+                        New Sales Order
+                    </Button>
+                </Group>
             </Group>
 
 
@@ -152,7 +184,7 @@ export default function SalesOrder() {
             >
                 <BaseTableExpanded
                     column={columnSo}
-                    data={salesOrderProgress}
+                    data={filteredSalesOrderProgress}
                     expandComponent={ExpandedSo}
                 />
 
@@ -162,7 +194,7 @@ export default function SalesOrder() {
             >
                 <BaseTableExpanded
                     column={columnSo}
-                    data={salesOrderPending}
+                    data={filteredSalesOrderPending}
                     expandComponent={ExpandedSo}
                 />
 
@@ -172,7 +204,7 @@ export default function SalesOrder() {
             >
                 <BaseTableExpanded
                     column={columnSo}
-                    data={salesOrderDone}
+                    data={filteredSalesOrderDone}
                     expandComponent={ExpandedSo}
                 />
 

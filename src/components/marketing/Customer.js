@@ -1,18 +1,16 @@
-import React, { useRef, useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
 
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
-import { Aside, Text, MediaQuery, Box, Group, Modal, List, TextInput, Textarea, NumberInput, Button, LoadingOverlay, Highlight, Collapse, Title } from "@mantine/core";
+import { Text, Group, TextInput, Textarea, NumberInput, Button, Highlight, Collapse, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useScrollLock } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
 
-import { IconListSearch, IconUser, IconDeviceMobile, IconMapPin, IconAt, IconEdit, IconX, IconDownload, IconTrashX, IconBrandProducthunt, IconFileCheck, IconClock, IconPlus, IconChevronDown, IconDotsCircleHorizontal } from "@tabler/icons";
-
-import useScrollSpy from 'react-use-scrollspy'
+import { IconUser, IconDeviceMobile, IconMapPin, IconAt, IconEdit, IconX, IconDownload, IconTrashX, IconBrandProducthunt, IconFileCheck, IconClock, IconPlus, IconChevronDown, IconDotsCircleHorizontal } from "@tabler/icons";
 
 import { SuccessNotif, FailedNotif } from "../notifications/Notifications";
 import { AuthContext } from "../../context/AuthContext";
-import { customerPageStyle } from "../../styles/customerPageStyle";
+import { sectionStyle } from "../../styles/sectionStyle";
 import { useRequest } from "../../hooks/useRequest";
 import BaseTableExpanded from "../layout/BaseTableExpanded";
 import ExpandedSo from "../layout/ExpandedSo";
@@ -24,24 +22,22 @@ import BaseAside from "../layout/BaseAside";
 
 const Customer = () => {
 
-    const { classes, cx } = customerPageStyle()
+    const { classes } = sectionStyle()
     const [dataCustomer, setDataCustomer] = useState({})
     const [buttonActive, setButtonActive] = useState('on_progress')
     const { customerId } = useParams()
-    const location = useLocation()
     const navigate = useNavigate()
     const auth = useContext(AuthContext)
     const [notAllowed, setNotAllowed] = useState(true)
-    const [editButton, setEditButton] = useState({ label: 'edit', color: 'blue' })
+    const [editButton, setEditButton] = useState({ label: 'edit', color: 'blue.6' })
     const [scrollLocked, setScrollLocked] = useScrollLock()
-    const [visible, setVisible] = useState(false)
     const [on_progress_so, set_on_progress_so] = useState([])
     const [pendingSo, setPendingSo] = useState([])
     const [doneSo, setDoneSo] = useState([])
     const [product, setProduct] = useState([])
     const [deliveryNote, setDeliveryNote] = useState([])
     const [breadcrumb, setBreadCrumb] = useState([])
-    const { Retrieve, Put, Delete } = useRequest()
+    const { Retrieve, Put, Delete, Loading } = useRequest()
     const { sectionRefs, activeSection } = useSection()
 
     const links = [
@@ -74,10 +70,10 @@ const Customer = () => {
                 Deleted data cannot be recovered.
             </Text>
         ),
+        radius: 'md',
         labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
-        onCancel: () => console.log('Cancel'),
         onConfirm: () => handleDeleteCustomer(),
     });
 
@@ -94,10 +90,10 @@ const Customer = () => {
 
     const handleClickEditButton = async () => {
         setEditButton((prev) => {
-            if (prev.color === 'blue') {
-                return { color: 'red', label: 'Cancel' }
-            } else if (prev.color === 'red') {
-                return { color: 'blue', label: 'Edit' }
+            if (prev.color === 'blue.6') {
+                return { color: 'red.6', label: 'Cancel' }
+            } else if (prev.color === 'red.6') {
+                return { color: 'blue.6', label: 'Edit' }
             }
 
         })
@@ -109,7 +105,7 @@ const Customer = () => {
     const fetch = async () => {
 
         try {
-            const customer = await Retrieve(customerId, auth.user.token, 'customer-detail')
+            const customer = await Retrieve(customerId, auth.user.token, 'marketing/customer-detail')
             const salesorders = customer.marketing_salesorder_related
             let products = customer.ppic_product_related
             let deliverynotes = customer.ppic_deliverynotecustomer_related
@@ -124,7 +120,10 @@ const Customer = () => {
                         leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
                         color='teal.8'
                         variant='subtle'
-                        radius='md' >
+                        radius='md'
+                        component={Link}
+                        to={`/home/marketing/delivery-note/${deliverynote.id}`}
+                    >
                         Detail
                     </Button>
                 })
@@ -133,6 +132,8 @@ const Customer = () => {
             products = products.map((product) => {
                 return ({
                     ...product, detailProductButton: <Button
+                        component={Link}
+                        to={`/home/marketing/customers/${customerId}/${product.id}`}
                         leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
                         color='teal.8'
                         variant='subtle'
@@ -286,33 +287,22 @@ const Customer = () => {
 
     const handleSubmit = async (data) => {
         // handle edit customer
-        setVisible((v) => !v)
         try {
-            await Put(customerId, data, auth.user.token, 'customer')
+            await Put(customerId, data, auth.user.token, 'marketing/customer')
             await fetch()
             await handleClickEditButton()
         } catch (e) {
             form.setErrors({ ...e.message.data })
-            if (e.message.status === 401) {
-                auth.resetToken(auth.user.token, location.pathname)
-                // expired token handle
-            }
-
-        } finally {
-            setVisible((v) => !v)
         }
     }
 
     const handleDeleteCustomer = async () => {
-        setVisible((v) => !v)
         try {
-            await Delete(customerId, auth.user.token, 'customer')
+            await Delete(customerId, auth.user.token, 'marketing/customer')
             SuccessNotif('Delete customer success')
             navigate('/home/marketing/customers')
         } catch (e) {
             FailedNotif(e.message.data[0])
-        } finally {
-            setVisible((v) => !v)
         }
     }
 
@@ -320,7 +310,7 @@ const Customer = () => {
         <>
 
             <BaseAside links={links} activeSection={activeSection} />
-            <LoadingOverlay visible={visible} overlayBlur={2} />
+            <Loading />
             <BreadCrumb links={breadcrumb} />
 
             <section id='customer' ref={sectionRefs[0]} className={classes.section} >
@@ -331,21 +321,21 @@ const Customer = () => {
                     </a>
                 </Title>
 
-                <p style={{ lineHeight: 1.55 }} >
-                    <Highlight
-                        align="left"
-                        highlight={['sales order', 'delivery']}
-                        highlightStyles={(theme) => ({
-                            backgroundImage: theme.fn.linearGradient(45, theme.colors.dark[5], theme.colors.gray[9]),
-                            fontWeight: 800,
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            fontSize: 16
-                        })}
-                    >
-                        Customer who have sales order or delivery data cannot be deleted
-                    </Highlight>
-                </p>
+                <Highlight
+                    align="left"
+                    highlight={['sales order', 'delivery']}
+                    highlightStyles={(theme) => ({
+                        backgroundImage: theme.fn.linearGradient(45, theme.colors.dark[5], theme.colors.gray[9]),
+                        fontWeight: 800,
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        fontSize: 16
+                    })}
+                >
+
+                    Customer who have sales order or delivery data cannot be deleted
+
+                </Highlight>
 
                 <Group position="right" >
                     <Button.Group>
@@ -372,12 +362,12 @@ const Customer = () => {
                             form='formEdit'
                             size='xs'
                             disabled={form.isDirty() ? notAllowed : notAllowed ? notAllowed : !notAllowed}
-                            color='blue'
+                            color='blue.6'
                             leftIcon={<IconDownload />} >
                             Save Changes</Button>
                         <Button
                             size='xs'
-                            color='red'
+                            color='red.6'
                             disabled={!notAllowed}
                             radius='md'
                             onClick={openModal}
@@ -415,6 +405,7 @@ const Customer = () => {
                         readOnly={notAllowed}
                         {...form.getInputProps('phone')}
                         required
+                        hideControls
                     />
 
                     <Textarea
@@ -478,6 +469,8 @@ const Customer = () => {
                         radius='md'
                         leftIcon={<IconPlus />}
                         variant='outline'
+                        component={Link}
+                        to='/home/marketing/sales-order/new'
                     >
                         New Sales order
                     </Button>

@@ -7,7 +7,6 @@ import { Outlet, useLocation, Link } from "react-router-dom";
 import { AuthContext } from '../../context/AuthContext'
 import NavLinks from '../layout/NavLinks';
 import BaseLayout from '../layout/BaseLayout';
-import { Text, Breadcrumbs } from '@mantine/core';
 
 
 const BaseMarketing = () => {
@@ -40,21 +39,6 @@ const BaseMarketing = () => {
             icon: <IconClipboardText stroke={2} size={20} />,
             url: '/home/marketing/delivery-note'
         },
-        {
-            label: 'Report',
-            icon: <IconFileReport stroke={2} size={20} />,
-            nested: [
-                {
-
-                    label: 'Delivery Schedule',
-                    activeLabel: 'Delivery Schedule',
-                    icon: <IconCalendarEvent stroke={2} size={20} />,
-                    url: '/home/marketing/delivery-schedule'
-                }
-            ]
-        }
-
-
     ]
 
 
