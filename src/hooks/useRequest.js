@@ -12,13 +12,14 @@ export const useRequest = () => {
     const [visible, setVisible] = useState(false)
     const navigate = useNavigate()
 
-    const Post = async (data, token, endpoint) => {
-        const url = `${Url}/${endpoint}/`
+    const Post = async (data, token, endpoint, content_type = 'application/json') => {
+        const url = `${Url}/${auth.user.division}/${endpoint}/`
         setVisible((v) => !v)
         try {
             const res = await axios.post(url, data, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': content_type,
                 }
             })
             return res.data
@@ -35,13 +36,14 @@ export const useRequest = () => {
 
     }
 
-    const Put = async (id, data, token, endpoint) => {
-        const url = `${Url}/${endpoint}/${id}/`
+    const Put = async (id, data, token, endpoint, content_type = 'application/json') => {
+        const url = `${Url}/${auth.user.division}/${endpoint}/${id}/`
         setVisible((v) => !v)
         try {
             const res = await axios.put(url, data, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': content_type,
                 }
             })
             return res.data
@@ -58,7 +60,7 @@ export const useRequest = () => {
     }
 
     const Get = async (token, endpoint) => {
-        const url = `${Url}/${endpoint}/`
+        const url = `${Url}/${auth.user.division}/${endpoint}/`
 
         try {
             const res = await axios.get(url, {
@@ -84,7 +86,7 @@ export const useRequest = () => {
     }
 
     const Delete = async (id, token, endpoint) => {
-        const url = `${Url}/${endpoint}/${id}/`
+        const url = `${Url}/${auth.user.division}/${endpoint}/${id}/`
         setVisible((v) => !v)
         try {
             const res = await axios.delete(url, {
@@ -106,7 +108,7 @@ export const useRequest = () => {
     }
 
     const Retrieve = async (id, token, endpoint) => {
-        const url = `${Url}/${endpoint}/${id}/`
+        const url = `${Url}/${auth.user.division}/${endpoint}/${id}/`
 
         try {
             const res = await axios.get(url, {

@@ -3,7 +3,7 @@ import NavLinks from "../layout/NavLinks";
 import BaseLayout from "../layout/BaseLayout";
 
 import { Outlet } from "react-router-dom";
-import { IconLayoutDashboard, IconAsset, IconBuildingWarehouse, IconForms, IconBuildingFactory, IconCalendarEvent, IconTruckDelivery } from "@tabler/icons";
+import { IconLayoutDashboard, IconAsset, IconBuildingWarehouse, IconBuildingFactory, IconBarcode, IconTruckDelivery } from "@tabler/icons";
 
 
 export default function BasePpic() {
@@ -18,7 +18,7 @@ export default function BasePpic() {
         {
             label: 'Product',
             activeLabel: 'Product',
-            icon: <IconForms stroke={2} size={20} />,
+            icon: <IconBarcode stroke={2} size={20} />,
             url: '/home/ppic/product'
         },
         {

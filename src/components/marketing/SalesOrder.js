@@ -5,7 +5,7 @@ import { IconDotsCircleHorizontal, IconPlus, IconSearch } from "@tabler/icons";
 
 import { Link } from "react-router-dom";
 
-import BaseTableExpanded from "../layout/BaseTableExpanded";
+import BaseTableExpanded from "../tables/BaseTableExpanded";
 import BreadCrumb from "../BreadCrumb";
 import { AuthContext } from "../../context/AuthContext";
 import { useRequest } from "../../hooks/useRequest";
@@ -15,16 +15,36 @@ import ExpandedSo from "../layout/ExpandedSo";
 export default function SalesOrder() {
 
     const auth = useContext(AuthContext)
+    const { Get } = useRequest()
     const [activeSegment, setActiveSegment] = useState('on_progress')
     const [salesOrderProgress, setSalesOrderProgress] = useState([])
     const [salesOrderPending, setSalesOrderPending] = useState([])
     const [salesOrderDone, setSalesOrderDone] = useState([])
     const [searchVal, setSearchVal] = useState('')
-    const [filteredSalesOrderProgress, setFilteredSalesOrderProgress] = useState([])
-    const [filteredSalesOrderPending, setFilteredSalesOrderPending] = useState([])
-    const [filteredSalesOrderDone, setFilteredSalesOrderDone] = useState([])
 
-    const { Get } = useRequest()
+    const filteredSalesOrderDone = useMemo(() => {
+
+        const valFiltered = value.toLowerCase()
+
+        return salesOrderDone.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
+
+    }, [searchVal, salesOrderDone])
+
+    const filteredSalesOrderProgress = useMemo(() => {
+
+        const valFiltered = value.toLowerCase()
+
+        return salesOrderProgress.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
+
+    }, [searchVal, salesOrderProgress])
+
+    const filteredSalesOrderPending = useMemo(() => {
+        const valFiltered = value.toLowerCase()
+
+        return salesOrderPending.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
+
+    }, [searchVal, salesOrderPending])
+
 
     const breadcrumb = [
         {
@@ -71,7 +91,7 @@ export default function SalesOrder() {
     useEffect(() => {
         const fetch = async (get, token) => {
             try {
-                const salesorders = await get(token, 'marketing/sales-order-list')
+                const salesorders = await get(token, 'sales-order-list')
                 let on_progress = []
                 let pending = []
                 let done = []
@@ -104,9 +124,7 @@ export default function SalesOrder() {
                 setSalesOrderDone(done)
                 setSalesOrderPending(pending)
                 setSalesOrderProgress(on_progress)
-                setFilteredSalesOrderDone(done)
-                setFilteredSalesOrderPending(pending)
-                setFilteredSalesOrderProgress(on_progress)
+
             } catch (e) {
                 console.log(e)
             }
@@ -114,22 +132,6 @@ export default function SalesOrder() {
 
         fetch(Get, auth.user.token)
     }, [auth.user.token])
-
-    const handleSearch = (e) => {
-        const value = e.target.value
-        setSearchVal(value)
-        const valFiltered = value.toLowerCase()
-
-        const filteredDone = salesOrderDone.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
-
-        const filteredOnProgress = salesOrderProgress.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
-
-        const filteredPending = salesOrderPending.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
-
-        setFilteredSalesOrderDone(filteredDone)
-        setFilteredSalesOrderPending(filteredPending)
-        setFilteredSalesOrderProgress(filteredOnProgress)
-    }
 
 
     return (
@@ -160,7 +162,7 @@ export default function SalesOrder() {
                         icon={<IconSearch />}
                         placeholder='Search'
                         value={searchVal}
-                        onChange={handleSearch}
+                        onChange={e => setSearchVal(e.target.value)}
                         radius='md'
                     />
                     <Button

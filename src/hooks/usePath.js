@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 export function usePath() {
 
     const path = useLocation()
-    const regex = new RegExp('\/\[A-Za-z0-9_-]+', 'g')
+    const regex = new RegExp('/[A-Za-z0-9_-]+', 'g')
     const getPath = () => {
 
         let paths = path.pathname.match(regex)

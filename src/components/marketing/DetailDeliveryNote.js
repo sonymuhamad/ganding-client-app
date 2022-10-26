@@ -16,7 +16,6 @@ const DetailDeliveryNote = () => {
     const { classes } = customStyle()
     const { Retrieve, Put } = useRequest()
     const params = useParams()
-    const [deliveryNote, setDeliveryNote] = useState({})
     const [productDeliver, setProductDeliver] = useState([])
     const auth = useContext(AuthContext)
 
@@ -51,11 +50,11 @@ const DetailDeliveryNote = () => {
         const fetch = async () => {
 
             try {
-                const { productdelivercustomer_set, ...dn } = await Retrieve(params.deliverynoteId, auth.user.token, 'marketing/delivery-notes')
+                const { productdelivercustomer_set, ...dn } = await Retrieve(params.deliverynoteId, auth.user.token, 'delivery-notes')
                 dn.created = new Date(dn.created).toString()
-                form.setValues({ ...dn })
-                setDeliveryNote({ ...dn })
-                setProductDeliver([...productdelivercustomer_set])
+                form.setValues(dn)
+                setDeliveryNote(dn)
+                setProductDeliver(productdelivercustomer_set)
 
             } catch (e) {
                 console.log(e)
@@ -78,11 +77,11 @@ const DetailDeliveryNote = () => {
     })
 
     const handleStatusChange = async (id) => {
-        const [certainPdeliver] = [...productDeliver].filter((pdeliver) => pdeliver.id === id)
+        const [certainPdeliver] = productDeliver.filter((pdeliver) => pdeliver.id === id)
         certainPdeliver.paid = !certainPdeliver.paid
 
         try {
-            await Put(id, certainPdeliver, auth.user.token, 'marketing/productdelivery-management-put')
+            await Put(id, certainPdeliver, auth.user.token, 'productdelivery-management-put')
         } catch (e) {
             console.log(e)
         }

@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useForm } from "@mantine/form";
 import { AuthContext } from "../../context/AuthContext";
-import { Title, TextInput, Textarea, NumberInput, NativeSelect, Stack, Button, Center, Paper, ActionIcon, Group, Text } from "@mantine/core";
+import { Title, TextInput, NumberInput, NativeSelect, Stack, Button, Center, Paper, ActionIcon, Group, Text } from "@mantine/core";
 import { customStyle } from '../../styles/customStyle'
 import { DatePicker } from "@mantine/dates";
 import { IconUser, IconCodeAsterix, IconCalendar, IconTrash, IconCalendarPlus, IconDownload, IconClipboardPlus } from "@tabler/icons";
@@ -16,8 +16,7 @@ const NewSalesOrder = () => {
     const { classes } = customStyle()
     const auth = useContext(AuthContext)
     const [customer, setCustomer] = useState([])
-    const [product, setProduct] = useState([])
-    const { Get, Post } = useRequest()
+    const { Get, Post, Loading } = useRequest()
     const navigate = useNavigate()
 
     const form = useForm({
@@ -80,8 +79,8 @@ const NewSalesOrder = () => {
 
         const fetch = async () => {
             try {
-                const customer = await Get(auth.user.token, 'marketing/product-customer')
-                setCustomer([...customer])
+                const customer = await Get(auth.user.token, 'product-customer')
+                setCustomer(customer)
 
             } catch (e) {
 
@@ -93,7 +92,7 @@ const NewSalesOrder = () => {
 
 
     const handleSubmit = async (data) => {
-        let validateData = { ...data }
+        let validateData = data
         validateData.date = data.date.toLocaleDateString('en-CA')
 
         validateData.productorder_set.map(porder => {
@@ -105,7 +104,7 @@ const NewSalesOrder = () => {
         })
 
         try {
-            await Post(validateData, auth.user.token, 'marketing/sales-order-management')
+            await Post(validateData, auth.user.token, 'sales-order-management')
             SuccessNotif('New sales order added successfully')
             navigate('/home/marketing/sales-order')
         } catch (e) {
@@ -232,7 +231,7 @@ const NewSalesOrder = () => {
         <>
 
             <BreadCrumb links={breadcrumb} />
-
+            <Loading />
             <Title className={classes.title} >
                 New sales order
             </Title>

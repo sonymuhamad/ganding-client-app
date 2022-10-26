@@ -30,11 +30,15 @@ import Suppliers from './components/purchasing/Suppliers'
 import BasePpic from './components/ppic/BasePpic';
 import PpicDashboard from './components/ppic/PpicDashboard'
 import Production from './components/ppic/Production'
+import * as ProductDetail from './components/ppic/DetailProduct';
 import Products from './components/ppic/Products'
 import Materials from './components/ppic/Materials'
 import Delivery from './components/ppic/Delivery'
 import Warehouse from './components/ppic/Warehouse'
-
+import NewProduct from './components/ppic/NewProduct';
+import DetailMaterial from './components/ppic/DetailMaterial';
+import NewMaterial from './components/ppic/NewMaterial';
+import DetailDeliveryNoteMaterial from './components/ppic/warehouse/DetailDeliveryNoteMaterial';
 
 import BasePlantManager from './components/plant-manager/BasePlantManager';
 import Mrp from './components/plant-manager/report/Mrp'
@@ -89,11 +93,15 @@ root.render(
 
             <Route index element={<PpicDashboard />} />
             <Route path='product' element={<Products />} />
+            <Route path='product/:productId' element={<ProductDetail.default />} />
+            <Route path='product/new' element={<NewProduct />} />
             <Route path='material' element={<Materials />} />
+            <Route path='material/:materialId' element={<DetailMaterial />} />
+            <Route path='material/new' element={<NewMaterial />} />
             <Route path='warehouse' element={<Warehouse />} />
             <Route path='delivery' element={<Delivery />} />
             <Route path='production' element={<Production />} />
-
+            <Route path='warehouse/:deliveryNoteMaterialId' element={<DetailDeliveryNoteMaterial />} />
           </Route>
 
           <Route path='purchasing' element={<BasePurchasing />} >

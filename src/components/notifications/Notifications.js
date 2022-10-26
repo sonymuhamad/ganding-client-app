@@ -10,7 +10,8 @@ const SuccessNotif = (message) => {
         message: message,
         disallowClose: true,
         autoClose: 4000,
-        icon: <IconCircleCheck />
+        icon: <IconCircleCheck />,
+        radius: 'lg'
     })
 }
 
@@ -21,7 +22,8 @@ const FailedNotif = (message) => {
         disallowClose: true,
         autoClose: 4000,
         icon: <IconX />,
-        color: 'red'
+        color: 'red',
+        radius: 'lg'
     })
 }
 

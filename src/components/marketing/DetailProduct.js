@@ -7,8 +7,8 @@ import { useRequest } from "../../hooks/useRequest";
 import { useSectionProduct } from '../../hooks/useSectionProduct'
 import { sectionStyle } from "../../styles/sectionStyle";
 import { Title, Group, TextInput, Paper, Image, Text } from "@mantine/core";
-import { IconBarbell, IconWriting, IconCodeAsterix, IconFileTypography, IconTag, IconTransferIn, IconTransferOut, IconList } from "@tabler/icons";
-import BaseTable from "../layout/BaseTable";
+import { IconBarbell, IconWriting, IconCodeAsterix, IconFileTypography, IconTag, IconList } from "@tabler/icons";
+import BaseTable from "../tables/BaseTable";
 
 
 
@@ -21,14 +21,22 @@ const DetailProduct = () => {
     const { sectionRefs, activeSection } = useSectionProduct()
     const [breadcrumb, setBreadcrumb] = useState([])
 
-    const [process, setProcess] = useState([])
-    const [productName, setProductName] = useState('')
-    const [weight, setWeight] = useState('')
-    const [productCode, setProductCode] = useState('')
-    const [price, setPrice] = useState('')
-    const [productType, setProductType] = useState('')
-    const [image, setImage] = useState(null)
-    const [numberOfProcess, setNumberOfProcess] = useState('')
+    const [product, setProduct] = useState({
+        id: '',
+        code: '',
+        image: null,
+        name: '',
+        customer: {
+            name: '',
+        },
+        process: '',
+        weight: '',
+        price: 0,
+        type: {
+            name: ''
+        },
+        ppic_process_related: [],
+    })
 
     const links = [
         {
@@ -47,8 +55,7 @@ const DetailProduct = () => {
 
         const fetch = async () => {
             try {
-                const product = await Retrieve(params.productId, auth.user.token, 'marketing/product-detail')
-                console.log(product)
+                const product = await Retrieve(params.productId, auth.user.token, 'product-detail')
                 setBreadcrumb([
                     {
                         path: '/home/marketing',
@@ -68,15 +75,7 @@ const DetailProduct = () => {
                     }
                 ])
 
-                setPrice(product.price)
-                setProductCode(product.code)
-                setProductName(product.name)
-                setProductType(product.type.name)
-                setWeight(product.weight)
-                setImage(product.image)
-                setNumberOfProcess(product.process)
-
-                setProcess([...product.ppic_process_related])
+                setProduct(product)
 
             } catch (e) {
                 console.log(e)
@@ -126,7 +125,7 @@ const DetailProduct = () => {
                 <Paper my='md' >
                     <Image
                         radius='md'
-                        src={image !== null ? `http://127.0.0.1:8000/images/${image}` : ''}
+                        src={product.image !== null ? `http://127.0.0.1:8000/images/${product.image}` : ''}
                         alt='product image'
                         withPlaceholder
                     />
@@ -137,38 +136,38 @@ const DetailProduct = () => {
                         readOnly
                         label='Name'
                         icon={<IconWriting />}
-                        value={productName}
+                        value={product.name}
                     />
                     <TextInput
                         readOnly
                         icon={<IconCodeAsterix />}
                         label='Code'
-                        value={productCode}
+                        value={product.code}
                     />
                     <TextInput
                         readOnly
                         icon={<IconFileTypography />}
                         label='Product type'
-                        value={productType}
+                        value={product.type.name}
                     />
                     <TextInput
                         readOnly
                         icon={<IconBarbell />}
                         label='Weight per piece'
-                        value={weight}
+                        value={product.weight}
                     />
                     <TextInput
                         readOnly
                         icon={<IconTag />}
                         label='Price'
-                        value={price}
+                        value={product.price}
                     />
 
                     <TextInput
                         readOnly
                         icon={<IconList />}
                         label='Number of process'
-                        value={numberOfProcess}
+                        value={product.process}
                     />
 
                 </Group>
@@ -185,7 +184,7 @@ const DetailProduct = () => {
 
                 <BaseTable
                     column={columnProcess}
-                    data={process}
+                    data={product.ppic_process_related}
                 />
 
             </section>

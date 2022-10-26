@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useMemo } from "react";
 
-import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Text, Group, TextInput, Textarea, NumberInput, Button, Highlight, Collapse, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useScrollLock } from "@mantine/hooks";
@@ -12,7 +12,7 @@ import { SuccessNotif, FailedNotif } from "../notifications/Notifications";
 import { AuthContext } from "../../context/AuthContext";
 import { sectionStyle } from "../../styles/sectionStyle";
 import { useRequest } from "../../hooks/useRequest";
-import BaseTableExpanded from "../layout/BaseTableExpanded";
+import BaseTableExpanded from "../tables/BaseTableExpanded";
 import ExpandedSo from "../layout/ExpandedSo";
 import ExpandedProduct from "../layout/ExpandedProduct";
 import BreadCrumb from "../BreadCrumb";
@@ -105,7 +105,7 @@ const Customer = () => {
     const fetch = async () => {
 
         try {
-            const customer = await Retrieve(customerId, auth.user.token, 'marketing/customer-detail')
+            const customer = await Retrieve(customerId, auth.user.token, 'customer-detail')
             const salesorders = customer.marketing_salesorder_related
             let products = customer.ppic_product_related
             let deliverynotes = customer.ppic_deliverynotecustomer_related
@@ -185,10 +185,11 @@ const Customer = () => {
             set_on_progress_so(on_progress)
             setDoneSo(done)
             setPendingSo(pending)
-            setDataCustomer({ ...customer })
-            form.setValues({ ...customer })
+            setDataCustomer(customer)
+            form.setValues(customer)
             setProduct(products)
             setDeliveryNote(deliverynotes)
+
         } catch (e) {
 
         }
@@ -288,7 +289,7 @@ const Customer = () => {
     const handleSubmit = async (data) => {
         // handle edit customer
         try {
-            await Put(customerId, data, auth.user.token, 'marketing/customer')
+            await Put(customerId, data, auth.user.token, 'customer')
             await fetch()
             await handleClickEditButton()
         } catch (e) {
@@ -298,7 +299,7 @@ const Customer = () => {
 
     const handleDeleteCustomer = async () => {
         try {
-            await Delete(customerId, auth.user.token, 'marketing/customer')
+            await Delete(customerId, auth.user.token, 'customer')
             SuccessNotif('Delete customer success')
             navigate('/home/marketing/customers')
         } catch (e) {

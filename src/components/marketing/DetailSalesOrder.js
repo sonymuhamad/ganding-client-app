@@ -5,7 +5,7 @@ import { IconDotsCircleHorizontal, IconEdit, IconDownload, IconTrashX, IconCodeA
 import { useParams, Link } from "react-router-dom";
 import { useRequest } from "../../hooks/useRequest";
 import { AuthContext } from "../../context/AuthContext";
-import BaseTableExpanded from "../layout/BaseTableExpanded";
+import BaseTableExpanded from "../tables/BaseTableExpanded";
 import { Button, Group, TextInput, Checkbox, Title, Stack, Progress, Text, ActionIcon, Collapse, CloseButton, NumberInput, Center, NativeSelect, Tooltip, Mark } from "@mantine/core";
 import BreadCrumb from "../BreadCrumb";
 import { DatePicker } from "@mantine/dates";
@@ -155,7 +155,7 @@ const DetailSalesOrder = () => {
     const handleEditSo = async (salesOrder) => {
         salesOrder.date = salesOrder.date.toLocaleDateString('en-CA')
         try {
-            const res = await Put(params.salesOrderId, salesOrder, auth.user.token, 'marketing/sales-order-management')
+            const res = await Put(params.salesOrderId, salesOrder, auth.user.token, 'sales-order-management')
             console.log(res)
             SuccessNotif('Sales order has been updated')
         } catch (e) {
@@ -171,7 +171,7 @@ const DetailSalesOrder = () => {
 
     const handleDeleteSo = async () => {
         try {
-            await Delete(params.salesOrderId, auth.user.token, 'marketing/sales-order-management')
+            await Delete(params.salesOrderId, auth.user.token, 'sales-order-management')
             SuccessNotif('Sales order has been deleted')
             navigate('/home/marketing/sales-order')
         } catch (e) {
@@ -187,7 +187,7 @@ const DetailSalesOrder = () => {
         salesOrder.fixed = !salesOrder.fixed
         salesOrder.date = salesOrder.date.toLocaleDateString('en-CA')
         try {
-            await Put(salesOrder.id, salesOrder, auth.user.token, 'marketing/sales-order-management')
+            await Put(salesOrder.id, salesOrder, auth.user.token, 'sales-order-management')
             SuccessNotif('Sales order status has been changed')
         } catch (e) {
             FailedNotif('Update status failed')
@@ -200,7 +200,7 @@ const DetailSalesOrder = () => {
         const fetch = async (retrieve, id, token) => {
 
             try {
-                const salesorder = await retrieve(id, token, 'marketing/sales-order-list')
+                const salesorder = await retrieve(id, token, 'sales-order-list')
 
                 const po = salesorder.productorder_set.map((product, index) => {
                     return ({
@@ -214,19 +214,32 @@ const DetailSalesOrder = () => {
                 })
 
                 const deliveryNotes = salesorder.productorder_set.reduce((prev, current) => {
-                    let temp = { ...prev }
+
+                    // algorithm for gather product delivery from product order based on its delivery note, 
+                    // return delivery notes and its particular product delivery 
+
+                    let temp = prev
 
                     for (const productDeliver of current.productdelivercustomer_set) {
-                        const idDn = productDeliver.delivery_note_customer.id
+
+                        // loop every product delivery from product order
+
+                        const idDn = productDeliver.delivery_note_customer.id // delivery note
+
                         const { delivery_note_customer, ...restProps } = productDeliver
                         const { product } = current
-                        const pdeliver = { ...restProps, product: { ...product } }
+                        const pdeliver = { ...restProps, product: product }
 
                         if (prev.hasOwnProperty(idDn)) {
+
+                            // if delivery note has been seen
+                            // stick product delivery to this delivery note 
+
                             temp[idDn].productdelivercustomer_set.push(pdeliver)
 
                         } else {
-                            temp[idDn] = { ...delivery_note_customer }
+
+                            temp[idDn] = delivery_note_customer
 
                             temp[idDn]['buttonDetail'] = <Button
 
@@ -247,10 +260,10 @@ const DetailSalesOrder = () => {
 
                 }, {})
 
-                setDeliveryNote({ ...deliveryNotes })
+                setDeliveryNote(deliveryNotes)
 
 
-                const products = await retrieve(salesorder.customer.id, token, 'marketing/product-customer')
+                const products = await retrieve(salesorder.customer.id, token, 'product-customer')
                 setProducts(products.ppic_product_related)
 
                 const created = new Date(salesorder.created)
@@ -269,8 +282,8 @@ const DetailSalesOrder = () => {
                 form.setValues(so)
                 setSalesOrder(so)
 
-                productOrderForm.setFieldValue('productorder_set', [...po])
-                setProductOrder([...po])
+                productOrderForm.setFieldValue('productorder_set', po)
+                setProductOrder(po)
 
                 form.resetDirty()
                 productOrderForm.resetDirty()
@@ -348,10 +361,10 @@ const DetailSalesOrder = () => {
 
         try {
             if (editedPo.id === '') {
-                await Post(editedPo, auth.user.token, 'marketing/product-order-management')
+                await Post(editedPo, auth.user.token, 'product-order-management')
                 SuccessNotif('Product order has been added')
             } else {
-                await Put(editedPo.id, editedPo, auth.user.token, 'marketing/product-order-management')
+                await Put(editedPo.id, editedPo, auth.user.token, 'product-order-management')
                 SuccessNotif('Product order has been updated')
             }
 
@@ -427,7 +440,7 @@ const DetailSalesOrder = () => {
                         })
                         if (productOrderForm.isDirty(`productorder_set.${index}`)) {
                             productOrderForm.resetDirty(`productorder_set.${index}`)
-                            productOrderForm.setFieldValue('productorder_set', [...productOrder])
+                            productOrderForm.setFieldValue('productorder_set', productOrder)
                         }
 
                     }}
@@ -450,7 +463,7 @@ const DetailSalesOrder = () => {
                     radius='md'
                     disabled={!editAccess ? editAccess : true}
 
-                    onClick={() => openModalDeletePo(po.id, auth.user.token, 'marketing/product-order-management', index)}
+                    onClick={() => openModalDeletePo(po.id, auth.user.token, 'product-order-management', index)}
 
                     leftIcon={<IconTrashX />} >
                     Delete</Button>
@@ -550,8 +563,8 @@ const DetailSalesOrder = () => {
                             onClick={() => {
 
                                 productOrderForm.removeListItem(`productorder_set.${index}.deliveryschedule_set`, i)
-                                const tes = `productorder_set.${index}.deliveryschedule_set`
-                                productOrderForm.setDirty({ [tes]: true })
+                                const dirtyProductOrderForm = `productorder_set.${index}.deliveryschedule_set`
+                                productOrderForm.setDirty({ [dirtyProductOrderForm]: true })
                             }
                             }
                         >
@@ -614,7 +627,7 @@ const DetailSalesOrder = () => {
                                     handleClickEditButton()
                                     if (form.isDirty()) {
                                         form.reset()
-                                        form.setValues({ ...salesOrder })
+                                        form.setValues(salesOrder)
                                     }
                                 }}
                             leftIcon={disableEditSo ? <IconEdit /> : <IconX />}

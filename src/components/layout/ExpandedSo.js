@@ -12,7 +12,7 @@ export default function ExpandedSo({ data }) {
 
                 return (
 
-                    <Group position="left" spacing='xs' key={product.id} >
+                    <Group position="left" spacing='xs' grow key={product.id} >
                         <TextInput icon={<IconAssembly />}
                             m='xs'
                             radius='md'

@@ -1,12 +1,11 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { useForm } from '@mantine/form'
-import { createStyles, Card, LoadingOverlay, Table, Text, Button, Modal, TextInput, Group, Textarea, NumberInput } from '@mantine/core'
-import { showNotification } from '@mantine/notifications'
+import { createStyles, Text, Button, Modal, TextInput, Group, Textarea, NumberInput } from '@mantine/core'
 import DataTable, { createTheme } from 'react-data-table-component'
 
-import { IconPencil, IconTrashX, IconPlus, IconDotsCircleHorizontal, IconAt, IconWriting, IconDeviceMobile, IconMapPin, IconSquarePlus, IconUserPlus, IconUserCheck } from '@tabler/icons'
+import { IconPlus, IconDotsCircleHorizontal, IconAt, IconDeviceMobile, IconMapPin, IconSquarePlus, IconUserPlus } from '@tabler/icons'
 
 
 import { customTableStyle } from '../../services/External'
@@ -101,7 +100,7 @@ const Customers = () => {
 
     const fetch = async () => {
         try {
-            let data_customers = await Get(auth.user.token, 'marketing/customer')
+            let data_customers = await Get(auth.user.token, 'customer')
 
             data_customers = data_customers.map((customer) => {
                 return ({ ...customer, detailButton: <Button component={Link} to={`/home/marketing/customers/${customer.id}`} leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />} color='teal.8' variant='subtle' radius='md' >Detail</Button> })
@@ -123,8 +122,8 @@ const Customers = () => {
         const token = auth.user.token
 
         try {
-            await Post(data, token, 'marketing/customer')
-            SuccessNotif(' Add new customer success 🤥')
+            await Post(data, token, 'customer')
+            SuccessNotif(' Add new customer success')
             fetch()
             form.reset()
             setOpened((o) => !o)

@@ -6,8 +6,8 @@ import { marketingDashboardStyle } from "../../styles/marketingDashboardStyle";
 import BaseAside from "../layout/BaseAside";
 import { useSection } from '../../hooks/useSection'
 import BreadCrumb from "../BreadCrumb";
-import BaseTableExpanded from "../layout/BaseTableExpanded";
-import BaseTableDefaultExpanded from '../layout/BaseTableDefaultExpanded'
+import BaseTableExpanded from "../tables/BaseTableExpanded";
+import BaseTableDefaultExpanded from '../tables/BaseTableDefaultExpanded'
 import { useRequest } from "../../hooks/useRequest";
 import { AuthContext } from "../../context/AuthContext";
 import ExpandedDn from "../layout/ExpandedDn";
@@ -72,7 +72,7 @@ export default function MarketingDashboard() {
             "order": 1
         },
         {
-            "label": "Calendar",
+            "label": "List schedule delivery",
             "link": "#calendar",
             "order": 1
         }
@@ -97,9 +97,8 @@ export default function MarketingDashboard() {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const salesOrder = await Get(auth.user.token, 'marketing/sales-order-this-month')
-                const deliverynotes = await Get(auth.user.token, 'marketing/delivery-notes-pending')
-                console.log(salesOrder)
+                const salesOrder = await Get(auth.user.token, 'sales-order-this-month')
+                const deliverynotes = await Get(auth.user.token, 'delivery-notes-pending')
 
                 const event = salesOrder.reduce((prev, current) => {
                     let temp = []
@@ -108,12 +107,12 @@ export default function MarketingDashboard() {
                         const tes = productOrder.deliveryschedule_set.map((schedule) => {
                             return { title: `Delivery ${productOrder.product.name}  ${schedule.quantity} pcs`, date: schedule.date }
                         })
-                        temp.push(...tes)
+                        temp.push(tes)
                     }
                     return [...prev, ...temp]
                 }, [])
 
-                setEvent([...event])
+                setEvent(event)
 
                 const dn = deliverynotes.map(dn => {
                     dn['detailDeliveryNoteButton'] = <Button
@@ -129,8 +128,8 @@ export default function MarketingDashboard() {
                     return dn
                 })
 
-                setDeliveryNotes([...dn])
-                setDataSo([...salesOrder])
+                setDeliveryNotes(dn)
+                setDataSo(salesOrder)
 
                 const dataCard = salesOrder.reduce((prev, current) => {
 
@@ -161,7 +160,7 @@ export default function MarketingDashboard() {
                     productdelivered: 0
                 })
 
-                setDataCard({ ...dataCard })
+                setDataCard(dataCard)
 
 
             } catch (e) {

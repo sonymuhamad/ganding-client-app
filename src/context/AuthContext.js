@@ -6,7 +6,7 @@ export const AuthContext = createContext(
     {
         user: {
             name: null,
-            group: null,
+            division: null,
             token: null
         },
         signIn: () => { },

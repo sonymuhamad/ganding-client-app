@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useContext } from "react";
-import BaseTableExpanded from "../layout/BaseTableExpanded";
+import BaseTableExpanded from "../tables/BaseTableExpanded";
 import ExpandedDn from "../layout/ExpandedDn";
 import { useRequest } from "../../hooks/useRequest";
 import { IconSearch, IconDotsCircleHorizontal } from "@tabler/icons";
@@ -11,10 +11,16 @@ import { Link } from "react-router-dom";
 export default function DeliveryNote() {
 
     const [deliveryNotes, setDeliveryNotes] = useState([])
-    const [filteredDeliveryNotes, setFilteredDeliveryNotes] = useState([])
     const { Get } = useRequest()
     const [searchVal, setSearchVal] = useState('')
     const auth = useContext(AuthContext)
+
+    const filteredDeliveryNotes = useMemo(() => {
+
+        const valFiltered = searchVal.toLowerCase()
+        return deliveryNotes.filter((dn) => dn.customer.name.toLowerCase().includes(valFiltered) || dn.created.includes(valFiltered) || dn.code.includes(valFiltered))
+
+    }, [deliveryNotes])
 
     const breadcrumb = [
         {
@@ -46,23 +52,16 @@ export default function DeliveryNote() {
                     return dn
                 })
 
-                setDeliveryNotes([...dn])
-                setFilteredDeliveryNotes([...dn])
+                setDeliveryNotes(dn)
+
 
             } catch (e) {
                 console.log(e)
             }
         }
-        fetch(auth.user.token, 'marketing/delivery-notes')
+        fetch(auth.user.token, 'delivery-notes')
     }, [auth.user.token])
 
-    const handleSearch = async (event) => {
-        const value = event.target.value
-        setSearchVal(value)
-        const valFiltered = value.toLowerCase()
-        const filtered = deliveryNotes.filter((dn) => dn.customer.name.toLowerCase().includes(valFiltered) || dn.created.includes(valFiltered) || dn.code.includes(valFiltered))
-        setFilteredDeliveryNotes(filtered)
-    }
 
 
     const columnDeliveryNote = useMemo(() => [
@@ -102,7 +101,7 @@ export default function DeliveryNote() {
                     icon={<IconSearch />}
                     placeholder='Search'
                     value={searchVal}
-                    onChange={handleSearch}
+                    onChange={e => setSearchVal(e.target.value)}
                     radius='md'
                 />
             </Group>

@@ -23,9 +23,8 @@ const ProtectedLayout = () => {
             navigate('/', { replace: true })
         } else {
             const regex = new RegExp('/home\/*(?=marketing|purchasing|plant-manager|ppic)')
-
             // users are not allowed to visit just /home/ path but must be a sequel path eg. /home/marketing
-            if (!regex.test(location.pathname)) {
+            if (!regex.test(location.pathname) || !(location.pathname.split('/')[2] === auth.user.division)) {
                 // if auth.user.group marketing navigate to dashboard marketing
                 // elif auth.user.group purchasing navigate to dashboard purchasing etc.
                 const division = auth.user.division
