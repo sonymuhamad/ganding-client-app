@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom"
 
 import useScrollSpy from 'react-use-scrollspy'
 
-import { IconWriting, IconFileTypography, IconTag, IconList, IconCodeAsterix, IconBarbell, IconTrashX, IconDownload, IconEdit, IconX, IconUser, IconBuildingWarehouse, IconDialpad, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload, IconSum } from "@tabler/icons"
+import { IconWriting, IconFileTypography, IconList, IconCodeAsterix, IconBarbell, IconTrashX, IconDownload, IconEdit, IconX, IconUser, IconBuildingWarehouse, IconDialpad, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload, IconSum, IconArrowsSort } from "@tabler/icons"
 
-import { Title, TextInput, Group, Paper, Image, Button, NativeSelect, FileButton, Text, Badge, ActionIcon, Divider, NumberInput, Center, UnstyledButton } from "@mantine/core"
+import { Title, TextInput, Group, Paper, Image, Button, NativeSelect, FileButton, Text, Badge, ActionIcon, Divider, NumberInput, Center, UnstyledButton, Select } from "@mantine/core"
 import { useForm } from "@mantine/form"
 import { openConfirmModal } from "@mantine/modals"
 
@@ -36,7 +36,7 @@ const ExpandedProduct = ({ data }) => {
 
     return (
         <>
-            <Group m='lg' >
+            <Group m='lg' grow >
                 <TextInput
                     label='Quantity at supplier'
                     radius='md'
@@ -62,7 +62,7 @@ const DetailProduct = () => {
 
     const params = useParams()
     const auth = useContext(AuthContext)
-    const { Retrieve, Get, Put, Delete, Loading } = useRequest()
+    const { Retrieve, Get, Put, Delete, Loading, Post } = useRequest()
     const { classes } = sectionStyle()
     const [breadcrumb, setBreadcrumb] = useState([])
     const [productType, setProductType] = useState([])
@@ -104,7 +104,6 @@ const DetailProduct = () => {
             weight: '',
             productordered: 0,
             productdelivered: 0,
-            price: 0,
             type: '',
             ppic_process_related: [],
         }
@@ -157,12 +156,8 @@ const DetailProduct = () => {
             sortable: true,
         },
         {
-            name: 'Order',
-            selector: row => row.ordered
-        },
-        {
-            name: 'Sent',
-            selector: row => row.delivered
+            name: 'Sent/order',
+            selector: row => `${row.delivered} / ${row.ordered}`
         },
         {
             name: 'Status',
@@ -181,6 +176,10 @@ const DetailProduct = () => {
         {
             name: 'Process type',
             selector: row => row.process_type_name,
+        },
+        {
+            name: 'Wip',
+            selector: row => `Process ${row.order}`,
         },
         {
             name: 'Stock',
@@ -307,18 +306,18 @@ const DetailProduct = () => {
         onConfirm: () => handleSubmitEditProcess(val)
     })
 
-    const openDeleteProcess = (id, index) => openConfirmModal({
+    const openDeleteProcess = (id) => openConfirmModal({
         title: `Delete process`,
         children: (
             <Text size="sm">
-                Are you sure?, data will be deleted.
+                Are you sure?, data related to this manufacturing process will also be deleted, including every production report.
             </Text>
         ),
         radius: 'md',
         labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteProcess(id, index)
+        onConfirm: () => handleDeleteProcess(id)
     })
 
 
@@ -335,16 +334,11 @@ const DetailProduct = () => {
         }
     }
 
-    const handleDeleteProcess = async (id, index) => {
-
-        const data = form.values
-        data.ppic_process_related.splice(index, 1)
-
-        const dataProduct = checkDataProduct(data)
+    const handleDeleteProcess = async (id) => {
 
         try {
-            await Put(params.productId, dataProduct, auth.user.token, 'product-management', 'multipart/form-data')
-            SuccessNotif('Process deleted')
+            await Delete(id, auth.user.token, 'process-management')
+            SuccessNotif('Delete process success')
             setAction(prev => prev + 1)
 
         } catch (e) {
@@ -357,22 +351,37 @@ const DetailProduct = () => {
 
     const handleSubmitEditProcess = async (val) => {
 
-        const dataProduct = checkDataProduct(val)
 
+        const dataProduct = checkDataProduct(val)
+        const { ppic_process_related, id, ...restProps } = dataProduct
+        const submittedProcess = ppic_process_related[(processEditAccess - 1)]
+
+        const process = { ...submittedProcess, product: id }
+        console.log(process)
         try {
-            await Put(val.id, dataProduct, auth.user.token, 'product-management', 'multipart/form-data')
-            SuccessNotif('Data changes saved')
+
+            if (process.id) {
+                await Put(process.id, process, auth.user.token, 'process-management')
+                SuccessNotif('Edit data success')
+            } else {
+                await Post(process, auth.user.token, 'process-management')
+                SuccessNotif('Add process success')
+            }
+
             setProcessEditAccess(null)
             setAction(prev => prev + 1)
 
         } catch (e) {
-            form.setErrors(e.message.data)
-            FailedNotif('Data changes failed to save')
-            if (e.message.data[0]) {
-                FailedNotif(e.message.data[0])
-            }
             handleClickProcessEditAccess()
+            if (e.message.data.order) {
+                FailedNotif(e.message.data.order)
+            } else if (e.message.data.non_field_errors) {
+                FailedNotif(e.message.data.non_field_errors)
+            } else {
+                FailedNotif('Edit data failed')
+            }
             console.log(e)
+
         }
 
     }
@@ -446,7 +455,7 @@ const DetailProduct = () => {
                         <Group>
                             <IconTimeline />
                             <div>
-                                <Text>Process {index + 1}</Text>
+                                <Text>Process {process.order}</Text>
                             </div>
                         </Group>
                     </UnstyledButton>
@@ -477,7 +486,7 @@ const DetailProduct = () => {
                             <Button
                                 size='xs'
                                 color='red.6'
-                                onClick={() => openDeleteProcess(process.id, index)}
+                                onClick={() => openDeleteProcess(process.id)}
                                 radius='md'
                                 disabled={!processEditAccess ? false : true}
                                 leftIcon={<IconTrashX />} >
@@ -488,43 +497,47 @@ const DetailProduct = () => {
                     <TextInput
                         label='Process name'
                         radius='md'
+                        my='xs'
+                        required
                         icon={<IconLayoutKanban />}
                         readOnly={!processEditAccess ? true : processEditAccess !== index + 1}
                         {...form.getInputProps(`ppic_process_related.${index}.process_name`)}
                     />
 
-                    <NativeSelect
+                    <Select
+                        my='xs'
                         label='Process type'
                         placeholder="Select process type"
                         radius='md'
+                        required
                         icon={<IconFileTypography />}
-                        disabled={!processEditAccess ? true : processEditAccess !== index + 1}
+                        readOnly={!processEditAccess ? true : processEditAccess !== index + 1}
                         data={processType.map(type => ({ value: type.id, label: type.name }))}
                         {...form.getInputProps(`ppic_process_related.${index}.process_type`)}
                         key={`${process.id}${index}`}
                     />
 
+                    <NumberInput
+                        hideControls
+                        label='Wip'
+                        radius='md'
+                        my='xs'
+                        required
+                        icon={<IconArrowsSort />}
+                        readOnly={!processEditAccess ? true : processEditAccess !== index + 1}
+                        {...form.getInputProps(`ppic_process_related.${index}.order`)}
+                    />
+
                     <Divider mt="xl" mb='xs' size='md' label="Bill of material" />
                     {form.values.ppic_process_related[index].requirementmaterial_set.length === 0 &&
-                        <Text my='md' >
+                        <Text my='md' size='sm' align="center" color='dimmed'  >
                             This process has no bill of material
                         </Text>
                     }
                     {form.values.ppic_process_related[index].requirementmaterial_set.map((reqMaterial, j) => (
                         <Paper ml='lg' mb='xs' key={`${reqMaterial.id}${j}`} >
-                            <Group my='xs' >
 
-                                <NativeSelect
-                                    radius='md'
-                                    label='Material'
-                                    icon={<IconAsset />}
-                                    placeholder="Select material"
-                                    disabled={!processEditAccess ? true : processEditAccess !== index + 1}
-                                    data={materialList.map(material => ({ value: material.id, label: material.name }))}
-                                    {...form.getInputProps(`ppic_process_related.${index}.requirementmaterial_set.${j}.material`)}
-
-                                />
-
+                            <Group position="right" >
                                 <ActionIcon
                                     color="red"
                                     mt='lg'
@@ -540,10 +553,25 @@ const DetailProduct = () => {
 
                             </Group>
 
-                            <Group>
+                            <Select
+                                required
+                                m='xs'
+                                radius='md'
+                                label='Material'
+                                icon={<IconAsset />}
+                                placeholder="Select material"
+                                readOnly={!processEditAccess ? true : processEditAccess !== index + 1}
+                                data={materialList.map(material => ({ value: material.id, label: material.name }))}
+                                {...form.getInputProps(`ppic_process_related.${index}.requirementmaterial_set.${j}.material`)}
+
+                            />
+
+
+                            <Group grow m='xs' >
 
                                 <NumberInput
                                     hideControls
+                                    required
                                     radius='md'
                                     placeholder="input quantity of consumption bill of material"
                                     icon={<IconTransferIn />}
@@ -554,6 +582,7 @@ const DetailProduct = () => {
 
                                 <NumberInput
                                     hideControls
+                                    required
                                     icon={<IconTransferOut />}
                                     placeholder='input quantity output product'
                                     readOnly={!processEditAccess ? true : processEditAccess !== index + 1}
@@ -584,26 +613,14 @@ const DetailProduct = () => {
                     <Divider mt="xl" mb='xs' size='md' label="Product assembly" />
 
                     {form.values.ppic_process_related[index].requirementproduct_set.length === 0 &&
-                        <Text my='md' >
+                        <Text my='md' size='sm' color='dimmed' align="center"  >
                             This process has no product assembly
                         </Text>
                     }
                     {form.values.ppic_process_related[index].requirementproduct_set.map((reqProduct, i) => (
                         <Paper ml='lg' mb='xs' key={`${reqProduct.id}${i}`} >
 
-                            <Group >
-
-                                <NativeSelect
-                                    radius='md'
-                                    icon={<IconBarcode />}
-                                    label='Product'
-                                    placeholder="Select product"
-                                    disabled={!processEditAccess ? true : processEditAccess !== index + 1}
-                                    data={productList.map(product => ({ value: product.id, label: product.name }))}
-                                    {...form.getInputProps(`ppic_process_related.${index}.requirementproduct_set.${i}.product`)}
-
-                                />
-
+                            <Group position="right"  >
                                 <ActionIcon
                                     color="red"
                                     mt='lg'
@@ -618,10 +635,25 @@ const DetailProduct = () => {
                                 </ActionIcon>
 
                             </Group>
-                            <Group>
+
+                            <Select
+                                required
+                                m='xs'
+                                radius='md'
+                                icon={<IconBarcode />}
+                                label='Product'
+                                placeholder="Select product"
+                                readOnly={!processEditAccess ? true : processEditAccess !== index + 1}
+                                data={productList.map(product => ({ value: product.id, label: product.name }))}
+                                {...form.getInputProps(`ppic_process_related.${index}.requirementproduct_set.${i}.product`)}
+
+                            />
+
+                            <Group grow m='xs' >
 
                                 <NumberInput
                                     hideControls
+                                    required
                                     readOnly={!processEditAccess ? true : processEditAccess !== index + 1}
                                     radius='md'
                                     placeholder="input quantity consumption product assembly"
@@ -630,6 +662,7 @@ const DetailProduct = () => {
                                     {...form.getInputProps(`ppic_process_related.${index}.requirementproduct_set.${i}.input`)}
                                 />
                                 <NumberInput
+                                    required
                                     hideControls
                                     placeholder='input quantity output product'
                                     icon={<IconTransferOut />}
@@ -668,6 +701,12 @@ const DetailProduct = () => {
 
             ))}
 
+            {form.values.ppic_process_related.length === 0 &&
+                <Text my='md' size='sm' align="center" color='dimmed'  >
+                    This product does not have a manufacturing process
+                </Text>
+            }
+
             <Center>
                 <Button
                     radius='md'
@@ -677,6 +716,7 @@ const DetailProduct = () => {
                         form.insertListItem(`ppic_process_related`, {
                             process_name: '',
                             process_type: '',
+                            order: '',
                             requirementmaterial_set: [],
                             requirementproduct_set: []
                         })
@@ -741,6 +781,7 @@ const DetailProduct = () => {
 
                 <form id="formEditProduct" onSubmit={form.onSubmit(openSubmitEditModal)} >
                     <TextInput
+                        required
                         radius='md'
                         readOnly
                         icon={<IconUser />}
@@ -748,6 +789,7 @@ const DetailProduct = () => {
                         value={product.customerName}
                     />
                     <TextInput
+                        required
                         my='xs'
                         radius='md'
                         label='Product name'
@@ -758,16 +800,18 @@ const DetailProduct = () => {
                     />
                     <TextInput
                         radius='md'
+                        required
                         readOnly={!editAccess ? true : false}
                         icon={<IconCodeAsterix />}
                         label='Product number'
                         {...form.getInputProps('code')}
                     />
-                    <Group mt='md' >
+                    <Group mt='md' grow >
 
-                        <NativeSelect
+                        <Select
                             radius='md'
-                            disabled={!editAccess ? true : false}
+                            required
+                            readOnly={!editAccess ? true : false}
                             icon={<IconFileTypography />}
                             label='Product type'
                             {...form.getInputProps('type')}
@@ -778,17 +822,14 @@ const DetailProduct = () => {
                         <TextInput
                             readOnly={!editAccess ? true : false}
                             radius='md'
+                            required
                             icon={<IconBarbell />}
                             label='Weight per piece'
                             {...form.getInputProps('weight')}
                         />
-                        <TextInput
-                            radius='md'
-                            readOnly={!editAccess ? true : false}
-                            icon={<IconTag />}
-                            label='Price'
-                            {...form.getInputProps('price')}
-                        />
+
+                    </Group>
+                    <Group grow mt='md' >
 
                         <TextInput
                             radius='md'
@@ -805,7 +846,6 @@ const DetailProduct = () => {
                             value={totalStock}
                             readOnly
                         />
-
                     </Group>
 
                 </form>

@@ -177,7 +177,6 @@ const DetailMaterial = () => {
             navigate('/home/ppic/material')
         } catch (e) {
             FailedNotif(e.message.data)
-            console.log(e)
         }
     }
 

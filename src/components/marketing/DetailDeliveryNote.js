@@ -53,7 +53,6 @@ const DetailDeliveryNote = () => {
                 const { productdelivercustomer_set, ...dn } = await Retrieve(params.deliverynoteId, auth.user.token, 'delivery-notes')
                 dn.created = new Date(dn.created).toString()
                 form.setValues(dn)
-                setDeliveryNote(dn)
                 setProductDeliver(productdelivercustomer_set)
 
             } catch (e) {

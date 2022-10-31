@@ -24,7 +24,7 @@ export default function SalesOrder() {
 
     const filteredSalesOrderDone = useMemo(() => {
 
-        const valFiltered = value.toLowerCase()
+        const valFiltered = searchVal.toLowerCase()
 
         return salesOrderDone.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
 
@@ -32,14 +32,14 @@ export default function SalesOrder() {
 
     const filteredSalesOrderProgress = useMemo(() => {
 
-        const valFiltered = value.toLowerCase()
+        const valFiltered = searchVal.toLowerCase()
 
         return salesOrderProgress.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
 
     }, [searchVal, salesOrderProgress])
 
     const filteredSalesOrderPending = useMemo(() => {
-        const valFiltered = value.toLowerCase()
+        const valFiltered = searchVal.toLowerCase()
 
         return salesOrderPending.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
 

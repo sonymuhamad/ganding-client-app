@@ -3,7 +3,7 @@ import { useForm } from "@mantine/form";
 import { TextInput, NumberInput, ActionIcon, NativeSelect, Group, Title, Button, FileButton, Text, Divider, UnstyledButton, Paper, Center } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 
-import { IconWriting, IconFileTypography, IconTag, IconCodeAsterix, IconBarbell, IconTrashX, IconDownload, IconUser, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload } from "@tabler/icons";
+import { IconWriting, IconFileTypography, IconCodeAsterix, IconBarbell, IconTrashX, IconDownload, IconUser, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload } from "@tabler/icons";
 
 import { useNavigate } from "react-router-dom";
 
@@ -34,7 +34,6 @@ const NewProduct = () => {
             name: '',
             customer: '',
             weight: '',
-            price: 0,
             type: '',
             ppic_process_related: [],
         }
@@ -108,6 +107,7 @@ const NewProduct = () => {
             if (e.message.data.ppic_process_related) {
                 FailedNotif(e.message.data.ppic_process_related)
             }
+            console.log(e)
 
         }
     }
@@ -163,30 +163,19 @@ const NewProduct = () => {
                         key={`${process.id}${index}`}
                     />
 
-                    <Divider mt="xl" mb='xs' size='md' label="Bill of material" />
+                    <Divider mt="xl" mb='xs' size='sm' label="Bill of material" />
                     {form.values.ppic_process_related[index].requirementmaterial_set.length === 0 &&
-                        <Text my='md' >
+                        <Text my='md' align="center" size='sm' color='dimmed' >
                             This process has no bill of material
                         </Text>
                     }
                     {form.values.ppic_process_related[index].requirementmaterial_set.map((reqMaterial, j) => (
                         <Paper ml='lg' mb='xs' key={`${reqMaterial.id}${j}`} >
-                            <Group my='xs' >
 
-                                <NativeSelect
-                                    radius='md'
-                                    label='Material'
-                                    required
-                                    icon={<IconAsset />}
-                                    placeholder="Select material"
-                                    data={materialList.map(material => ({ value: material.id, label: material.name }))}
-                                    {...form.getInputProps(`ppic_process_related.${index}.requirementmaterial_set.${j}.material`)}
 
-                                />
-
+                            <Group position="right" >
                                 <ActionIcon
                                     color="red"
-                                    mt='lg'
                                     onClick={() => {
                                         form.removeListItem(`ppic_process_related.${index}.requirementmaterial_set`, j)
                                     }}
@@ -196,7 +185,19 @@ const NewProduct = () => {
 
                             </Group>
 
-                            <Group>
+                            <NativeSelect
+                                m='xs'
+                                radius='md'
+                                label='Material'
+                                required
+                                icon={<IconAsset />}
+                                placeholder="Select material"
+                                data={materialList.map(material => ({ value: material.id, label: material.name }))}
+                                {...form.getInputProps(`ppic_process_related.${index}.requirementmaterial_set.${j}.material`)}
+
+                            />
+
+                            <Group grow m='xs' >
 
                                 <NumberInput
                                     hideControls
@@ -234,32 +235,19 @@ const NewProduct = () => {
                         Add material
                     </Button>
 
-                    <Divider mt="xl" mb='xs' size='md' label="Product assembly" />
+                    <Divider mt="xl" mb='xs' size='sm' label="Product assembly" />
 
                     {form.values.ppic_process_related[index].requirementproduct_set.length === 0 &&
-                        <Text my='md' >
+                        <Text my='md' align="center" size='sm' color='dimmed' >
                             This process has no product assembly
                         </Text>
                     }
                     {form.values.ppic_process_related[index].requirementproduct_set.map((reqProduct, i) => (
                         <Paper ml='lg' mb='xs' key={`${reqProduct.id}${i}`} >
 
-                            <Group >
-
-                                <NativeSelect
-                                    radius='md'
-                                    required
-                                    icon={<IconBarcode />}
-                                    label='Product'
-                                    placeholder="Select product"
-                                    data={productAssemblyList.map(product => ({ value: product.id, label: product.name }))}
-                                    {...form.getInputProps(`ppic_process_related.${index}.requirementproduct_set.${i}.product`)}
-
-                                />
-
+                            <Group position="right">
                                 <ActionIcon
                                     color="red"
-                                    mt='lg'
                                     onClick={() => {
                                         form.removeListItem(`ppic_process_related.${index}.requirementproduct_set`, i)
                                     }}
@@ -268,7 +256,20 @@ const NewProduct = () => {
                                 </ActionIcon>
 
                             </Group>
-                            <Group>
+
+                            <NativeSelect
+                                m='xs'
+                                radius='md'
+                                required
+                                icon={<IconBarcode />}
+                                label='Product'
+                                placeholder="Select product"
+                                data={productAssemblyList.map(product => ({ value: product.id, label: product.name }))}
+                                {...form.getInputProps(`ppic_process_related.${index}.requirementproduct_set.${i}.product`)}
+
+                            />
+
+                            <Group grow m='xs' >
 
                                 <NumberInput
                                     required
@@ -294,6 +295,7 @@ const NewProduct = () => {
 
 
                     ))}
+
                     <Button
                         radius='md'
                         leftIcon={<IconPlus />}
@@ -314,6 +316,13 @@ const NewProduct = () => {
 
 
             ))}
+
+
+            {form.values.ppic_process_related.length === 0 &&
+                <Text my='md' align="center" size='sm' color='dimmed' >
+                    This product does not have a manufacturing process
+                </Text>
+            }
 
             <Center>
                 <Button
@@ -349,16 +358,39 @@ const NewProduct = () => {
 
             <form id='formNewProduct' onSubmit={form.onSubmit(openSubmitModal)}   >
 
-                <Group>
-                    <NativeSelect
-                        radius='md'
-                        placeholder="Select a customer"
-                        icon={<IconUser />}
-                        label='Customer'
-                        required
-                        {...form.getInputProps('customer')}
-                        data={customerList.map(customer => ({ value: customer.id, label: customer.name }))}
-                    />
+
+                <NativeSelect
+                    m='xs'
+                    radius='md'
+                    placeholder="Select a customer"
+                    icon={<IconUser />}
+                    label='Customer'
+                    required
+                    {...form.getInputProps('customer')}
+                    data={customerList.map(customer => ({ value: customer.id, label: customer.name }))}
+                />
+
+
+
+                <TextInput
+                    m='xs'
+                    radius='md'
+                    required
+                    {...form.getInputProps('name')}
+                    icon={<IconWriting />}
+                    label='Product name'
+                />
+
+                <TextInput
+                    m='xs'
+                    required
+                    radius='md'
+                    {...form.getInputProps('code')}
+                    icon={<IconCodeAsterix />}
+                    label='Product number'
+                />
+
+                <Group grow m='xs' >
 
                     <NativeSelect
                         radius='md'
@@ -369,31 +401,6 @@ const NewProduct = () => {
                         {...form.getInputProps('type')}
                         data={productType.map(type => ({ value: type.id, label: type.name }))}
                     />
-
-
-                    <TextInput
-                        radius='md'
-                        required
-                        {...form.getInputProps('name')}
-                        icon={<IconWriting />}
-                        label='Product name'
-                    />
-
-                    <TextInput
-                        required
-                        radius='md'
-                        {...form.getInputProps('code')}
-                        icon={<IconCodeAsterix />}
-                        label='Product number'
-                    />
-                    <TextInput
-                        required
-                        {...form.getInputProps('price')}
-                        radius='md'
-                        icon={<IconTag />}
-                        label='Price'
-
-                    />
                     <TextInput
                         required
                         radius='md'
@@ -401,9 +408,8 @@ const NewProduct = () => {
                         icon={<IconBarbell />}
                         label='Kg/pcs'
                     />
-
-
                 </Group>
+
 
                 <Group my='md' >
 
@@ -434,6 +440,8 @@ const NewProduct = () => {
                         </Text>
                     )}
                 </Group>
+
+                <Divider my='md' size='sm' />
 
                 {processFields}
 

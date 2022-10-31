@@ -345,7 +345,7 @@ export default function Product() {
 
     const [productCustomer, setProductCustomer] = useState([])
     const auth = useContext(AuthContext)
-    const { Get, Delete, Put } = useRequest()
+    const { Get, Delete } = useRequest()
     const [searchVal, setSearchVal] = useState('')
     const { classes } = sectionStyle()
 
@@ -394,12 +394,12 @@ export default function Product() {
         {
             "label": 'Product type',
             "link": '#product-type',
-            'order': 2
+            'order': 1
         },
         {
             "label": 'Process type',
             "link": '#process-type',
-            'order': 2
+            'order': 1
         },
     ]
 

@@ -39,6 +39,9 @@ import NewProduct from './components/ppic/NewProduct';
 import DetailMaterial from './components/ppic/DetailMaterial';
 import NewMaterial from './components/ppic/NewMaterial';
 import DetailDeliveryNoteMaterial from './components/ppic/warehouse/DetailDeliveryNoteMaterial';
+import NewProduction from './components/ppic/production/NewProduction';
+import DetailProduction from './components/ppic/production/DetailProduction';
+import NewProductionPriority from './components/ppic/production/NewProductionPriority';
 
 import BasePlantManager from './components/plant-manager/BasePlantManager';
 import Mrp from './components/plant-manager/report/Mrp'
@@ -100,7 +103,11 @@ root.render(
             <Route path='material/new' element={<NewMaterial />} />
             <Route path='warehouse' element={<Warehouse />} />
             <Route path='delivery' element={<Delivery />} />
+
             <Route path='production' element={<Production />} />
+            <Route path='production/:productionId' element={<DetailProduction />} />
+            <Route path='production/new' element={<NewProduction />} />
+            <Route path='production/new/:priorityId' element={<NewProductionPriority />} />
             <Route path='warehouse/:deliveryNoteMaterialId' element={<DetailDeliveryNoteMaterial />} />
           </Route>
 
