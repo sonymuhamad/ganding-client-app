@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useRequest } from "../../hooks/useRequest";
 import { useForm } from "@mantine/form";
@@ -14,10 +13,9 @@ import { customStyle } from '../../styles/customStyle'
 const DetailDeliveryNote = () => {
 
     const { classes } = customStyle()
-    const { Retrieve, Put } = useRequest()
+    const { Retrieve, Put, Loading } = useRequest()
     const params = useParams()
     const [productDeliver, setProductDeliver] = useState([])
-    const auth = useContext(AuthContext)
 
     const breadcrumb = [
         {
@@ -50,7 +48,7 @@ const DetailDeliveryNote = () => {
         const fetch = async () => {
 
             try {
-                const { productdelivercustomer_set, ...dn } = await Retrieve(params.deliverynoteId, auth.user.token, 'delivery-notes')
+                const { productdelivercustomer_set, ...dn } = await Retrieve(params.deliverynoteId, 'delivery-notes')
                 dn.created = new Date(dn.created).toString()
                 form.setValues(dn)
                 setProductDeliver(productdelivercustomer_set)
@@ -60,9 +58,22 @@ const DetailDeliveryNote = () => {
             }
         }
         fetch()
-    }, [auth.user.token])
+    }, [Retrieve, params.deliverynoteId])
 
-    const openModal = (id) => openConfirmModal({
+
+    const handleStatusChange = useCallback(async (id) => {
+        const [certainPdeliver] = productDeliver.filter((pdeliver) => pdeliver.id === id)
+        certainPdeliver.paid = !certainPdeliver.paid
+
+        try {
+            await Put(id, certainPdeliver, 'productdelivery-management-put')
+        } catch (e) {
+            console.log(e)
+        }
+
+    }, [productDeliver, Put])
+
+    const openModal = useCallback((id) => openConfirmModal({
         title: `Change invoice status `,
         children: (
             <Text size="sm">
@@ -73,22 +84,12 @@ const DetailDeliveryNote = () => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleStatusChange(id),
-    })
-
-    const handleStatusChange = async (id) => {
-        const [certainPdeliver] = productDeliver.filter((pdeliver) => pdeliver.id === id)
-        certainPdeliver.paid = !certainPdeliver.paid
-
-        try {
-            await Put(id, certainPdeliver, auth.user.token, 'productdelivery-management-put')
-        } catch (e) {
-            console.log(e)
-        }
-
-    }
+    }), [handleStatusChange])
 
     return (
         <>
+
+            <Loading />
 
             <BreadCrumb links={breadcrumb} />
 

@@ -1,28 +1,27 @@
-import React, { useState, useEffect, useContext, useRef, useMemo } from "react"
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { useParams } from "react-router-dom"
 import { useNavigate } from "react-router-dom"
 
 import useScrollSpy from 'react-use-scrollspy'
 
-import { IconWriting, IconFileTypography, IconList, IconCodeAsterix, IconBarbell, IconTrashX, IconDownload, IconEdit, IconX, IconUser, IconBuildingWarehouse, IconDialpad, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload, IconSum, IconArrowsSort } from "@tabler/icons"
+import { IconFileTypography, IconList, IconCodeAsterix, IconBarbell, IconTrashX, IconDownload, IconEdit, IconX, IconUser, IconBuildingWarehouse, IconDialpad, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload, IconSum, IconArrowsSort } from "@tabler/icons"
 
-import { Title, TextInput, Group, Paper, Image, Button, NativeSelect, FileButton, Text, Badge, ActionIcon, Divider, NumberInput, Center, UnstyledButton, Select } from "@mantine/core"
+import { Title, TextInput, Group, Paper, Image, Button, FileButton, Text, Badge, ActionIcon, Divider, NumberInput, Center, UnstyledButton, Select } from "@mantine/core"
 import { useForm } from "@mantine/form"
 import { openConfirmModal } from "@mantine/modals"
 
-import BaseAside from "../layout/BaseAside"
-import BreadCrumb from "../BreadCrumb"
-import BaseTable from "../tables/BaseTable"
-import BaseTableDisableExpanded from "../tables/BaseTableDisableExpanded"
-import { AuthContext } from '../../context/AuthContext'
-import { useRequest } from '../../hooks/useRequest'
-import { SuccessNotif, FailedNotif } from '../notifications/Notifications'
-import { sectionStyle } from "../../styles/sectionStyle"
+import BaseAside from "../../layout/BaseAside"
+import BreadCrumb from "../../BreadCrumb"
+import BaseTable from "../../tables/BaseTable"
+import BaseTableDisableExpanded from "../../tables/BaseTableDisableExpanded"
+import { useRequest } from '../../../hooks/useRequest'
+import { SuccessNotif, FailedNotif } from '../../notifications/Notifications'
+import { sectionStyle } from "../../../styles/sectionStyle"
 
 
 const ExpandedProduct = ({ data }) => {
 
-    const findQuantitySubcont = (dataProduct) => {
+    const findQuantitySubcont = useCallback((dataProduct) => {
 
         // preventing error occured when changing process type from subcont to non subcont
 
@@ -31,7 +30,8 @@ const ExpandedProduct = ({ data }) => {
         } else {
             return 0
         }
-    }
+    }, [data])
+
     const quantitySubcont = findQuantitySubcont(data)
 
     return (
@@ -61,7 +61,6 @@ const ExpandedProduct = ({ data }) => {
 const DetailProduct = () => {
 
     const params = useParams()
-    const auth = useContext(AuthContext)
     const { Retrieve, Get, Put, Delete, Loading, Post } = useRequest()
     const { classes } = sectionStyle()
     const [breadcrumb, setBreadcrumb] = useState([])
@@ -193,47 +192,7 @@ const DetailProduct = () => {
     ], [])
 
 
-    const handleClickEditButton = () => {
-        setEditAcces((prev) => !prev)
-        if (form.isDirty()) {
-
-            form.resetDirty()
-            form.setValues(product)
-
-        }
-    }
-
-    const openSubmitEditModal = (val) => openConfirmModal({
-        title: `Edit product`,
-        children: (
-            <Text size="sm">
-                Are you sure?, detail product will changed.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, change', cancel: "No, don't change it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onCancel: () => handleClickEditButton(),
-        onConfirm: () => handleEditProduct(val)
-    })
-
-    const openDeleteModal = () => openConfirmModal({
-        title: 'Delete product',
-        children: (
-            <Text size='md' >
-                Are you sure, this product will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes,delete ', cancel: "No, don't delete it " },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteProduct()
-    })
-
-
-    const checkDataProduct = (value) => {
+    const checkDataProduct = useCallback((value) => {
 
         // remove one to one relations with depth >= 1
 
@@ -254,17 +213,28 @@ const DetailProduct = () => {
             const data = dataFormProduct
             return data
         }
-    }
+    }, [])
 
 
-    const handleEditProduct = async (val) => {
+    const handleClickEditButton = useCallback(() => {
+        setEditAcces((prev) => !prev)
+        if (form.isDirty()) {
+
+            form.resetDirty()
+            form.setValues(product)
+
+        }
+    }, [product, form])
+
+
+    const handleEditProduct = useCallback(async (val) => {
 
         // handler for submit edit product
 
         const dataProduct = checkDataProduct(val)
 
         try {
-            await Put(val.id, dataProduct, auth.user.token, 'product-management', 'multipart/form-data')
+            await Put(val.id, dataProduct, 'product-management', 'multipart/form-data')
             setAction(prev => prev + 1)
             SuccessNotif('Product updated')
         } catch (e) {
@@ -275,54 +245,23 @@ const DetailProduct = () => {
             handleClickEditButton()
         }
 
-    }
+    }, [handleClickEditButton, checkDataProduct, form])
 
-    const handleDeleteProduct = async () => {
+    const handleDeleteProduct = useCallback(async () => {
 
         // handler for delete product
 
         try {
-            await Delete(params.productId, auth.user.token, 'product-management')
+            await Delete(params.productId, 'product-management')
             SuccessNotif('Delete product success')
             navigate('/home/ppic/product')
         } catch (e) {
             FailedNotif(e.message.data[0])
             console.log(e)
         }
-    }
+    }, [navigate])
 
-    const openSubmitEditProcess = (val) => openConfirmModal({
-        title: `Save changes`,
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be saved.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, save changes', cancel: "No, don't save it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onCancel: () => handleClickProcessEditAccess(),
-        onConfirm: () => handleSubmitEditProcess(val)
-    })
-
-    const openDeleteProcess = (id) => openConfirmModal({
-        title: `Delete process`,
-        children: (
-            <Text size="sm">
-                Are you sure?, data related to this manufacturing process will also be deleted, including every production report.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteProcess(id)
-    })
-
-
-
-    const handleClickProcessEditAccess = (index) => {
+    const handleClickProcessEditAccess = useCallback((index) => {
 
         if (index + 1 === processEditAccess || index === undefined) {
             setProcessEditAccess(null)
@@ -332,12 +271,12 @@ const DetailProduct = () => {
         } else {
             setProcessEditAccess(index + 1)
         }
-    }
+    }, [product, processEditAccess, form])
 
-    const handleDeleteProcess = async (id) => {
+    const handleDeleteProcess = useCallback(async (id) => {
 
         try {
-            await Delete(id, auth.user.token, 'process-management')
+            await Delete(id, 'process-management')
             SuccessNotif('Delete process success')
             setAction(prev => prev + 1)
 
@@ -347,24 +286,24 @@ const DetailProduct = () => {
             handleClickProcessEditAccess()
         }
 
-    }
+    }, [handleClickProcessEditAccess])
 
-    const handleSubmitEditProcess = async (val) => {
+    const handleSubmitEditProcess = useCallback(async (val) => {
 
 
         const dataProduct = checkDataProduct(val)
-        const { ppic_process_related, id, ...restProps } = dataProduct
+        const { ppic_process_related, id } = dataProduct
         const submittedProcess = ppic_process_related[(processEditAccess - 1)]
 
         const process = { ...submittedProcess, product: id }
-        console.log(process)
+
         try {
 
             if (process.id) {
-                await Put(process.id, process, auth.user.token, 'process-management')
+                await Put(process.id, process, 'process-management')
                 SuccessNotif('Edit data success')
             } else {
-                await Post(process, auth.user.token, 'process-management')
+                await Post(process, 'process-management')
                 SuccessNotif('Add process success')
             }
 
@@ -384,26 +323,90 @@ const DetailProduct = () => {
 
         }
 
-    }
+    }, [checkDataProduct, handleClickProcessEditAccess, processEditAccess])
 
-    const totalStock = product.ppic_process_related.reduce((prev, current) => {
+    const openSubmitEditModal = useCallback((val) => openConfirmModal({
+        title: `Edit product`,
+        children: (
+            <Text size="sm">
+                Are you sure?, detail product will changed.
+            </Text>
+        ),
+        radius: 'md',
+        labels: { confirm: 'Yes, change', cancel: "No, don't change it" },
+        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+        confirmProps: { radius: 'md' },
+        onCancel: () => handleClickEditButton(),
+        onConfirm: () => handleEditProduct(val)
+    }), [handleClickEditButton, handleEditProduct])
 
-        for (const wh of current.warehouseproduct_set) {
-            prev += wh.quantity
-        }
+    const openDeleteModal = useCallback(() => openConfirmModal({
+        title: 'Delete product',
+        children: (
+            <Text size='md' >
+                Are you sure, this product will be deleted.
+            </Text>
+        ),
+        radius: 'md',
+        labels: { confirm: 'Yes,delete ', cancel: "No, don't delete it " },
+        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+        confirmProps: { radius: 'md' },
+        onConfirm: () => handleDeleteProduct()
+    }), [handleDeleteProduct])
 
-        return prev
 
-    }, 0)
+    const openSubmitEditProcess = useCallback((val) => openConfirmModal({
+        title: `Save changes`,
+        children: (
+            <Text size="sm">
+                Are you sure?, data will be saved.
+            </Text>
+        ),
+        radius: 'md',
+        labels: { confirm: 'Yes, save changes', cancel: "No, don't save it" },
+        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+        confirmProps: { radius: 'md' },
+        onCancel: () => handleClickProcessEditAccess(),
+        onConfirm: () => handleSubmitEditProcess(val)
+    }), [handleClickProcessEditAccess, handleSubmitEditProcess])
+
+    const openDeleteProcess = useCallback((id) => openConfirmModal({
+        title: `Delete process`,
+        children: (
+            <Text size="sm">
+                Are you sure?, data related to this manufacturing process will also be deleted, including every production report.
+            </Text>
+        ),
+        radius: 'md',
+        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
+        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+        confirmProps: { radius: 'md' },
+        onConfirm: () => handleDeleteProcess(id)
+    }), [handleDeleteProcess])
+
+
+
+    const totalStock = useMemo(() => {
+        return product.ppic_process_related.reduce((prev, current) => {
+
+            for (const wh of current.warehouseproduct_set) {
+                prev += wh.quantity
+            }
+
+            return prev
+
+        }, 0)
+
+    }, [product])
 
     useEffect(() => {
         const fetch = async () => {
             try {
-                const product = await Retrieve(params.productId, auth.user.token, 'product-detail')
-                const productType = await Get(auth.user.token, 'product-type')
-                const processType = await Get(auth.user.token, 'process-type')
-                const productLists = await Get(auth.user.token, 'product-lists')
-                const materialLists = await Get(auth.user.token, 'material-lists')
+                const product = await Retrieve(params.productId, 'product-detail')
+                const productType = await Get('product-type')
+                const processType = await Get('process-type')
+                const productLists = await Get('product-lists')
+                const materialLists = await Get('material-lists')
 
                 const detailProduct = { ...product, customer: product.customer.id, customerName: product.customer.name, type: product.type.id, ppic_process_related: product.ppic_process_related.map(process => ({ ...process, process_type_name: process.process_type.name, process_type: process.process_type.id, requirementmaterial_set: process.requirementmaterial_set.map(material => ({ ...material, material: material.material.id })), requirementproduct_set: process.requirementproduct_set.map(product => ({ ...product, product: product.product.id })) })) }
 
@@ -441,11 +444,10 @@ const DetailProduct = () => {
 
         fetch()
 
-    }, [auth.user.token, action])
+    }, [action,])
 
-    const manufacturingProcess =
-
-        <form id='processForm' onSubmit={form.onSubmit(openSubmitEditProcess)} >
+    const manufacturingProcess = useMemo(() => {
+        return <form id='processForm' onSubmit={form.onSubmit(openSubmitEditProcess)} >
 
             {form.values.ppic_process_related.map((process, index) => (
 
@@ -732,6 +734,9 @@ const DetailProduct = () => {
 
         </form>
 
+    }, [handleClickProcessEditAccess, materialList, productList, processType, openDeleteProcess, openSubmitEditProcess, processEditAccess, form.values.ppic_process_related])
+
+
 
     return (
         <>
@@ -794,7 +799,7 @@ const DetailProduct = () => {
                         radius='md'
                         label='Product name'
                         readOnly={!editAccess ? true : false}
-                        icon={<IconWriting />}
+                        icon={<IconBarcode />}
                         {...form.getInputProps('name')}
 
                     />

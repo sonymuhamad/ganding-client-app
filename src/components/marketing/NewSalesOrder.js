@@ -1,6 +1,5 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useForm } from "@mantine/form";
-import { AuthContext } from "../../context/AuthContext";
 import { Title, TextInput, NumberInput, NativeSelect, Stack, Button, Center, Paper, ActionIcon, Group, Text } from "@mantine/core";
 import { customStyle } from '../../styles/customStyle'
 import { DatePicker } from "@mantine/dates";
@@ -14,7 +13,6 @@ import BreadCrumb from "../BreadCrumb";
 const NewSalesOrder = () => {
 
     const { classes } = customStyle()
-    const auth = useContext(AuthContext)
     const [customer, setCustomer] = useState([])
     const { Get, Post, Loading } = useRequest()
     const navigate = useNavigate()
@@ -79,7 +77,7 @@ const NewSalesOrder = () => {
 
         const fetch = async () => {
             try {
-                const customer = await Get(auth.user.token, 'product-customer')
+                const customer = await Get('product-customer')
                 setCustomer(customer)
 
             } catch (e) {
@@ -88,10 +86,10 @@ const NewSalesOrder = () => {
         }
 
         fetch()
-    }, [auth.user.token])
+    }, [Get])
 
 
-    const handleSubmit = async (data) => {
+    const handleSubmit = useCallback(async (data) => {
         let validateData = data
         validateData.date = data.date.toLocaleDateString('en-CA')
 
@@ -104,13 +102,11 @@ const NewSalesOrder = () => {
         })
 
         try {
-            await Post(validateData, auth.user.token, 'sales-order-management')
+            await Post(validateData, 'sales-order-management')
             SuccessNotif('New sales order added successfully')
             navigate('/home/marketing/sales-order')
         } catch (e) {
-            const { productorder_set, date, ...restData } = validateData
-            form.reset()
-            // form.setValues({ ...restData })
+
             form.setErrors({ ...e.message.data })
             if (e.message.data.productorder_set) {
                 FailedNotif(e.message.data.productorder_set[0])
@@ -120,9 +116,9 @@ const NewSalesOrder = () => {
             }
             console.log(e)
         }
-    }
+    }, [Post, navigate])
 
-    const openModal = (data) => openConfirmModal({
+    const openModal = useCallback((data) => openConfirmModal({
         title: `Add new sales order`,
         children: (
             <Text size="sm">
@@ -134,97 +130,99 @@ const NewSalesOrder = () => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleSubmit(data),
-    })
+    }), [handleSubmit])
 
-    const formFields = form.values.productorder_set.map((item, index) => (
+    const formFields = useMemo(() => {
+        return form.values.productorder_set.map((item, index) => (
 
-        <Paper style={{ border: `1px solid #ced4da` }} p='xs' m='lg' key={index} >
+            <Paper style={{ border: `1px solid #ced4da` }} p='xs' m='lg' key={index} >
 
-            <Text mb='md' >
-                {`Product ${index + 1}`}
-            </Text>
-
-
-            <Group>
-                <NativeSelect
-                    radius='md'
-                    icon={<IconUser />}
-                    label='Name'
-                    placeholder="Select product name"
-                    data={form.values.customer !== '' ? customer.filter(cust => cust.id === parseInt(form.values.customer))[0].ppic_product_related.map(product => ({ value: product.id, label: product.name })) : []}
-
-                    {...form.getInputProps(`productorder_set.${index}.product`)}
-                />
-                <TextInput
-                    label='Code'
-                    radius='md'
-                    value={
-                        form.values.productorder_set[index].product !== '' ?
-                            customer.find(cust => cust.id === parseInt(form.values.customer)).ppic_product_related.find((product) => product.id == parseInt(form.values.productorder_set[index].product)) !== undefined ?
-                                customer.find(cust => cust.id === parseInt(form.values.customer)).ppic_product_related.find((product) => product.id == parseInt(form.values.productorder_set[index].product)).code
-                                : ''
-                            : ''
-                    }
-                    readOnly
-                />
-
-                <NumberInput
-                    radius='md'
-                    hideControls
-                    icon={<IconCodeAsterix />}
-                    label='Quantity order'
-                    placeholder="Input quantity"
-                    {...form.getInputProps(`productorder_set.${index}.ordered`)}
-                />
-
-                <ActionIcon color="red" onClick={() => form.removeListItem('productorder_set', index)}>
-                    <IconTrash />
-                </ActionIcon>
-
-            </Group>
-
-            <Paper m='lg' >
                 <Text mb='md' >
-                    Delivery schedule
+                    {`Product ${index + 1}`}
                 </Text>
-                {form.values.productorder_set[index].deliveryschedule_set.map((schedule, i) => (
-                    <Group key={`${i}${i}`}  >
-                        <NumberInput
-                            radius='md'
-                            hideControls
-                            icon={<IconCodeAsterix />}
-                            label='Quantity'
-                            placeholder="Input quantity"
-                            {...form.getInputProps(`productorder_set.${index}.deliveryschedule_set.${i}.quantity`)}
-                        />
-                        <DatePicker
-                            radius='md'
-                            label="Date"
-                            placeholder="Pick a date"
-                            inputFormat="YYYY-MM-DD"
-                            {...form.getInputProps(`productorder_set.${index}.deliveryschedule_set.${i}.date`)}
 
-                            icon={<IconCalendar />}
-                        />
-                        <ActionIcon color="red" mt='lg' onClick={() => form.removeListItem(`productorder_set.${index}.deliveryschedule_set`, i)}  >
-                            <IconTrash />
-                        </ActionIcon>
-                    </Group>
-                ))}
+
+                <Group>
+                    <NativeSelect
+                        radius='md'
+                        icon={<IconUser />}
+                        label='Name'
+                        placeholder="Select product name"
+                        data={form.values.customer !== '' ? customer.filter(cust => cust.id === parseInt(form.values.customer))[0].ppic_product_related.map(product => ({ value: product.id, label: product.name })) : []}
+
+                        {...form.getInputProps(`productorder_set.${index}.product`)}
+                    />
+                    <TextInput
+                        label='Code'
+                        radius='md'
+                        value={
+                            form.values.productorder_set[index].product !== '' ?
+                                customer.find(cust => cust.id === parseInt(form.values.customer)).ppic_product_related.find((product) => product.id === parseInt(form.values.productorder_set[index].product)) !== undefined ?
+                                    customer.find(cust => cust.id === parseInt(form.values.customer)).ppic_product_related.find((product) => product.id === parseInt(form.values.productorder_set[index].product)).code
+                                    : ''
+                                : ''
+                        }
+                        readOnly
+                    />
+
+                    <NumberInput
+                        radius='md'
+                        hideControls
+                        icon={<IconCodeAsterix />}
+                        label='Quantity order'
+                        placeholder="Input quantity"
+                        {...form.getInputProps(`productorder_set.${index}.ordered`)}
+                    />
+
+                    <ActionIcon color="red" onClick={() => form.removeListItem('productorder_set', index)}>
+                        <IconTrash />
+                    </ActionIcon>
+
+                </Group>
+
+                <Paper m='lg' >
+                    <Text mb='md' >
+                        Delivery schedule
+                    </Text>
+                    {form.values.productorder_set[index].deliveryschedule_set.map((schedule, i) => (
+                        <Group key={`${i}${i}`}  >
+                            <NumberInput
+                                radius='md'
+                                hideControls
+                                icon={<IconCodeAsterix />}
+                                label='Quantity'
+                                placeholder="Input quantity"
+                                {...form.getInputProps(`productorder_set.${index}.deliveryschedule_set.${i}.quantity`)}
+                            />
+                            <DatePicker
+                                radius='md'
+                                label="Date"
+                                placeholder="Pick a date"
+                                inputFormat="YYYY-MM-DD"
+                                {...form.getInputProps(`productorder_set.${index}.deliveryschedule_set.${i}.date`)}
+
+                                icon={<IconCalendar />}
+                            />
+                            <ActionIcon color="red" mt='lg' onClick={() => form.removeListItem(`productorder_set.${index}.deliveryschedule_set`, i)}  >
+                                <IconTrash />
+                            </ActionIcon>
+                        </Group>
+                    ))}
+                </Paper>
+
+                <Button
+                    radius='md'
+                    mt='sm'
+                    ml='lg'
+                    color='indigo'
+                    leftIcon={<IconCalendarPlus />}
+                    onClick={() => form.insertListItem(`productorder_set.${index}.deliveryschedule_set`, { quantity: 0, date: '' })}
+
+                >
+                    Add schedule</Button>
             </Paper>
-
-            <Button
-                radius='md'
-                mt='sm'
-                ml='lg'
-                color='indigo'
-                leftIcon={<IconCalendarPlus />}
-                onClick={() => form.insertListItem(`productorder_set.${index}.deliveryschedule_set`, { quantity: 0, date: '' })}
-
-            >
-                Add schedule</Button>
-        </Paper>
-    ))
+        ))
+    }, [form, customer])
 
 
     return (

@@ -6,8 +6,6 @@ import { IconNotes, IconAssembly, IconFileDollar, IconPackgeExport } from "@tabl
 
 export default function ExpandedDeliveryNote({ data }) {
 
-    console.log(data)
-
     return (
         <>
             <Textarea icon={<IconNotes size={20} stroke={2} />}

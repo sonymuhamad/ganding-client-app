@@ -1,9 +1,10 @@
 import axios from "axios";
 import { Url, AuthException } from "../services/External";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useContext, useState } from "react";
+import { useContext, useState, useCallback } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { LoadingOverlay } from "@mantine/core";
+
 
 export const useRequest = () => {
 
@@ -12,13 +13,13 @@ export const useRequest = () => {
     const [visible, setVisible] = useState(false)
     const navigate = useNavigate()
 
-    const Post = async (data, token, endpoint, content_type = 'application/json') => {
+    const Post = useCallback(async (data, endpoint, content_type = 'application/json') => {
         const url = `${Url}/${auth.user.division}/${endpoint}/`
         setVisible((v) => !v)
         try {
             const res = await axios.post(url, data, {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${auth.user.token}`,
                     'Content-Type': content_type,
                 }
             })
@@ -26,7 +27,7 @@ export const useRequest = () => {
 
         } catch (err) {
             if (err.response.status === 401) {
-                auth.resetToken(token, location.pathname)
+                auth.resetToken(auth.user.token, location.pathname)
                 // expired token handle
             }
             throw new AuthException(err.response)
@@ -34,15 +35,15 @@ export const useRequest = () => {
             setVisible((v) => !v)
         }
 
-    }
+    }, [auth, location.pathname])
 
-    const Put = async (id, data, token, endpoint, content_type = 'application/json') => {
+    const Put = useCallback(async (id, data, endpoint, content_type = 'application/json') => {
         const url = `${Url}/${auth.user.division}/${endpoint}/${id}/`
         setVisible((v) => !v)
         try {
             const res = await axios.put(url, data, {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${auth.user.token}`,
                     'Content-Type': content_type,
                 }
             })
@@ -50,29 +51,30 @@ export const useRequest = () => {
 
         } catch (err) {
             if (err.response.status === 401) {
-                auth.resetToken(token, location.pathname)
+                auth.resetToken(auth.user.token, location.pathname)
                 // expired token handle
             }
             throw new AuthException(err.response)
         } finally {
             setVisible((v) => !v)
         }
-    }
+    }, [auth, location.pathname])
 
-    const Get = async (token, endpoint) => {
+    const Get = useCallback(async (endpoint) => {
         const url = `${Url}/${auth.user.division}/${endpoint}/`
+        setVisible(v => !v)
 
         try {
             const res = await axios.get(url, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${auth.user.token}`
                 }
             })
             return res.data
 
         } catch (err) {
             if (err.response.status === 401) {
-                auth.resetToken(token, location.pathname)
+                auth.resetToken(auth.user.token, location.pathname)
                 // expired token handle
             }
             if (err.response.status === 404) {
@@ -80,46 +82,48 @@ export const useRequest = () => {
             }
             throw new AuthException(err.response)
         } finally {
-
+            setVisible(v => !v)
         }
 
-    }
+    }, [auth, location.pathname, navigate])
 
-    const Delete = async (id, token, endpoint) => {
+
+    const Delete = useCallback(async (id, endpoint) => {
         const url = `${Url}/${auth.user.division}/${endpoint}/${id}/`
         setVisible((v) => !v)
         try {
             const res = await axios.delete(url, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${auth.user.token}`
                 }
             })
             return res.data
 
         } catch (err) {
             if (err.response.status === 401) {
-                auth.resetToken(token, location.pathname)
+                auth.resetToken(auth.user.token, location.pathname)
                 // expired token handle
             }
             throw new AuthException(err.response)
         } finally {
             setVisible((v) => !v)
         }
-    }
+    }, [auth, location.pathname])
 
-    const Retrieve = async (id, token, endpoint) => {
+    const Retrieve = useCallback(async (id, endpoint) => {
         const url = `${Url}/${auth.user.division}/${endpoint}/${id}/`
+        setVisible(v => !v)
 
         try {
             const res = await axios.get(url, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${auth.user.token}`
                 }
             })
             return res.data
         } catch (err) {
             if (err.response.status === 401) {
-                auth.resetToken(token, location.pathname)
+                auth.resetToken(auth.user.token, location.pathname)
                 // expired token handle
             }
             if (err.response.status === 404) {
@@ -127,9 +131,9 @@ export const useRequest = () => {
             }
             throw new AuthException(err.response)
         } finally {
-
+            setVisible(v => !v)
         }
-    }
+    }, [auth, location.pathname, navigate])
 
     const Loading = () => {
         return (

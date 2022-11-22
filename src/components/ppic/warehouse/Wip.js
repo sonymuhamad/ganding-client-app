@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useRequest } from "../../../hooks/useRequest";
-import { AuthContext } from "../../../context/AuthContext";
 import BaseTableExpanded from "../../tables/BaseTableExpanded";
 import ModalEditStockProduct from "../../layout/ModalEditStockProduct";
 import { openModal } from "@mantine/modals";
 
-import { IconEdit } from "@tabler/icons";
+import { IconBarcode, IconCodeAsterix, IconEdit, IconTimeline, IconTypography } from "@tabler/icons";
 import { TextInput, Button, Group, Paper } from "@mantine/core";
 
 
@@ -14,6 +13,7 @@ const ExpandedDetailWarehouseWip = ({ data }) => {
         <Paper p='sm'  >
             <Group grow >
                 <TextInput
+                    icon={<IconBarcode />}
                     label='Product name'
                     value={data.product.name}
                     readOnly
@@ -21,6 +21,7 @@ const ExpandedDetailWarehouseWip = ({ data }) => {
                 />
 
                 <TextInput
+                    icon={<IconCodeAsterix />}
                     label='Product number'
                     value={data.product.code}
                     readOnly
@@ -30,12 +31,14 @@ const ExpandedDetailWarehouseWip = ({ data }) => {
 
             <Group grow my='xs' >
                 <TextInput
+                    icon={<IconTypography />}
                     label='Product type'
                     value={data.product.type.name}
                     readOnly
                     radius='md'
                 />
                 <TextInput
+                    icon={<IconTimeline />}
                     label='Process name'
                     value={data.process.process_name}
                     readOnly
@@ -95,11 +98,9 @@ const ExpandedWarehouseWip = ({ data }) => {
 
 const Wip = () => {
 
-
     const [searchProductWip, setSearchProductWip] = useState('')
     const [warehouseWip, setWarehouseWip] = useState([])
     const [actionWarehouseWip, setActionWarehouseWip] = useState(0)
-    const auth = useContext(AuthContext)
     const { Get } = useRequest()
 
     const filteredWarehouseWip = useMemo(() => {
@@ -137,11 +138,11 @@ const Wip = () => {
     ], [])
 
 
-    const openEditWarehouseWip = (warehouseWip) => openModal({
+    const openEditWarehouseWip = useCallback((warehouseWip) => openModal({
         title: `Edit stock wip ${warehouseWip.product.name}`,
         radius: 'md',
         children: <ModalEditStockProduct whProduct={warehouseWip} setaction={setActionWarehouseWip} />
-    })
+    }), [])
 
 
     useEffect(() => {
@@ -149,7 +150,7 @@ const Wip = () => {
 
         const fetchWarehouseWip = async () => {
             try {
-                const whTypeWip = await Get(auth.user.token, 'warehouse-wip')
+                const whTypeWip = await Get('warehouse-wip')
                 const whWip = whTypeWip.map(whType => ({
                     ...whType, warehouseproduct_set: whType.warehouseproduct_set.map(wh => ({
                         ...wh, buttonEdit:
@@ -175,7 +176,7 @@ const Wip = () => {
 
         fetchWarehouseWip()
 
-    }, [auth.user.token, actionWarehouseWip])
+    }, [actionWarehouseWip, openEditWarehouseWip])
 
     return (
         <>

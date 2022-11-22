@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useRequest } from "../../../hooks/useRequest";
-import { AuthContext } from "../../../context/AuthContext";
 import ExpandedWarehouseFg from "../../layout/ExpandedWarehouseFg";
 import ModalEditStockProduct from '../../layout/ModalEditStockProduct'
 import BaseTableExpanded from "../../tables/BaseTableExpanded";
@@ -14,7 +13,6 @@ import { IconEdit, IconSearch } from "@tabler/icons";
 
 const FinishGood = () => {
 
-    const auth = useContext(AuthContext)
     const { Get } = useRequest()
     const [searchProductFg, setSearchProductFg] = useState('')
     const [warehouseFg, setWarehouseFg] = useState([])
@@ -56,18 +54,18 @@ const FinishGood = () => {
         }
     ], [])
 
-    const openEditWarehouseFg = (warehouseFg) => openModal({
+    const openEditWarehouseFg = useCallback((warehouseFg) => openModal({
         title: `Edit stock finished good ${warehouseFg.product.name}`,
         radius: 'md',
         children: <ModalEditStockProduct whProduct={warehouseFg} setaction={setActionWarehouseFg} />
-    })
+    }), [])
 
     useEffect(() => {
         // effect for fetch finished goods
 
         const fetchFg = async () => {
             try {
-                const whTypeFg = await Get(auth.user.token, 'warehouse-fg')
+                const whTypeFg = await Get('warehouse-fg')
                 const warehouseFg = whTypeFg.find(whType => whType.id === 1).warehouseproduct_set.map(wh => ({
                     ...wh, buttonEdit:
 
@@ -91,7 +89,7 @@ const FinishGood = () => {
         }
         fetchFg()
 
-    }, [auth.user.token, actionWarehouseFg])
+    }, [actionWarehouseFg, openEditWarehouseFg])
 
 
     return (

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useContext, useState } from "react";
+import React, { useMemo, useRef } from "react";
 import useScrollSpy from 'react-use-scrollspy'
 
 import { Title, Divider } from "@mantine/core";
@@ -9,23 +9,14 @@ import Machine from "./production/Machine";
 import Operator from "./production/Operator";
 import ProductionReport from "./production/ProductionReport";
 import ProductionPriority from "./production/ProductionPriority";
-
-import { useRequest } from "../../hooks/useRequest";
-import { AuthContext } from "../../context/AuthContext";
+import ProductSubconstruction from "./production/ProductSubconstruction";
 
 export default function Production() {
 
     const { classes } = sectionStyle()
-    const { Get } = useRequest()
-    const auth = useContext(AuthContext)
-
-    const [customerProduct, setCustomerProduct] = useState([])
-    const [machineList, setMachineList] = useState([])
-    const [operatorList, setOperatorList] = useState([])
-    const [actionProductionReport, setActionProductionReport] = useState(0)
-
 
     const sectionRefs = [
+        useRef(null),
         useRef(null),
         useRef(null),
         useRef(null),
@@ -37,7 +28,7 @@ export default function Production() {
         offsetPx: -80
     })
 
-    const links = [
+    const links = useMemo(() => [
         {
             "label": 'Production priority',
             "link": '#production-priority',
@@ -46,6 +37,11 @@ export default function Production() {
         {
             "label": "Production report",
             "link": "#report",
+            "order": 1
+        },
+        {
+            "label": "Product in subconstruction",
+            "link": "#product-subconstruction",
             "order": 1
         },
         {
@@ -58,9 +54,9 @@ export default function Production() {
             "link": '#operator',
             'order': 1
         },
-    ]
+    ], [])
 
-    const breadcrumb = [
+    const breadcrumb = useMemo(() => [
         {
             path: '/home/ppic',
             label: 'Ppic'
@@ -69,26 +65,8 @@ export default function Production() {
             path: '/home/ppic/production',
             label: 'Production'
         }
-    ]
+    ], [])
 
-    useEffect(() => {
-        Get(auth.user.token, 'production-list').then(data => {
-            const dataProduct = data.reduce((prev, current) => {
-                const product = current.ppic_product_related.map(product => ({ ...product, group: current.name }))
-                return [...prev, ...product]
-            }, [])
-
-            setCustomerProduct(dataProduct)
-        })
-
-        Get(auth.user.token, 'machine').then(data => {
-            setMachineList(data)
-        })
-
-        Get(auth.user.token, 'operator').then(data => {
-            setOperatorList(data)
-        })
-    }, [auth.user.token])
 
 
     return (
@@ -109,7 +87,7 @@ export default function Production() {
                 </p>
                 <Divider my='md'></Divider>
 
-                <ProductionPriority setaction={setActionProductionReport} />
+                <ProductionPriority />
 
             </section>
 
@@ -120,10 +98,22 @@ export default function Production() {
                     </a>
                 </Title>
                 <Divider my='md'></Divider>
-                <ProductionReport action={actionProductionReport} setaction={setActionProductionReport} machine={machineList} operator={operatorList} products={customerProduct} />
+                <ProductionReport />
             </section>
 
-            <section id='machine' className={classes.section} ref={sectionRefs[2]} >
+            <section id='product-subconstruction' className={classes.section} ref={sectionRefs[2]} >
+                <Title className={classes.title} >
+                    <a href="#product-subconstruction" className={classes.a_href} >
+                        Product in subconstruction
+                    </a>
+                </Title>
+                <Divider my='md'></Divider>
+
+                <ProductSubconstruction />
+
+            </section>
+
+            <section id='machine' className={classes.section} ref={sectionRefs[3]} >
                 <Title className={classes.title} >
                     <a href="#machine" className={classes.a_href} >
                         Machine
@@ -134,7 +124,7 @@ export default function Production() {
 
             </section>
 
-            <section id='operator' className={classes.section} ref={sectionRefs[3]} >
+            <section id='operator' className={classes.section} ref={sectionRefs[4]} >
                 <Title className={classes.title} >
                     <a href="#operator" className={classes.a_href} >
                         Operator

@@ -30,18 +30,22 @@ import Suppliers from './components/purchasing/Suppliers'
 import BasePpic from './components/ppic/BasePpic';
 import PpicDashboard from './components/ppic/PpicDashboard'
 import Production from './components/ppic/Production'
-import * as ProductDetail from './components/ppic/DetailProduct';
+import * as ProductDetail from './components/ppic/product/DetailProduct';
 import Products from './components/ppic/Products'
 import Materials from './components/ppic/Materials'
 import Delivery from './components/ppic/Delivery'
 import Warehouse from './components/ppic/Warehouse'
-import NewProduct from './components/ppic/NewProduct';
-import DetailMaterial from './components/ppic/DetailMaterial';
-import NewMaterial from './components/ppic/NewMaterial';
+import NewProduct from './components/ppic/product/NewProduct';
+import DetailMaterial from './components/ppic/material/DetailMaterial';
+import NewMaterial from './components/ppic/material/NewMaterial';
 import DetailDeliveryNoteMaterial from './components/ppic/warehouse/DetailDeliveryNoteMaterial';
 import NewProduction from './components/ppic/production/NewProduction';
 import DetailProduction from './components/ppic/production/DetailProduction';
 import NewProductionPriority from './components/ppic/production/NewProductionPriority';
+import * as PpicDetailDeliveryNote from './components/ppic/delivery/DetailDeliveryNote'
+import DetailDeliveryNoteSubcont from './components/ppic/delivery/DetailDeliveryNoteSubcont';
+import DetailSubcontReceipt from './components/ppic/warehouse/DetailSubcontReceipt';
+
 
 import BasePlantManager from './components/plant-manager/BasePlantManager';
 import Mrp from './components/plant-manager/report/Mrp'
@@ -102,13 +106,17 @@ root.render(
             <Route path='material/:materialId' element={<DetailMaterial />} />
             <Route path='material/new' element={<NewMaterial />} />
             <Route path='warehouse' element={<Warehouse />} />
+
             <Route path='delivery' element={<Delivery />} />
+            <Route path='delivery/:deliveryNoteId' element={<PpicDetailDeliveryNote.default />} />
+            <Route path='delivery/subcont/:deliveryNoteSubcontId' element={<DetailDeliveryNoteSubcont />} />
 
             <Route path='production' element={<Production />} />
             <Route path='production/:productionId' element={<DetailProduction />} />
             <Route path='production/new' element={<NewProduction />} />
             <Route path='production/new/:priorityId' element={<NewProductionPriority />} />
-            <Route path='warehouse/:deliveryNoteMaterialId' element={<DetailDeliveryNoteMaterial />} />
+            <Route path='warehouse/material-receipt/:deliveryNoteMaterialId' element={<DetailDeliveryNoteMaterial />} />
+            <Route path='warehouse/subcont-receipt/:receiptNoteSubcontId' element={<DetailSubcontReceipt />} />
           </Route>
 
           <Route path='purchasing' element={<BasePurchasing />} >

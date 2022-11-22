@@ -1,6 +1,5 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { AuthContext } from "../../../context/AuthContext";
 import { useRequest } from "../../../hooks/useRequest";
 
 import { useForm } from "@mantine/form";
@@ -18,7 +17,6 @@ const NewProductionPriority = () => {
     const params = useParams()
     const navigate = useNavigate()
     const { Get, Loading, Post } = useRequest()
-    const auth = useContext(AuthContext)
     const [operatorList, setOperatorList] = useState([])
     const [machineList, setMachineList] = useState([])
     const { classes } = sectionStyle()
@@ -50,7 +48,11 @@ const NewProductionPriority = () => {
             operator: null,
             process: '',
             product: ''
-        }
+        },
+        validate: (values) => ({
+            machine: values.machine === null ? 'This field is required' : null,
+            operator: values.operator === null ? 'This field is required' : null
+        })
     })
 
 
@@ -69,22 +71,23 @@ const NewProductionPriority = () => {
         }
     ]
 
-    const handleSubmit = async (data) => {
+    const handleSubmit = useCallback(async (data) => {
         try {
-            await Post(data, auth.user.token, 'production-report-management')
+            await Post(data, 'production-report-management')
             SuccessNotif('Add new production success')
             navigate('/home/ppic/production')
         } catch (e) {
-            console.log(e)
-            if (e.message.data.non_field_errors) {
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            } else if (e.message.data.non_field_errors) {
                 FailedNotif(e.message.data.non_field_errors)
             } else {
                 FailedNotif('New production failed')
             }
         }
-    }
+    }, [Post, navigate])
 
-    const openConfirmSubmit = (data) => openConfirmModal({
+    const openConfirmSubmit = useCallback((data) => openConfirmModal({
         title: `Save new production`,
         children: (
             <Text size="sm">
@@ -97,13 +100,29 @@ const NewProductionPriority = () => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleSubmit(data)
-    })
+    }), [handleSubmit])
 
+    const findPriority = useCallback((listPriority) => {
+
+        const priority = listPriority.find(prior => prior.id === parseInt(params.priorityId))
+
+        form.setValues({
+            quantity: priority.production_quantity,
+            quantity_not_good: 0,
+            machine: null,
+            operator: null,
+            process: priority.id,
+            product: priority.product.id
+        })
+
+        setPriority(priority)
+
+    }, [params.priorityId])
 
     useEffect(() => {
 
 
-        Get(auth.user.token, 'production-priority').then(data => {
+        Get('production-priority').then(data => {
 
             const listPriority = data.reduce((prev, current) => {
                 const { ppic_process_related } = current
@@ -111,31 +130,19 @@ const NewProductionPriority = () => {
                 return [...prev, ...ppic_process_related]
             }, [])
 
-
-            const priority = listPriority.find(prior => prior.id === parseInt(params.priorityId))
-
-            form.setValues({
-                quantity: priority.production_quantity,
-                quantity_not_good: 0,
-                machine: null,
-                operator: null,
-                process: priority.id,
-                product: priority.product.id
-            })
-
-            setPriority(priority)
+            findPriority(listPriority)
 
         })
 
-        Get(auth.user.token, 'machine').then(data => {
+        Get('machine').then(data => {
             setMachineList(data)
         })
 
-        Get(auth.user.token, 'operator').then(data => {
+        Get('operator').then(data => {
             setOperatorList(data)
         })
 
-    }, [auth.user.token])
+    }, [Get, findPriority])
 
     return (
         <>
@@ -145,7 +152,7 @@ const NewProductionPriority = () => {
             <Title
                 className={classes.title}
             >
-                Detail production report
+                New production
             </Title>
 
             <Loading />

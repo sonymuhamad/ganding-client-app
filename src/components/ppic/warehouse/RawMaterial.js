@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { SuccessNotif, FailedNotif } from "../../notifications/Notifications";
 import { useRequest } from "../../../hooks/useRequest";
-import { AuthContext } from "../../../context/AuthContext";
 import BaseTableExpanded from "../../tables/BaseTableExpanded";
 import { openModal, closeAllModals, openConfirmModal } from "@mantine/modals";
 
-import { IconSearch, IconEdit } from "@tabler/icons";
+import { IconSearch, IconEdit, IconPerspective, IconRuler2, IconScale, IconDimensions, IconRulerMeasure } from "@tabler/icons";
 
 import { TextInput, NumberInput, Group, Paper, Button, Text } from "@mantine/core";
 
@@ -17,6 +16,7 @@ const ExpandedDetailWarehouseMaterial = ({ data }) => {
         <Paper p='sm'  >
             <Group grow >
                 <TextInput
+                    icon={<IconPerspective />}
                     label='Specification'
                     value={data.spec}
                     readOnly
@@ -24,6 +24,7 @@ const ExpandedDetailWarehouseMaterial = ({ data }) => {
                 />
 
                 <TextInput
+                    icon={<IconRulerMeasure />}
                     label='Thickness'
                     value={data.thickness}
                     readOnly
@@ -33,6 +34,7 @@ const ExpandedDetailWarehouseMaterial = ({ data }) => {
 
             <Group grow my='xs' >
                 <TextInput
+                    icon={<IconRuler2 />}
                     label='Length'
                     value={data.length}
                     readOnly
@@ -40,6 +42,7 @@ const ExpandedDetailWarehouseMaterial = ({ data }) => {
                 />
 
                 <TextInput
+                    icon={<IconScale />}
                     label='Weight'
                     value={data.weight}
                     readOnly
@@ -47,6 +50,7 @@ const ExpandedDetailWarehouseMaterial = ({ data }) => {
                 />
 
                 <TextInput
+                    icon={<IconDimensions />}
                     label='Width'
                     readOnly
                     value={data.width}
@@ -60,26 +64,29 @@ const ExpandedDetailWarehouseMaterial = ({ data }) => {
 
 const ExpandedMaterialWarehouse = ({ data }) => {
 
-
-    const dataMaterial = data.material_set.map(material => ({
-        ...material, button: <Button
-            leftIcon={<IconEdit stroke={2} size={16} />}
-            color='blue.6'
-            variant='subtle'
-            radius='md'
-            onClick={() => {
-                openEditStockWarehouseMaterial(material)
-            }}
-        >
-            Edit stock
-        </Button>
-    }))
-
-    const openEditStockWarehouseMaterial = (material) => openModal({
+    const openEditStockWarehouseMaterial = useCallback((material) => openModal({
         title: `Edit stock material`,
         radius: 'md',
         children: <ModalEditStockMaterial material={material} />
-    })
+    }), [])
+
+    const dataMaterial = useMemo(() => {
+
+        return data.material_set.map(material => ({
+            ...material, button: <Button
+                leftIcon={<IconEdit stroke={2} size={16} />}
+                color='blue.6'
+                variant='subtle'
+                radius='md'
+                onClick={() => {
+                    openEditStockWarehouseMaterial(material)
+                }}
+            >
+                Edit stock
+            </Button>
+        }))
+    }, [data.material_set, openEditStockWarehouseMaterial])
+
 
 
     const columnMaterial = useMemo(() => [
@@ -122,12 +129,11 @@ const ExpandedMaterialWarehouse = ({ data }) => {
 const ModalEditStockMaterial = ({ material }) => {
 
     const [quantity, setQuantity] = useState('')
-    const auth = useContext(AuthContext)
     const { Put } = useRequest()
 
-    const handleSubmit = async () => {
+    const handleSubmit = useCallback(async () => {
         try {
-            await Put(material.warehousematerial.id, { quantity: quantity }, auth.user.token, 'warehouse-management-material')
+            await Put(material.warehousematerial.id, { quantity: quantity }, 'warehouse-management-material')
             closeAllModals()
             material.action(prev => prev + 1)
             SuccessNotif('Edit stock material success')
@@ -135,10 +141,10 @@ const ModalEditStockMaterial = ({ material }) => {
             console.log(e)
             FailedNotif('Edit stock material failed')
         }
-    }
+    }, [material, Put, quantity])
 
 
-    const openConfirmSubmit = () => openConfirmModal({
+    const openConfirmSubmit = useCallback(() => openConfirmModal({
         title: `Edit stock material`,
         children: (
             <Text size="sm">
@@ -152,11 +158,11 @@ const ModalEditStockMaterial = ({ material }) => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleSubmit()
-    })
+    }), [handleSubmit])
 
     useEffect(() => {
         setQuantity(material.warehousematerial.quantity)
-    }, [])
+    }, [material.warehousematerial.quantity])
 
     return (
         <>
@@ -205,8 +211,7 @@ const RawMaterial = ({ actions }) => {
     const [searchVal, setSearchVal] = useState('')
     const [uom, setUom] = useState([])
     const [actionWhMaterial, setActionWhMaterial] = useState(0)
-    const auth = useContext(AuthContext)
-    const { Get } = useRequest()
+    const { Get, Loading } = useRequest()
 
     const filteredUom = useMemo(() => {
 
@@ -248,7 +253,7 @@ const RawMaterial = ({ actions }) => {
         const fetchUomMaterial = async () => {
 
             try {
-                const uomMaterial = await Get(auth.user.token, 'warehouse-material')
+                const uomMaterial = await Get('warehouse-material')
 
                 const dataUomMaterial = uomMaterial.map(uom => ({ ...uom, material_set: uom.material_set.map(material => ({ ...material, action: setActionWhMaterial })) }))
 
@@ -262,10 +267,11 @@ const RawMaterial = ({ actions }) => {
         fetchUomMaterial()
 
 
-    }, [auth.user.token, actionWhMaterial, actions])
+    }, [actionWhMaterial, actions])
 
     return (
         <>
+            <Loading />
             <Group position="right"  >
                 <TextInput
                     radius='md'

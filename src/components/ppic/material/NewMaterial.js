@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 import { useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
 import { TextInput, Group, NumberInput, NativeSelect, Title, Button, Center, Text } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 
-import { IconDownload } from "@tabler/icons";
-import { SuccessNotif, FailedNotif } from '../notifications/Notifications'
-import { useRequest } from "../../hooks/useRequest";
-import { AuthContext } from "../../context/AuthContext";
-import BreadCrumb from "../BreadCrumb";
-import { sectionStyle } from "../../styles/sectionStyle";
+import { IconAsset, IconAtom2, IconDimensions, IconDownload, IconPerspective, IconRuler2, IconRulerMeasure, IconScale, IconUserCheck } from "@tabler/icons";
+import { SuccessNotif, FailedNotif } from '../../notifications/Notifications'
+import { useRequest } from "../../../hooks/useRequest";
+import BreadCrumb from "../../BreadCrumb";
+import { sectionStyle } from "../../../styles/sectionStyle";
 
 
 
@@ -19,7 +18,6 @@ const NewMaterial = () => {
     const { classes } = sectionStyle()
     const [supplierList, setSupplierList] = useState([])
     const [uomList, setUomList] = useState([])
-    const auth = useContext(AuthContext)
     const { Get, Post, Loading } = useRequest()
     const navigate = useNavigate()
 
@@ -53,9 +51,9 @@ const NewMaterial = () => {
         }
     ]
 
-    const handleSubmit = async (val) => {
+    const handleSubmit = useCallback(async (val) => {
         try {
-            await Post(val, auth.user.token, 'material', 'multipart/form-data')
+            await Post(val, 'material', 'multipart/form-data')
 
             SuccessNotif('New material added successfully')
             navigate('/home/ppic/material')
@@ -63,9 +61,9 @@ const NewMaterial = () => {
             form.setErrors(e.message.data)
             FailedNotif('Failed to add new new material')
         }
-    }
+    }, [navigate])
 
-    const openSubmitMaterial = (val) => openConfirmModal({
+    const openSubmitMaterial = useCallback((val) => openConfirmModal({
         title: `Save new material`,
         children: (
             <Text size="sm">
@@ -77,15 +75,15 @@ const NewMaterial = () => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleSubmit(val)
-    })
+    }), [handleSubmit])
 
 
     useEffect(() => {
         const fetch = async () => {
 
             try {
-                const uoms = await Get(auth.user.token, 'uom-list')
-                const suppliers = await Get(auth.user.token, 'supplier-list')
+                const uoms = await Get('uom-list')
+                const suppliers = await Get('supplier-list')
                 setUomList(uoms)
                 setSupplierList(suppliers)
 
@@ -108,10 +106,11 @@ const NewMaterial = () => {
                 Add new material
             </Title>
 
-
+            <Loading />
             <form id='newMaterialForm' onSubmit={form.onSubmit(openSubmitMaterial)}  >
 
                 <NativeSelect
+                    icon={<IconUserCheck />}
                     label='Supplier'
                     radius='md'
                     required
@@ -121,6 +120,7 @@ const NewMaterial = () => {
                 />
 
                 <TextInput
+                    icon={<IconAsset />}
                     label='Material name'
                     my='xs'
                     required
@@ -131,6 +131,7 @@ const NewMaterial = () => {
 
 
                 <TextInput
+                    icon={<IconPerspective />}
                     label='Material specification'
                     radius='md'
                     required
@@ -138,12 +139,12 @@ const NewMaterial = () => {
                     placeholder="Input material specification"
                 />
 
-                <Group my='xs' >
+                <Group my='xs' grow >
 
 
                     <NativeSelect
                         label='Unit of material'
-
+                        icon={<IconAtom2 />}
                         radius='md'
                         placeholder="select unit of material"
                         data={uomList.map(uom => ({ value: uom.id, label: uom.name }))}
@@ -153,6 +154,12 @@ const NewMaterial = () => {
                     />
 
                     <NumberInput
+                        icon={<IconRuler2 />}
+                        hideControls
+                        min={0}
+                        decimalSeparator=','
+                        precision={2}
+                        step={0.5}
                         label='Length'
                         radius='md'
                         {...form.getInputProps('length')}
@@ -161,6 +168,12 @@ const NewMaterial = () => {
                     />
 
                     <NumberInput
+                        icon={<IconDimensions />}
+                        hideControls
+                        min={0}
+                        decimalSeparator=','
+                        precision={2}
+                        step={0.5}
                         label='Width'
                         {...form.getInputProps('width')}
                         placeholder="width of material"
@@ -168,14 +181,26 @@ const NewMaterial = () => {
                         required
                     />
 
-                    <TextInput
+                    <NumberInput
+                        icon={<IconRulerMeasure />}
+                        hideControls
+                        min={0}
+                        decimalSeparator=','
+                        precision={2}
+                        step={0.5}
                         label='Thickness'
                         {...form.getInputProps('thickness')}
                         placeholder="thickness of material"
                         radius='md'
                         required
                     />
-                    <TextInput
+                    <NumberInput
+                        icon={<IconScale />}
+                        hideControls
+                        min={0}
+                        decimalSeparator=','
+                        precision={2}
+                        step={0.5}
                         label='Kg/pcs'
                         {...form.getInputProps('weight')}
                         placeholder="weight of material"

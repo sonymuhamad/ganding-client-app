@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 import { Group, TextInput, Text, NumberInput, Paper, Divider, Title, Button, Select, UnstyledButton } from "@mantine/core";
 import { useParams } from "react-router-dom";
-import { AuthContext } from "../../../context/AuthContext";
+
 import { useRequest } from "../../../hooks/useRequest";
-import { useForm } from "@mantine/form";
 import BreadCrumb from "../../BreadCrumb";
 import { sectionStyle } from "../../../styles/sectionStyle";
 
-import { IconBarcode, IconCodeAsterix, IconTimeline, IconFileTypography, IconSortAscending2, IconBuildingFactory, IconUser, IconArchive, IconEdit, IconX, IconDownload, IconTrashX, IconAsset, } from "@tabler/icons";
+import { useForm } from "@mantine/form";
+import { IconBarcode, IconCodeAsterix, IconTimeline, IconFileTypography, IconSortAscending2, IconBuildingFactory, IconUser, IconArchive, IconEdit, IconX, IconDownload, IconTrashX, IconAsset, IconSum, IconPerspective, IconScale, IconRuler2, IconDimensions, IconRulerMeasure, IconAtom2, } from "@tabler/icons";
 import { openConfirmModal } from "@mantine/modals";
 import { FailedNotif, SuccessNotif } from "../../notifications/Notifications";
 import { useNavigate } from "react-router-dom";
@@ -16,8 +16,8 @@ import { useNavigate } from "react-router-dom";
 
 const DetailProduction = () => {
 
-    const auth = useContext(AuthContext)
     const params = useParams()
+    const [action, setAction] = useState(0)
     const { Retrieve, Get, Put, Delete, Loading } = useRequest()
     const navigate = useNavigate()
 
@@ -93,7 +93,7 @@ const DetailProduction = () => {
 
     useEffect(() => {
 
-        Retrieve(params.productionId, auth.user.token, 'production-report').then(data => {
+        Retrieve(params.productionId, 'production-report').then(data => {
             const { operator, machine, ...restProps } = data
             const detailProductionReport = { ...restProps, machine: machine.id, operator: operator.id }
 
@@ -102,17 +102,35 @@ const DetailProduction = () => {
 
         })
 
-        Get(auth.user.token, 'machine').then(data => {
+        Get('machine').then(data => {
             setMachineList(data)
         })
 
-        Get(auth.user.token, 'operator').then(data => {
+        Get('operator').then(data => {
             setOperatorList(data)
         })
 
-    }, [auth.user.token, params.productionId])
+    }, [params.productionId, Get, Retrieve, action])
 
-    const openDeleteProduction = () => openConfirmModal({
+    const handleClickEditButton = () => {
+
+        form.resetDirty()
+        form.setValues(detailProduction)
+        setEditAccess(prev => !prev)
+    }
+
+    const handleDeleteProduction = useCallback(async () => {
+        try {
+            await Delete(params.productionId, 'production-report-management')
+            SuccessNotif('Delete production report success')
+            navigate('/home/ppic/production')
+        } catch (e) {
+            console.log(e)
+            FailedNotif(e.message.data)
+        }
+    }, [navigate, Delete, params.productionId])
+
+    const openDeleteProduction = useCallback(() => openConfirmModal({
         title: 'Delete production report',
         children: (
             <Text size='sm' >
@@ -124,35 +142,26 @@ const DetailProduction = () => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleDeleteProduction()
-    })
-
-    const handleDeleteProduction = async () => {
-        try {
-            await Delete(params.productionId, auth.user.token, 'production-report-management')
-            SuccessNotif('Delete production report success')
-            navigate('/home/ppic/production')
-        } catch (e) {
-            console.log(e)
-            FailedNotif(e.message.data)
-        }
-    }
+    }), [handleDeleteProduction])
 
     const handleSubmit = async (data) => {
         const { process, product, ...restProps } = data
 
         try {
-            await Put(params.productionId, { ...restProps, process: process.id, product: product.id }, auth.user.token, 'production-report-management')
+            await Put(params.productionId, { ...restProps, process: process.id, product: product.id }, 'production-report-management')
+            setAction(prev => prev + 1)
             SuccessNotif('Edit data production success')
             setDetailProduction(prev => ({ ...prev, machine: data.machine, operator: data.operator, quantity: data.quantity, quantity_not_good: data.quantity_not_good }))
             form.resetDirty()
             setEditAccess(prev => !prev)
 
         } catch (e) {
-            console.log(e)
-            if (e.message.data.non_field_errors) {
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            } else if (e.message.data.non_field_errors) {
                 FailedNotif(e.message.data.non_field_errors)
             } else {
-                FailedNotif('Add production failed')
+                FailedNotif('Edit production failed')
             }
             handleClickEditButton()
         }
@@ -174,104 +183,140 @@ const DetailProduction = () => {
         onConfirm: () => handleSubmit(data)
     })
 
-    const handleClickEditButton = () => {
-        form.resetDirty()
-        form.setValues(detailProduction)
-        setEditAccess(prev => !prev)
-    }
 
-    const materialUsed = detailProduction.materialproductionreport_set.map(matUsed => (
-        <Paper key={matUsed.id} style={{ border: `1px solid #ced4da` }} radius='md' m='xs'  >
 
-            <Group grow m='xs' >
+    const materialUsed = useMemo(() => {
+        return detailProduction.materialproductionreport_set.map(matUsed => (
+            <Paper key={matUsed.id} style={{ border: `1px solid #ced4da` }} radius='md' m='xs'  >
 
+                <Group grow m='xs' >
+
+                    <TextInput
+                        icon={<IconAsset />}
+                        radius='md'
+                        label='Material name'
+                        variant='filled'
+                        readOnly
+                        value={matUsed.material.name}
+                    />
+                    <TextInput
+                        icon={<IconSum />}
+                        variant='filled'
+                        label='Quantity used in production'
+                        radius='md'
+                        readOnly
+                        value={matUsed.quantity}
+                        rightSection={<Text size='sm' color='dimmed' >
+                            {matUsed.material.uom.name}
+                        </Text>}
+                    />
+
+                </Group>
+
+                <Group grow m='xs' >
+                    <TextInput
+                        icon={<IconPerspective />}
+                        variant='filled'
+                        radius='md'
+                        label='Specification material'
+                        readOnly
+                        value={matUsed.material.spec}
+                    />
+                    <TextInput
+                        icon={<IconScale />}
+                        variant='filled'
+                        label='Weight'
+                        radius='md'
+                        readOnly
+                        value={matUsed.material.weight}
+                        rightSection={<Text size='sm' color='dimmed' >
+                            Kg
+                        </Text>}
+                    />
+                    <TextInput
+                        icon={<IconRuler2 />}
+                        variant='filled'
+                        label='Length'
+                        radius='md'
+                        readOnly
+                        value={matUsed.material.length}
+                        rightSection={<Text size='sm' color='dimmed' >
+                            mm
+                        </Text>}
+                    />
+                    <TextInput
+                        icon={<IconDimensions />}
+                        variant='filled'
+                        label='Width'
+                        radius='md'
+                        readOnly
+                        value={matUsed.material.width}
+                        rightSection={<Text size='sm' color='dimmed' >
+                            mm
+                        </Text>}
+                    />
+                    <TextInput
+                        icon={<IconRulerMeasure />}
+                        variant='filled'
+                        label='Thickness'
+                        radius='md'
+                        readOnly
+                        value={matUsed.material.thickness}
+                        rightSection={<Text size='sm' color='dimmed' >
+                            mm
+                        </Text>}
+                    />
+                    <TextInput
+                        icon={<IconAtom2 />}
+                        variant='filled'
+                        label='Unit of material'
+                        radius='md'
+                        readOnly
+                        value={matUsed.material.uom.name}
+                    />
+
+                </Group>
+
+
+            </Paper>
+        ))
+    }, [detailProduction])
+
+    const productUsed = useMemo(() => {
+        return detailProduction.productproductionreport_set.map(prodUsed => (
+            <Paper key={prodUsed.id} style={{ border: `1px solid #ced4da` }} radius='md' m='xs' >
                 <TextInput
+                    icon={<IconBarcode />}
                     radius='md'
-                    label='Material name'
+                    variant="filled"
+                    label='Product name'
                     readOnly
-                    value={matUsed.material.name}
+                    m='xs'
+                    value={prodUsed.product.name}
                 />
                 <TextInput
+                    icon={<IconCodeAsterix />}
+                    variant='filled'
+                    label='Product number'
+                    radius='md'
+                    m='xs'
+                    readOnly
+                    value={prodUsed.product.code}
+                />
+                <TextInput
+                    icon={<IconSum />}
+                    variant='filled'
                     label='Quantity used in production'
+                    m='xs'
                     radius='md'
                     readOnly
-                    value={matUsed.quantity}
+                    value={prodUsed.quantity}
 
                 />
 
-            </Group>
-
-            <Group grow m='xs' >
-                <TextInput
-                    radius='md'
-                    label='Specification material'
-                    readOnly
-                    value={matUsed.material.spec}
-                />
-                <TextInput
-                    label='Weight'
-                    radius='md'
-                    readOnly
-                    value={matUsed.material.weight}
-                />
-                <TextInput
-                    label='Length'
-                    radius='md'
-                    readOnly
-                    value={matUsed.material.length}
-                />
-                <TextInput
-                    label='Width'
-                    radius='md'
-                    readOnly
-                    value={matUsed.material.width}
-                />
-                <TextInput
-                    label='Thickness'
-                    radius='md'
-                    readOnly
-                    value={matUsed.material.thickness}
-                />
-                <TextInput
-                    label='Unit of material'
-                    radius='md'
-                    readOnly
-                    value={matUsed.material.uom.name}
-                />
-
-            </Group>
-
-
-        </Paper>
-    ))
-
-    const productUsed = detailProduction.productproductionreport_set.map(prodUsed => (
-        <Paper key={prodUsed.id} style={{ border: `1px solid #ced4da` }} radius='md' m='xs' >
-            <TextInput
-                radius='md'
-                label='Product name'
-                readOnly
-                m='xs'
-                value={prodUsed.product.name}
-            />
-            <TextInput
-                label='Product number'
-                radius='md'
-                m='xs'
-                readOnly
-                value={prodUsed.product.code}
-            />
-            <TextInput
-                label='Quantity used in production'
-                m='xs'
-                radius='md'
-                readOnly
-                value={prodUsed.quantity}
-
-            />
-
-        </Paper>
-    ))
+            </Paper>
+        ))
+    }, [detailProduction])
 
 
     return (
@@ -320,7 +365,7 @@ const DetailProduction = () => {
             </Group>
 
             <TextInput
-                variant="unstyled"
+                variant="filled"
                 readOnly
                 m='xs'
                 icon={<IconBarcode />}
@@ -329,7 +374,7 @@ const DetailProduction = () => {
             />
 
             <TextInput
-                variant="unstyled"
+                variant="filled"
                 icon={<IconCodeAsterix />}
                 readOnly
                 m='xs'
@@ -337,31 +382,28 @@ const DetailProduction = () => {
                 value={form.values.product.code}
             />
 
-            <Group grow >
+            <Group grow m='xs' >
 
                 <TextInput
-                    variant="unstyled"
+                    variant="filled"
                     icon={<IconTimeline />}
                     readOnly
-                    m='xs'
                     label='Process name'
                     value={form.values.process.process_name}
                 />
 
                 <TextInput
-                    variant="unstyled"
+                    variant="filled"
                     icon={<IconFileTypography />}
                     readOnly
-                    m='xs'
                     label='Process type'
                     value={form.values.process.process_type.name}
                 />
 
                 <TextInput
-                    variant="unstyled"
+                    variant="filled"
                     icon={<IconSortAscending2 />}
                     readOnly
-                    m='xs'
                     label='Wip'
                     value={`Wip${form.values.process.order}`}
                 />
@@ -394,17 +436,17 @@ const DetailProduction = () => {
                     label='Operator'
                 />
 
-                <Group grow >
+                <Group grow m='xs' >
 
 
 
                     <NumberInput
                         hideControls
-                        m='xs'
                         icon={<IconArchive />}
                         label='Quantity production'
                         radius='md'
                         required
+                        min={0}
                         readOnly={!editAccess}
                         placeholder="input quantity production"
                         {...form.getInputProps('quantity')}
@@ -414,7 +456,7 @@ const DetailProduction = () => {
                     <NumberInput
                         icon={<IconArchive />}
                         hideControls
-                        m='xs'
+                        min={0}
                         readOnly={!editAccess}
                         label='Quantity not good'
                         required
@@ -439,6 +481,10 @@ const DetailProduction = () => {
 
             {materialUsed}
 
+            {materialUsed.length === 0 && <Text my='md' size='sm' align="center" color='dimmed'  >
+                This production does not use material
+            </Text>}
+
             <Divider my='md' />
             <UnstyledButton>
                 <Group>
@@ -450,6 +496,11 @@ const DetailProduction = () => {
             </UnstyledButton>
 
             {productUsed}
+
+            {productUsed.length === 0 &&
+                <Text my='md' size='sm' align="center" color='dimmed'  >
+                    This production does not use product assembly
+                </Text>}
 
         </>
     )

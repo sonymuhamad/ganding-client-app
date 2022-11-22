@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useContext, useMemo } from "react"
-import { AuthContext } from "../../../context/AuthContext"
+import React, { useState, useEffect, useMemo } from "react"
 import { useRequest } from "../../../hooks/useRequest"
 
 import BaseTable from "../../tables/BaseTable"
@@ -9,7 +8,6 @@ import { IconSearch } from "@tabler/icons"
 
 const ReceiptSchedule = () => {
 
-    const auth = useContext(AuthContext)
     const { Get } = useRequest()
     const [schedule, setSchedule] = useState([])
     const [searchVal, setSearchVal] = useState('')
@@ -31,7 +29,7 @@ const ReceiptSchedule = () => {
             selector: row => row.material_order.purchase_order_material.supplier.name
         },
         {
-            name: 'Po number',
+            name: 'Purchase order number',
             selector: row => row.material_order.purchase_order_material.code
         },
         {
@@ -50,10 +48,10 @@ const ReceiptSchedule = () => {
 
 
     useEffect(() => {
-        Get(auth.user.token, 'material-receipt-schedule').then(data => {
+        Get('material-receipt-schedule').then(data => {
             setSchedule(data)
         })
-    }, [auth.user.token])
+    }, [])
 
     return (
         <>

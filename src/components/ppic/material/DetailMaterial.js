@@ -1,28 +1,26 @@
-import React, { useEffect, useState, useContext, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
 
 import { Title, TextInput, Group, Button, Paper, NumberInput, NativeSelect, Text, Image, FileButton } from "@mantine/core";
 import useScrollSpy from 'react-use-scrollspy'
 
-import { IconTrashX, IconDownload, IconEdit, IconX, IconUpload, IconTrash, IconDotsCircleHorizontal } from "@tabler/icons";
+import { IconTrashX, IconDownload, IconEdit, IconX, IconUpload, IconTrash, IconDotsCircleHorizontal, IconUserCheck, IconAsset, IconPerspective, IconAtom2, IconBuildingWarehouse, IconRuler2, IconDimensions, IconRulerMeasure, IconScale } from "@tabler/icons";
 
 import { openConfirmModal } from "@mantine/modals";
 
-import { useRequest } from "../../hooks/useRequest";
+import { useRequest } from "../../../hooks/useRequest";
 import { useForm } from "@mantine/form";
-import BreadCrumb from "../BreadCrumb";
-import BaseAside from "../layout/BaseAside";
-import BaseTable from "../tables/BaseTable";
-import { sectionStyle } from "../../styles/sectionStyle";
-import { FailedNotif, SuccessNotif } from "../notifications/Notifications";
+import BreadCrumb from "../../BreadCrumb";
+import BaseAside from "../../layout/BaseAside";
+import BaseTable from "../../tables/BaseTable";
+import { sectionStyle } from "../../../styles/sectionStyle";
+import { FailedNotif, SuccessNotif } from "../../notifications/Notifications";
 
 
 
 const DetailMaterial = () => {
 
     const params = useParams() // materialId
-    const auth = useContext(AuthContext)
     const { Retrieve, Get, Loading, Put, Delete } = useRequest()
     const [breadcrumb, setBreadcrumb] = useState([])
     const { classes } = sectionStyle()
@@ -124,8 +122,8 @@ const DetailMaterial = () => {
 
         const fetch = async () => {
             try {
-                const material = await Retrieve(params.materialId, auth.user.token, 'material-detail')
-                const uoms = await Get(auth.user.token, 'uom-list')
+                const material = await Retrieve(params.materialId, 'material-detail')
+                const uoms = await Get('uom-list')
                 const { warehousematerial, ppic_requirementmaterial_related, ...restDataMaterial } = material
 
                 const reqMaterial = material.ppic_requirementmaterial_related.map(req => ({
@@ -168,19 +166,27 @@ const DetailMaterial = () => {
 
         fetch()
 
-    }, [auth.user.token, params.materialId, action])
+    }, [action])
 
-    const handleDelete = async (id) => {
+
+    const handleClickEditButton = useCallback(() => {
+        setEditAccess(prev => !prev)
+        form.resetDirty()
+        const { warehousematerial, ppic_requirementmaterial_related, ...restDataMaterial } = detailMaterial
+        form.setValues(restDataMaterial)
+    }, [detailMaterial])
+
+    const handleDelete = useCallback(async (id) => {
         try {
-            await Delete(id, auth.user.token, 'material')
+            await Delete(id, 'material')
             SuccessNotif('Delete material success')
             navigate('/home/ppic/material')
         } catch (e) {
             FailedNotif(e.message.data)
         }
-    }
+    }, [navigate])
 
-    const handleSubmitEditMaterial = async (val) => {
+    const handleSubmitEditMaterial = useCallback(async (val) => {
         const data = { ...val, supplier: val.supplier.id }
         let validData
 
@@ -191,10 +197,10 @@ const DetailMaterial = () => {
             validData = data
         }
 
-
+        console.log(validData)
 
         try {
-            await Put(params.materialId, validData, auth.user.token, 'material', 'multipart/form-data')
+            await Put(params.materialId, validData, 'material', 'multipart/form-data')
             SuccessNotif('Edit data material success')
             setAction(prev => prev + 1)
             setEditAccess(prev => !prev)
@@ -205,18 +211,12 @@ const DetailMaterial = () => {
             console.log(e)
         }
 
-    }
-
-    const handleClickEditButton = () => {
-        setEditAccess(prev => !prev)
-        form.resetDirty()
-        const { warehousematerial, ppic_requirementmaterial_related, ...restDataMaterial } = detailMaterial
-        form.setValues(restDataMaterial)
-    }
+    }, [handleClickEditButton])
 
 
 
-    const openSubmitEditMaterial = (val) => openConfirmModal({
+
+    const openSubmitEditMaterial = useCallback((val) => openConfirmModal({
         title: 'Edit material',
         children: (
             <Text size='sm' >
@@ -229,9 +229,9 @@ const DetailMaterial = () => {
         confirmProps: { radius: 'md' },
         onCancel: () => handleClickEditButton(),
         onConfirm: () => handleSubmitEditMaterial(val)
-    })
+    }), [handleClickEditButton, handleSubmitEditMaterial])
 
-    const openDeleteMaterial = (id) => openConfirmModal({
+    const openDeleteMaterial = useCallback((id) => openConfirmModal({
         title: `Delete material`,
         children: (
             <Text size="sm">
@@ -243,7 +243,7 @@ const DetailMaterial = () => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleDelete(id)
-    })
+    }), [handleDelete])
 
 
     return (
@@ -294,6 +294,7 @@ const DetailMaterial = () => {
                 <form id='formEditMaterial' onSubmit={form.onSubmit(openSubmitEditMaterial)}  >
 
                     <TextInput
+                        icon={<IconUserCheck />}
                         label='Supplier'
                         radius='md'
                         readOnly
@@ -301,6 +302,7 @@ const DetailMaterial = () => {
                     />
 
                     <TextInput
+                        icon={<IconAsset />}
                         label='Material name'
                         my='xs'
                         readOnly={!editAccess}
@@ -311,6 +313,7 @@ const DetailMaterial = () => {
 
                     <Group mb='xs' grow >
                         <TextInput
+                            icon={<IconPerspective />}
                             readOnly={!editAccess}
                             label='Material specification'
                             radius='md'
@@ -320,6 +323,7 @@ const DetailMaterial = () => {
 
 
                         <NativeSelect
+                            icon={<IconAtom2 />}
                             label='Unit of material'
                             disabled={!editAccess}
                             radius='md'
@@ -330,19 +334,25 @@ const DetailMaterial = () => {
                         />
 
                         <NumberInput
+                            icon={<IconBuildingWarehouse />}
                             hideControls
                             label='Stock in warehouse'
                             radius='md'
                             value={detailMaterial.warehousematerial.quantity}
-                            readOnly={!editAccess}
+                            readOnly
                         />
 
 
                     </Group>
 
-                    <Group>
+                    <Group grow >
 
                         <NumberInput
+                            icon={<IconRuler2 />}
+                            min={0}
+                            decimalSeparator=','
+                            precision={2}
+                            step={0.5}
                             hideControls
                             label='Length'
                             readOnly={!editAccess}
@@ -352,6 +362,11 @@ const DetailMaterial = () => {
                         />
 
                         <NumberInput
+                            icon={<IconDimensions />}
+                            min={0}
+                            decimalSeparator=','
+                            precision={2}
+                            step={0.5}
                             hideControls
                             label='Width'
                             readOnly={!editAccess}
@@ -360,14 +375,26 @@ const DetailMaterial = () => {
                             radius='md'
                         />
 
-                        <TextInput
+                        <NumberInput
+                            icon={<IconRulerMeasure />}
+                            min={0}
+                            decimalSeparator=','
+                            precision={2}
+                            step={0.5}
+                            hideControls
                             label='Thickness'
                             readOnly={!editAccess}
                             {...form.getInputProps('thickness')}
                             placeholder="thickness of material"
                             radius='md'
                         />
-                        <TextInput
+                        <NumberInput
+                            icon={<IconScale />}
+                            min={0}
+                            decimalSeparator=','
+                            precision={2}
+                            step={0.5}
+                            hideControls
                             label='Kg/pcs'
                             readOnly={!editAccess}
                             {...form.getInputProps('weight')}

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 
 import { Title, Divider } from "@mantine/core";
 import useScrollSpy from 'react-use-scrollspy'
@@ -10,19 +10,22 @@ import { sectionStyle } from "../../styles/sectionStyle";
 import RawMaterial from "./warehouse/RawMaterial";
 import FinishGood from "./warehouse/FinishGood";
 import Wip from "./warehouse/Wip";
-import Subcont from "./warehouse/Subcont"
 import ConversionUom from "./warehouse/ConversionUom";
 import BaseConversionMaterial from "./warehouse/BaseConversionMaterial";
 import ConvertMaterial from "./warehouse/ConvertMaterial";
 import MaterialReceipt from "./warehouse/MaterialReceipt";
 import ReceiptSchedule from './warehouse/ReceiptSchedule'
 
+import ReceiptNoteProductSubconstruction from "./warehouse/ReceiptNoteProductSubconstruction";
+import ReceiptSubcontSchedule from "./warehouse/ReceiptSubcontSchedule";
+
+
 export default function Warehouse() {
 
     const { classes } = sectionStyle()
     const [actionConvertMaterial, setActionConvertMaterial] = useState(0)
 
-    const breadcrumb = [
+    const breadcrumb = useMemo(() => [
         {
             path: '/home/ppic',
             label: 'Ppic'
@@ -31,9 +34,11 @@ export default function Warehouse() {
             path: '/home/ppic/warehouse',
             label: 'Warehouse'
         }
-    ]
+    ], [])
 
     const sectionRefs = [
+        useRef(null),
+        useRef(null),
         useRef(null),
         useRef(null),
         useRef(null),
@@ -49,7 +54,7 @@ export default function Warehouse() {
         offsetPx: -80
     })
 
-    const links = [
+    const links = useMemo(() => [
         {
             "label": "Raw materials",
             "link": "#material-wh",
@@ -81,21 +86,26 @@ export default function Warehouse() {
             order: 2
         },
         {
-            label: 'Product in subcont',
-            link: "#subcont",
-            order: 2
-        },
-        {
-            label: 'Material receipt',
+            label: 'Material receipt note',
             link: '#material-receipt',
             order: 1
         },
         {
-            label: 'Receipt schedule',
+            label: 'Material receipt schedule',
             link: '#receipt-schedule',
             order: 1
         },
-    ]
+        {
+            label: 'Product subconstruction receipt note',
+            link: '#receipt-note-subcont',
+            order: 1
+        },
+        {
+            label: 'Product subconstruction receipt schedule',
+            link: '#subcont-receipt-schedule',
+            order: 1
+        },
+    ], [])
 
     return (
         <>
@@ -198,20 +208,7 @@ export default function Warehouse() {
             </section>
 
 
-            <section id='subcont' className={classes.section} ref={sectionRefs[6]}   >
-                <Title className={classes.title} >
-                    <a href="#subcont" className={classes.a_href} >
-                        Product in subcont
-                    </a>
-                </Title>
-
-                <Divider mb='md'></Divider>
-
-                <Subcont />
-
-            </section>
-
-            <section id='material-receipt' className={classes.section} ref={sectionRefs[7]}   >
+            <section id='material-receipt' className={classes.section} ref={sectionRefs[6]}   >
                 <Title className={classes.title} >
                     <a href="#material-receipt" className={classes.a_href} >
                         Material receipt
@@ -224,7 +221,7 @@ export default function Warehouse() {
 
             </section>
 
-            <section id='receipt-schedule' className={classes.section} ref={sectionRefs[8]}   >
+            <section id='receipt-schedule' className={classes.section} ref={sectionRefs[7]}   >
                 <Title className={classes.title} >
                     <a href="#receipt-schedule" className={classes.a_href} >
                         Receipt schedule
@@ -234,6 +231,32 @@ export default function Warehouse() {
                 <Divider mb='md'></Divider>
 
                 <ReceiptSchedule />
+
+            </section>
+
+            <section id='receipt-note-subcont' className={classes.section} ref={sectionRefs[8]}   >
+                <Title className={classes.title} >
+                    <a href="#receipt-note-subcont" className={classes.a_href} >
+                        Receipt note subconstruction
+                    </a>
+                </Title>
+
+                <Divider mb='md'></Divider>
+
+                <ReceiptNoteProductSubconstruction />
+
+            </section>
+
+            <section id='subcont-receipt-schedule' className={classes.section} ref={sectionRefs[9]}   >
+                <Title className={classes.title} >
+                    <a href="#subcont-receipt-schedule" className={classes.a_href} >
+                        Product subconstruction receipt schedule
+                    </a>
+                </Title>
+
+                <Divider mb='md'></Divider>
+
+                <ReceiptSubcontSchedule />
 
             </section>
 

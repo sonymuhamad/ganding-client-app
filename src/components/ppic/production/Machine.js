@@ -1,59 +1,57 @@
-import React, { useEffect, useState, useContext, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 
-import { IconEdit, IconTrash, IconPlus } from "@tabler/icons";
+import { IconEdit, IconTrash, IconPlus, IconEngine, IconDownload } from "@tabler/icons";
 import { Button, Group, TextInput, Text } from "@mantine/core";
 import { useRequest } from "../../../hooks/useRequest";
-import { AuthContext } from "../../../context/AuthContext";
 import BaseTable from "../../tables/BaseTable";
 import { openModal, closeAllModals, openConfirmModal } from "@mantine/modals";
 import { SuccessNotif, FailedNotif } from "../../notifications/Notifications";
+import { useForm } from "@mantine/form";
 
 
 const ModalEditMachine = ({ data, action }) => {
 
-    const [name, setName] = useState('')
-    const auth = useContext(AuthContext)
+    const form = useForm({
+        initialValues: {
+            name: data.name
+        }
+    })
     const { Put, Loading } = useRequest()
 
-    const handleSubmit = async (data) => {
+    const handleSubmit = useCallback(async (value) => {
+
         try {
-            await Put(data.id, { name: name }, auth.user.token, 'machine')
+            await Put(data.id, value, 'machine')
             closeAllModals()
             action(prev => prev + 1)
             SuccessNotif('Edit machine name success')
         } catch (e) {
-            console.log(e)
+            form.setErrors(e.message.data)
             FailedNotif('Edit machine name failed')
         }
-    }
-
-    useEffect(() => {
-        setName(data.name)
-    }, [])
+    }, [Put, action, data.id])
 
     return (
         <>
             <Loading />
-            <form onSubmit={(e) => {
-                e.preventDefault()
-                handleSubmit(data)
-            }}  >
+            <form onSubmit={form.onSubmit(handleSubmit)}  >
 
                 <TextInput
                     radius='md'
                     label='Machine name'
                     required
-                    value={name}
-                    onChange={(e) => {
-                        setName(e.target.value)
-                    }}
+                    m='xs'
+                    icon={<IconEngine />}
+                    {...form.getInputProps('name')}
                 />
 
                 <Button
+                    leftIcon={<IconDownload />}
                     my='md'
                     radius='md'
                     fullWidth
                     type='submit'
+                    disabled={data.name === form.values.name}
                 >
                     Save
                 </Button>
@@ -64,18 +62,22 @@ const ModalEditMachine = ({ data, action }) => {
 
 const ModalAddMachine = ({ action }) => {
 
-    const [name, setName] = useState('')
-    const auth = useContext(AuthContext)
+    const form = useForm({
+        initialValues: {
+            name: ''
+        }
+    })
     const { Post, Loading } = useRequest()
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (value) => {
+
         try {
-            await Post({ name: name }, auth.user.token, 'machine')
+            await Post(value, 'machine')
             closeAllModals()
             action(prev => prev + 1)
             SuccessNotif('Add new machine success')
         } catch (e) {
-            console.log(e)
+            form.setErrors(e.message.data)
             FailedNotif('Add machine failed')
         }
     }
@@ -83,19 +85,15 @@ const ModalAddMachine = ({ action }) => {
     return (
         <>
             <Loading />
-            <form onSubmit={(e) => {
-                e.preventDefault()
-                handleSubmit()
-            }}  >
+            <form onSubmit={form.onSubmit(handleSubmit)}  >
 
                 <TextInput
                     radius='md'
                     label='Machine name'
                     required
-                    value={name}
-                    onChange={(e) => {
-                        setName(e.target.value)
-                    }}
+                    m='xs'
+                    icon={<IconEngine />}
+                    {...form.getInputProps('name')}
                 />
 
                 <Button
@@ -103,6 +101,7 @@ const ModalAddMachine = ({ action }) => {
                     radius='md'
                     fullWidth
                     type='submit'
+                    leftIcon={<IconDownload />}
                 >
                     Save
                 </Button>
@@ -111,13 +110,10 @@ const ModalAddMachine = ({ action }) => {
     )
 }
 
-
-
 const Machine = () => {
 
     const [machine, setMachine] = useState([])
     const [action, setAction] = useState(0)
-    const auth = useContext(AuthContext)
     const { Get, Delete } = useRequest()
 
 
@@ -127,6 +123,10 @@ const Machine = () => {
             selector: row => row.name
         },
         {
+            name: 'Times used',
+            selector: row => `${row.numbers_of_production} times`
+        },
+        {
             name: '',
             selector: row => row.buttonEdit
         },
@@ -134,95 +134,90 @@ const Machine = () => {
             name: '',
             selector: row => row.buttonDelete
         },
-        // {
-        //     name: 'jumlah barang yang diproduksi',
-        //     selector: row => row.buttonDelete
-        // },
-        // {
-        //     name: 'berapa kali digunakan',
-        //     selector: row => row.buttonDelete
-        // },
     ], [])
 
 
 
-    const openEditMachine = (machine) => openModal({
+    const openEditMachine = useCallback((machine) => openModal({
         title: 'Edit machine name',
         radius: 'md',
         children: <ModalEditMachine data={machine} action={setAction} />
-    })
+    }), [])
 
-    const openAddMachine = () => openModal({
+    const openAddMachine = useCallback(() => openModal({
         title: 'Add new machine',
         radius: 'md',
         children: <ModalAddMachine action={setAction} />
-    })
+    }), [])
 
-    const openDeleteMachine = (id) => openConfirmModal({
-        title: 'Delete machine',
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteMachine(id)
-    })
-
-    const handleDeleteMachine = async (id) => {
+    const handleDeleteMachine = useCallback(async (id) => {
         try {
-            await Delete(id, auth.user.token, 'machine')
+            await Delete(id, 'machine')
             SuccessNotif('delete data machine success')
             setAction(prev => prev + 1)
         } catch (e) {
             console.log(e)
             FailedNotif(e.message.data)
         }
-    }
+    }, [])
 
+    const openDeleteMachine = useCallback((id) => {
+
+        return openConfirmModal({
+            title: 'Delete machine',
+            children: (
+                <Text size="sm">
+                    Are you sure?, data will be deleted.
+                </Text>
+            ),
+            radius: 'md',
+            labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
+            cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+            confirmProps: { radius: 'md' },
+            onConfirm: () => handleDeleteMachine(id)
+        })
+    }, [handleDeleteMachine])
+
+
+    const fetchMachine = useCallback(async () => {
+        try {
+            const dataMachine = await Get('machine')
+
+            const machineList = dataMachine.map(mesin => ({
+                ...mesin, buttonEdit:
+
+                    <Button
+                        leftIcon={<IconEdit stroke={2} size={16} />}
+                        color='blue.6'
+                        variant='subtle'
+                        radius='md'
+                        mx='xs'
+                        onClick={() => openEditMachine(mesin)}
+                    >
+                        Edit
+                    </Button>,
+                buttonDelete: <Button
+                    leftIcon={<IconTrash stroke={2} size={16} />}
+                    color='red'
+                    variant='subtle'
+                    radius='md'
+                    onClick={() => openDeleteMachine(mesin.id)}
+                >
+                    Delete
+                </Button>
+            }))
+
+            setMachine(machineList)
+        } catch (e) {
+            console.log(e)
+        }
+    }, [openDeleteMachine, openEditMachine])
 
     useEffect(() => {
         // effect for fetch machine
-
-        const fetchMachine = async () => {
-            try {
-                const machines = await Get(auth.user.token, 'machine')
-                const machine = machines.map(mesin => ({
-                    ...mesin, buttonEdit:
-
-                        <Button
-                            leftIcon={<IconEdit stroke={2} size={16} />}
-                            color='blue.6'
-                            variant='subtle'
-                            radius='md'
-                            mx='xs'
-                            onClick={() => openEditMachine(mesin)}
-                        >
-                            Edit
-                        </Button>,
-                    buttonDelete: <Button
-                        leftIcon={<IconTrash stroke={2} size={16} />}
-                        color='red'
-                        variant='subtle'
-                        radius='md'
-                        onClick={() => openDeleteMachine(mesin.id)}
-                    >
-                        Delete
-                    </Button>
-                }))
-
-                setMachine(machine)
-            } catch (e) {
-                console.log(e)
-            }
-        }
-
         fetchMachine()
 
-    }, [auth.user.token, action])
+    }, [action, fetchMachine])
 
 
     return (
@@ -238,6 +233,7 @@ const Machine = () => {
                     Machine
                 </Button>
             </Group>
+
             <BaseTable
                 column={columnMachine}
                 data={machine}

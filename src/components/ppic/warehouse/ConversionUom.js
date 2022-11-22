@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { SuccessNotif, FailedNotif } from "../../notifications/Notifications";
 import { useRequest } from "../../../hooks/useRequest";
-import { AuthContext } from "../../../context/AuthContext";
 import BaseTable from "../../tables/BaseTable";
 import { openModal, closeAllModals, openConfirmModal } from "@mantine/modals";
 import { useForm } from "@mantine/form";
@@ -11,7 +10,6 @@ import { IconPlus, IconEdit, IconTrash } from "@tabler/icons";
 
 const EditConversionUom = ({ data, setaction }) => {
     const { Get, Put } = useRequest()
-    const auth = useContext(AuthContext)
     const [uom, setUom] = useState([])
 
     const form = useForm({
@@ -21,9 +19,9 @@ const EditConversionUom = ({ data, setaction }) => {
         }
     })
 
-    const handleSubmit = async (value) => {
+    const handleSubmit = useCallback(async (value) => {
         try {
-            await Put(data.id, value, auth.user.token, 'uom-conversion-management')
+            await Put(data.id, value, 'uom-conversion-management')
             setaction(prev => prev + 1)
             SuccessNotif('Edit conversion unit of material success')
             closeAllModals()
@@ -31,10 +29,10 @@ const EditConversionUom = ({ data, setaction }) => {
             console.log(e)
             FailedNotif(e.message.data.non_field_errors)
         }
-    }
+    }, [data.id, Put, setaction])
 
 
-    const openConfirmSubmit = (value) => openConfirmModal({
+    const openConfirmSubmit = useCallback((value) => openConfirmModal({
         title: `Edit conversion unit of material`,
         children: (
             <Text size="sm">
@@ -46,13 +44,13 @@ const EditConversionUom = ({ data, setaction }) => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleSubmit(value)
-    })
+    }), [handleSubmit])
 
     useEffect(() => {
 
         const fetchUom = async () => {
             try {
-                const uoms = await Get(auth.user.token, 'uom-list')
+                const uoms = await Get('uom-list')
                 setUom(uoms)
             } catch (e) {
                 console.log(e)
@@ -61,7 +59,7 @@ const EditConversionUom = ({ data, setaction }) => {
 
         fetchUom()
 
-    }, [])
+    }, [Get])
 
     return (
         <>
@@ -99,8 +97,8 @@ const EditConversionUom = ({ data, setaction }) => {
 }
 
 const PostConversionUom = ({ setaction }) => {
+
     const { Get, Post } = useRequest()
-    const auth = useContext(AuthContext)
     const [uom, setUom] = useState([])
 
     const form = useForm({
@@ -110,9 +108,9 @@ const PostConversionUom = ({ setaction }) => {
         }
     })
 
-    const handleSubmit = async (value) => {
+    const handleSubmit = useCallback(async (value) => {
         try {
-            await Post(value, auth.user.token, 'uom-conversion-management')
+            await Post(value, 'uom-conversion-management')
             setaction(prev => prev + 1)
             SuccessNotif('Add conversion unit of material success')
             closeAllModals()
@@ -121,8 +119,10 @@ const PostConversionUom = ({ setaction }) => {
             FailedNotif(e.message.data.non_field_errors)
         }
     }
+        , [Post, setaction])
 
-    const openConfirmSubmit = (value) => openConfirmModal({
+
+    const openConfirmSubmit = useCallback((value) => openConfirmModal({
         title: `Add conversion unit of material`,
         children: (
             <Text size="sm">
@@ -134,13 +134,13 @@ const PostConversionUom = ({ setaction }) => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleSubmit(value)
-    })
+    }), [handleSubmit])
 
     useEffect(() => {
 
         const fetchUom = async () => {
             try {
-                const uoms = await Get(auth.user.token, 'uom-list')
+                const uoms = await Get('uom-list')
                 setUom(uoms)
             } catch (e) {
                 console.log(e)
@@ -149,7 +149,7 @@ const PostConversionUom = ({ setaction }) => {
 
         fetchUom()
 
-    }, [])
+    }, [Get])
 
     return (
         <>
@@ -190,7 +190,6 @@ const PostConversionUom = ({ setaction }) => {
 
 const ConversionUom = () => {
 
-    const auth = useContext(AuthContext)
     const { Get, Delete } = useRequest()
     const [conversionUom, setConversionUom] = useState([])
 
@@ -213,18 +212,18 @@ const ConversionUom = () => {
             selector: row => row.buttonDelete
         }
     ], [])
-    const handleDeleteConversionUom = async (id) => {
+
+    const handleDeleteConversionUom = useCallback(async (id) => {
         try {
-            await Delete(id, auth.user.token, 'uom-conversion-management')
+            await Delete(id, 'uom-conversion-management')
             SuccessNotif('Delete success')
             setActionConversionUom(prev => prev + 1)
         } catch (e) {
-            console.log(e)
             FailedNotif('Delete failed')
         }
-    }
+    }, [])
 
-    const openDeleteConversionUom = (id) => openConfirmModal({
+    const openDeleteConversionUom = useCallback((id) => openConfirmModal({
         title: 'Delete conversion unit of material',
         children: (
             <Text size="sm">
@@ -236,21 +235,22 @@ const ConversionUom = () => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleDeleteConversionUom(id)
-    })
+    }), [handleDeleteConversionUom])
 
-    const openEditConversionUom = (conversionUom) => openModal({
+    const openEditConversionUom = useCallback((conversionUom) => openModal({
         title: 'Edit conversion unit of material',
         radius: 'md',
         size: 'lg',
         children: <EditConversionUom data={conversionUom} setaction={setActionConversionUom} />
-    })
+    }), [])
 
-    const openPostConversionUom = () => openModal({
+    const openPostConversionUom = useCallback(() => openModal({
         title: 'Add conversion unit of material',
         radius: 'md',
         size: 'lg',
         children: <PostConversionUom setaction={setActionConversionUom} />
-    })
+    }), [])
+
 
     useEffect(() => {
         // effect for conversion unit of material
@@ -258,7 +258,7 @@ const ConversionUom = () => {
         const fetchConversionUom = async () => {
 
             try {
-                const uoms = await Get(auth.user.token, 'uom-conversion-detail')
+                const uoms = await Get('uom-conversion-detail')
 
                 setConversionUom(uoms.map(uom => ({
                     ...uom, buttonEdit:
@@ -290,7 +290,7 @@ const ConversionUom = () => {
         }
 
         fetchConversionUom()
-    }, [auth.user.token, actionConversionUom])
+    }, [actionConversionUom, openDeleteConversionUom, openEditConversionUom])
 
 
     return (

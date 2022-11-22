@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 
 import { IconPlus, IconSearch, IconDotsCircleHorizontal } from "@tabler/icons";
 import { Button, Group, TextInput, } from "@mantine/core";
-import { AuthContext } from "../../../context/AuthContext";
 import { useRequest } from "../../../hooks/useRequest";
 import BaseTable from "../../tables/BaseTable";
 import { Link } from "react-router-dom";
@@ -11,7 +10,6 @@ import { Link } from "react-router-dom";
 
 const ProductionReport = () => {
 
-    const auth = useContext(AuthContext)
     const { Get } = useRequest()
     const [reports, setReports] = useState([])
     const [searchReport, setSearchReport] = useState('')
@@ -38,7 +36,7 @@ const ProductionReport = () => {
         },
         {
             name: 'Date',
-            selector: row => new Date(row.created).toDateString()
+            selector: row => new Date(row.date).toDateString()
         },
         {
             name: '',
@@ -55,7 +53,7 @@ const ProductionReport = () => {
     useEffect(() => {
         const fetchProductionReport = async () => {
             try {
-                const reports = await Get(auth.user.token, 'production-report')
+                const reports = await Get('production-report')
                 const productionReport = reports.map(report => ({
                     ...report,
                     buttonDetail:
@@ -80,7 +78,7 @@ const ProductionReport = () => {
             }
         }
         fetchProductionReport()
-    }, [auth.user.token])
+    }, [])
 
     return (
         <>

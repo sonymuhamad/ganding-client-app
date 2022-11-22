@@ -1,25 +1,23 @@
-import React, { useState, useEffect, useContext, } from "react"
-import { TextInput, NumberInput, Select, Button, Paper, ThemeIcon, UnstyledButton, Group, Divider, Text, NativeSelect, Title } from "@mantine/core"
+import React, { useState, useEffect } from "react"
+import { TextInput, NumberInput, Select, Button, Paper, ThemeIcon, UnstyledButton, Group, Text, Title } from "@mantine/core"
 import { IconSortAscending2, IconBarcode, IconFileTypography, IconBuildingFactory, IconCodeAsterix, IconTimeline, IconArchive, IconAsset, IconCircleDotted, IconCircleCheck, IconXboxX, IconUser } from "@tabler/icons"
+import { useNavigate } from "react-router-dom"
+import { openConfirmModal } from "@mantine/modals"
 
-import { AuthContext } from "../../../context/AuthContext"
 import { useRequest } from "../../../hooks/useRequest"
 import { sectionStyle } from "../../../styles/sectionStyle"
 import BreadCrumb from "../../BreadCrumb"
 import { SuccessNotif, FailedNotif } from "../../notifications/Notifications"
-import { useNavigate } from "react-router-dom"
-import { openConfirmModal } from "@mantine/modals"
-
+import CustomSelectComponentProcess from "../../layout/CustomSelectComponentProcess"
 
 
 const NewProduction = () => {
 
-    const auth = useContext(AuthContext)
     const { Get, Post, Loading } = useRequest()
     const { classes } = sectionStyle()
     const [machineList, setMachineList] = useState([])
     const [operatorList, setOperatorList] = useState([])
-    const [productCustomer, setProductCustomer] = useState([])
+    const [productionList, setProductionList] = useState([])
     const [processList, setProcessList] = useState([])
 
     const [product, setProduct] = useState('')
@@ -48,11 +46,13 @@ const NewProduction = () => {
     const handleSubmit = async () => {
 
         try {
-            await Post({ product: product, quantity: quantity, quantity_not_good: quantityNotGood, machine: machine, operator: operator, process: process }, auth.user.token, 'production-report-management')
+            await Post({ product: product, quantity: quantity, quantity_not_good: quantityNotGood, machine: machine, operator: operator, process: process }, 'production-report-management')
             SuccessNotif('Add production success')
             navigate('/home/ppic/production')
         } catch (e) {
-            if (e.message.data.non_field_errors) {
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            } else if (e.message.data.non_field_errors) {
                 FailedNotif(e.message.data.non_field_errors)
             } else {
                 FailedNotif('Add production failed')
@@ -84,24 +84,19 @@ const NewProduction = () => {
 
     useEffect(() => {
 
-        Get(auth.user.token, 'production-list').then(data => {
-            const dataProduct = data.reduce((prev, current) => {
-                const product = current.ppic_product_related.map(product => ({ ...product, group: current.name }))
-                return [...prev, ...product]
-            }, [])
-
-            setProductCustomer(dataProduct)
+        Get('production-list').then(data => {
+            setProductionList(data)
         })
 
-        Get(auth.user.token, 'machine').then(data => {
+        Get('machine').then(data => {
             setMachineList(data)
         })
 
-        Get(auth.user.token, 'operator').then(data => {
+        Get('operator').then(data => {
             setOperatorList(data)
         })
 
-    }, [auth.user.token])
+    }, [Get])
 
 
     return (
@@ -126,12 +121,12 @@ const NewProduction = () => {
                     searchable
                     nothingFound="No products"
                     radius='md'
-                    data={productCustomer.map(data => ({ value: data.id, label: data.name, group: data.group }))}
+                    data={productionList.map(data => ({ value: data.id, label: data.name, group: data.customer.name }))}
                     value={product}
                     required
                     onChange={(value) => {
                         setProduct(value)
-                        const process = productCustomer.find(product => product.id === parseInt(value)).ppic_process_related
+                        const process = productionList.find(product => product.id === parseInt(value)).ppic_process_related
                         setProcessList(process)
                         setProcess('')
                     }}
@@ -142,23 +137,24 @@ const NewProduction = () => {
                     radius='md'
                     label='Product number'
                     icon={<IconCodeAsterix />}
-                    value={product !== '' ? productCustomer.find(prod => prod.id === parseInt(product)).code : ''}
+                    value={product !== '' ? productionList.find(prod => prod.id === parseInt(product)).code : ''}
                     readOnly
                     m='xs'
                 />
 
                 <Group grow m='xs'>
 
-                    <NativeSelect
+                    <Select
+                        itemComponent={CustomSelectComponentProcess}
                         placeholder="Pick process"
                         label='Process'
                         required
                         radius='md'
                         icon={<IconTimeline />}
-                        data={processList.map(process => ({ value: process.id, label: process.process_name }))}
+                        data={processList.map(process => ({ value: process.id, label: process.process_name, order: process.order }))}
                         value={process}
-                        onChange={(e) => {
-                            setProcess(e.target.value)
+                        onChange={value => {
+                            setProcess(value)
                         }}
                     />
 
@@ -277,7 +273,7 @@ const NewProduction = () => {
 
                                     <TextInput
                                         radius='md'
-                                        label='Qty need'
+                                        label='Required quantity'
                                         readOnly
                                         value={quantity === null || quantity === 0 || quantity === undefined ? 0 :
                                             Math.ceil(((quantity + quantityNotGood) / reqMat.output) * reqMat.input)}
@@ -348,7 +344,7 @@ const NewProduction = () => {
 
                                     <TextInput
                                         radius='md'
-                                        label='Qty need'
+                                        label='Required quantity'
                                         readOnly
                                         value={quantity === null || quantity === 0 || quantity === undefined ? 0 :
                                             Math.ceil(((quantity + quantityNotGood) / reqProduct.output) * reqProduct.input)}

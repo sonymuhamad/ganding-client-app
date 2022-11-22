@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Text, Group, TextInput, Textarea, NumberInput, Button, Highlight, Collapse, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useScrollLock } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
 
 import { IconUser, IconDeviceMobile, IconMapPin, IconAt, IconEdit, IconX, IconDownload, IconTrashX, IconBrandProducthunt, IconFileCheck, IconClock, IconPlus, IconChevronDown, IconDotsCircleHorizontal } from "@tabler/icons";
 
 import { SuccessNotif, FailedNotif } from "../notifications/Notifications";
-import { AuthContext } from "../../context/AuthContext";
 import { sectionStyle } from "../../styles/sectionStyle";
 import { useRequest } from "../../hooks/useRequest";
 import BaseTableExpanded from "../tables/BaseTableExpanded";
@@ -23,14 +21,13 @@ import BaseAside from "../layout/BaseAside";
 const Customer = () => {
 
     const { classes } = sectionStyle()
+    const [action, setAction] = useState(0)
     const [dataCustomer, setDataCustomer] = useState({})
     const [buttonActive, setButtonActive] = useState('on_progress')
     const { customerId } = useParams()
     const navigate = useNavigate()
-    const auth = useContext(AuthContext)
     const [notAllowed, setNotAllowed] = useState(true)
     const [editButton, setEditButton] = useState({ label: 'edit', color: 'blue.6' })
-    const [scrollLocked, setScrollLocked] = useScrollLock()
     const [on_progress_so, set_on_progress_so] = useState([])
     const [pendingSo, setPendingSo] = useState([])
     const [doneSo, setDoneSo] = useState([])
@@ -63,7 +60,45 @@ const Customer = () => {
         }
     ]
 
-    const openModal = () => openConfirmModal({
+
+    const handleClickEditButton = useCallback(async () => {
+        setEditButton((prev) => {
+            if (prev.color === 'blue.6') {
+                return { color: 'red.6', label: 'Cancel' }
+            } else if (prev.color === 'red.6') {
+                return { color: 'blue.6', label: 'Edit' }
+            }
+
+        })
+
+        setNotAllowed((t) => !t)
+    }, [])
+
+
+    const handleSubmit = useCallback(async (data) => {
+        // handle edit customer
+        try {
+            await Put(customerId, data, 'customer')
+            SuccessNotif('Edit customer success')
+            handleClickEditButton()
+            setAction(prev => prev + 1)
+        } catch (e) {
+            FailedNotif('Edit customer failed')
+            form.setErrors({ ...e.message.data })
+        }
+    }, [handleClickEditButton, Put, customerId])
+
+    const handleDeleteCustomer = useCallback(async () => {
+        try {
+            await Delete(customerId, 'customer')
+            SuccessNotif('Delete customer success')
+            navigate('/home/marketing/customers')
+        } catch (e) {
+            FailedNotif(e.message.data[0])
+        }
+    }, [Delete, customerId, navigate])
+
+    const openModal = useCallback(() => openConfirmModal({
         title: `Delete Customer ${dataCustomer.name} `,
         children: (
             <Text size="sm">
@@ -75,7 +110,7 @@ const Customer = () => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleDeleteCustomer(),
-    });
+    }), [handleDeleteCustomer, dataCustomer.name])
 
 
     const form = useForm(
@@ -88,116 +123,122 @@ const Customer = () => {
             }
         })
 
-    const handleClickEditButton = async () => {
-        setEditButton((prev) => {
-            if (prev.color === 'blue.6') {
-                return { color: 'red.6', label: 'Cancel' }
-            } else if (prev.color === 'red.6') {
-                return { color: 'blue.6', label: 'Edit' }
-            }
+    const setDataDeliveryNote = useCallback((deliverynotes) => {
 
-        })
-
-        setScrollLocked((l) => !l)
-        setNotAllowed((t) => !t)
-    }
-
-    const fetch = async () => {
-
-        try {
-            const customer = await Retrieve(customerId, auth.user.token, 'customer-detail')
-            const salesorders = customer.marketing_salesorder_related
-            let products = customer.ppic_product_related
-            let deliverynotes = customer.ppic_deliverynotecustomer_related
-
-            let on_progress = []
-            let pending = []
-            let done = []
-
-            deliverynotes = deliverynotes.map(deliverynote => {
-                return ({
-                    ...deliverynote, detailDeliveryNoteButton: <Button
-                        leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                        color='teal.8'
-                        variant='subtle'
-                        radius='md'
-                        component={Link}
-                        to={`/home/marketing/delivery-note/${deliverynote.id}`}
-                    >
-                        Detail
-                    </Button>
-                })
-            })
-
-            products = products.map((product) => {
-                return ({
-                    ...product, detailProductButton: <Button
-                        component={Link}
-                        to={`/home/marketing/customers/${customerId}/${product.id}`}
-                        leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                        color='teal.8'
-                        variant='subtle'
-                        radius='md' >
-                        Detail
-                    </Button>
-
-                })
-            })
-
-            for (const so of salesorders) {
-                so['detailSalesOrderButton'] = <Button
-
+        return deliverynotes.map(deliverynote => {
+            return ({
+                ...deliverynote, detailDeliveryNoteButton: <Button
                     leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
                     color='teal.8'
                     variant='subtle'
                     radius='md'
                     component={Link}
-                    to={`/home/marketing/sales-order/${so.id}`}
+                    to={`/home/marketing/delivery-note/${deliverynote.id}`}
                 >
                     Detail
                 </Button>
-                so['amountOfProduct'] = so.productorder_set.length
-                if (so.done === true) {
-                    done = [...done, so]
+            })
+        })
+
+    }, [])
+
+    const setDataProduct = useCallback((products) => {
+        return products.map((product) => {
+            return ({
+                ...product, detailProductButton: <Button
+                    component={Link}
+                    to={`/home/marketing/customers/${customerId}/${product.id}`}
+                    leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
+                    color='teal.8'
+                    variant='subtle'
+                    radius='md' >
+                    Detail
+                </Button>
+
+            })
+        })
+    }, [customerId])
+
+    const setBreadcrumbAfterEffect = useCallback((name) => {
+        setBreadCrumb([
+            {
+                path: '/home/marketing',
+                label: 'Marketing'
+            },
+            {
+                path: '/home/marketing/customers',
+                label: 'Customers'
+            },
+            {
+                path: `/home/marketing/customers/${customerId}`,
+                label: { name }
+            }
+        ])
+    }, [customerId])
+
+    const setSoListAfterEffect = useCallback((salesorders) => {
+
+        let on_progress = []
+        let pending = []
+        let done = []
+
+        for (const so of salesorders) {
+            so['detailSalesOrderButton'] = <Button
+
+                leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
+                color='teal.8'
+                variant='subtle'
+                radius='md'
+                component={Link}
+                to={`/home/marketing/sales-order/${so.id}`}
+            >
+                Detail
+            </Button>
+            so['amountOfProduct'] = so.productorder_set.length
+            if (so.done === true) {
+                done = [...done, so]
+            } else {
+                if (so.fixed === true) {
+                    on_progress = [...on_progress, so]
                 } else {
-                    if (so.fixed === true) {
-                        on_progress = [...on_progress, so]
-                    } else {
-                        pending = [...pending, so]
-                    }
+                    pending = [...pending, so]
                 }
             }
-            setBreadCrumb([
-                {
-                    path: '/home/marketing',
-                    label: 'Marketing'
-                },
-                {
-                    path: '/home/marketing/customers',
-                    label: 'Customers'
-                },
-                {
-                    path: `/home/marketing/customers/${customerId}`,
-                    label: `${customer.name}`
-                }
-            ])
+        }
+        setDoneSo(done)
+        set_on_progress_so(on_progress)
+        setPendingSo(pending)
+    }, [])
 
-            set_on_progress_so(on_progress)
-            setDoneSo(done)
-            setPendingSo(pending)
+
+
+    const fetch = useCallback(async () => {
+
+        try {
+            const customer = await Retrieve(customerId, 'customer-detail')
+            const salesorders = customer.marketing_salesorder_related
+            const products = customer.ppic_product_related
+            const deliverynotes = customer.ppic_deliverynotecustomer_related
+
+
+            const deliveryNoteList = setDataDeliveryNote(deliverynotes)
+            const productList = setDataProduct(products)
+
+            setSoListAfterEffect(salesorders)
+            setBreadcrumbAfterEffect(customer.name)
             setDataCustomer(customer)
             form.setValues(customer)
-            setProduct(products)
-            setDeliveryNote(deliverynotes)
+            setProduct(productList)
+            setDeliveryNote(deliveryNoteList)
 
         } catch (e) {
 
         }
-    }
+    }, [setSoListAfterEffect, setBreadcrumbAfterEffect, setDataDeliveryNote, setDataProduct, Retrieve, customerId])
 
     useEffect(() => {
         fetch()
-    }, [])
+    }, [fetch, action])
 
     const columnSo = useMemo(() => [
         // columns for sales order tables
@@ -286,26 +327,6 @@ const Customer = () => {
 
     ], [])
 
-    const handleSubmit = async (data) => {
-        // handle edit customer
-        try {
-            await Put(customerId, data, auth.user.token, 'customer')
-            await fetch()
-            await handleClickEditButton()
-        } catch (e) {
-            form.setErrors({ ...e.message.data })
-        }
-    }
-
-    const handleDeleteCustomer = async () => {
-        try {
-            await Delete(customerId, auth.user.token, 'customer')
-            SuccessNotif('Delete customer success')
-            navigate('/home/marketing/customers')
-        } catch (e) {
-            FailedNotif(e.message.data[0])
-        }
-    }
 
     return (
         <>

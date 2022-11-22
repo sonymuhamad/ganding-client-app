@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useContext } from "react"
+import React, { useState, useEffect } from "react"
 
-import { AuthContext } from "../../context/AuthContext"
 import { useRequest } from "../../hooks/useRequest"
 import { closeAllModals, openConfirmModal } from "@mantine/modals"
 import { SuccessNotif, FailedNotif } from "../notifications/Notifications"
@@ -10,12 +9,11 @@ import { Button, NumberInput, Text } from "@mantine/core"
 const ModalEditStockProduct = ({ whProduct, setaction }) => {
 
     const [quantity, setQuantity] = useState('')
-    const auth = useContext(AuthContext)
     const { Put } = useRequest()
 
     const handleSubmit = async () => {
         try {
-            await Put(whProduct.id, { quantity: quantity }, auth.user.token, 'warehouse-management-product')
+            await Put(whProduct.id, { quantity: quantity }, 'warehouse-management-product')
             closeAllModals()
             setaction(prev => prev + 1)
             SuccessNotif('Edit stock success')
@@ -43,8 +41,12 @@ const ModalEditStockProduct = ({ whProduct, setaction }) => {
     })
 
     useEffect(() => {
-        setQuantity(whProduct.quantity)
-    }, [])
+
+        if (whProduct.quantity) {
+            setQuantity(whProduct.quantity)
+        }
+
+    }, [whProduct])
 
     return (
         <>

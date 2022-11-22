@@ -7,6 +7,7 @@ export const asideStyle = createStyles((theme) => ({
         ...theme.fn.focusStyles(),
         display: 'block',
         textDecoration: 'none',
+        fontWeight: 500,
         color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
         lineHeight: 1.2,
         fontSize: theme.fontSizes.sm,
@@ -17,12 +18,13 @@ export const asideStyle = createStyles((theme) => ({
             }`,
 
         '&:hover': {
-            backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
+            backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.blue[2],
+            color: theme.colors[theme.primaryColor][theme.colorScheme === 'dark' ? 2 : 7],
         },
     },
 
     linkActive: {
-        fontWeight: 500,
+        fontWeight: 550,
         borderLeftColor: theme.colors[theme.primaryColor][theme.colorScheme === 'dark' ? 6 : 7],
         color: theme.colors[theme.primaryColor][theme.colorScheme === 'dark' ? 2 : 7],
 

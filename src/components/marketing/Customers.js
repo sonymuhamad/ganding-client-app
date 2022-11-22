@@ -1,74 +1,18 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { useForm } from '@mantine/form'
-import { createStyles, Text, Button, Modal, TextInput, Group, Textarea, NumberInput } from '@mantine/core'
-import DataTable, { createTheme } from 'react-data-table-component'
+import { Text, Button, Modal, TextInput, Group, Textarea, NumberInput } from '@mantine/core'
+import DataTable from 'react-data-table-component'
 
 import { IconPlus, IconDotsCircleHorizontal, IconAt, IconDeviceMobile, IconMapPin, IconSquarePlus, IconUserPlus } from '@tabler/icons'
 
 
 import { customTableStyle } from '../../services/External'
 import BreadCrumb from '../BreadCrumb'
-import { AuthContext } from '../../context/AuthContext'
-import { SuccessNotif } from '../notifications/Notifications'
+import { FailedNotif, SuccessNotif } from '../notifications/Notifications'
 import { useRequest } from '../../hooks/useRequest'
-
-
-createTheme(
-    'solarized',
-    {
-        text: {
-            primary: '#f1f3f5',
-            secondary: '#f1f3f5',
-        },
-        background: {
-            default: '#141517',
-        },
-        context: {
-            background: '#cb4b16',
-            text: '#FFFFFF',
-        },
-        divider: {
-            default: '#073642',
-        },
-        button: {
-            default: '#2aa198',
-            hover: 'rgba(0,0,0,.08)',
-            focus: 'rgba(255,255,255,.12)',
-            disabled: 'rgba(255, 255, 255, .34)',
-        },
-        sortFocus: {
-            default: '#2aa198',
-        },
-    },
-    'dark',
-);
-
-
-// const ExpandedComponent = ({ data }) => <pre>{data.symbol}</pre>;
-
-const customerPageStyle = createStyles(() => ({
-
-    wrapper: {
-        display: 'flex',
-        width: '100%',
-    },
-    leftDiv: {
-        width: 1000,
-        display: 'inline-block',
-        marginRight: 50,
-        paddingLeft: 0,
-
-    },
-    rightDiv: {
-        width: 900,
-        display: 'inline-block',
-        backgroundColor: 'black',
-        height: 800
-    }
-
-}))
+import { customerPageStyle } from '../../styles/customerPageStyle'
 
 
 const Customers = () => {
@@ -92,15 +36,15 @@ const Customers = () => {
             label: 'Customers'
         }
     ]
-    const auth = useContext(AuthContext)
 
+    const [action, setAction] = useState(0)
     const [opened, setOpened] = useState(false)
     const [dataCustomer, setDataCustomer] = useState([])
     const { Get, Post, Loading } = useRequest()
 
-    const fetch = async () => {
+    const fetch = useCallback(async () => {
         try {
-            let data_customers = await Get(auth.user.token, 'customer')
+            let data_customers = await Get('customer')
 
             data_customers = data_customers.map((customer) => {
                 return ({ ...customer, detailButton: <Button component={Link} to={`/home/marketing/customers/${customer.id}`} leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />} color='teal.8' variant='subtle' radius='md' >Detail</Button> })
@@ -111,29 +55,25 @@ const Customers = () => {
 
         }
     }
+        , [Get])
 
     useEffect(() => {
         fetch()
-    }, [])
+    }, [fetch, action])
 
-    const handlesubmit = async (data) => {
+    const handlesubmit = useCallback(async (data) => {
         // add new customer handle
-
-        const token = auth.user.token
-
         try {
-            await Post(data, token, 'customer')
-            SuccessNotif(' Add new customer success')
-            fetch()
+            await Post(data, 'customer')
+            SuccessNotif('Add customer success')
             form.reset()
+            setAction(prev => prev + 1)
             setOpened((o) => !o)
         } catch (e) {
             form.setErrors({ ...e.message.data })
-
-        } finally {
+            FailedNotif('Add customer failed')
         }
-
-    }
+    }, [Post])
 
     const column = useMemo(() => [
         {
@@ -189,6 +129,7 @@ const Customers = () => {
                     </Text>
                 }
                 radius='md'
+                size='xl'
             >
                 <Loading />
                 <form onSubmit={form.onSubmit(handlesubmit)} >

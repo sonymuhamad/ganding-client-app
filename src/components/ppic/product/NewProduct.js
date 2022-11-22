@@ -1,24 +1,21 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
 import { TextInput, NumberInput, ActionIcon, NativeSelect, Group, Title, Button, FileButton, Text, Divider, UnstyledButton, Paper, Center } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 
-import { IconWriting, IconFileTypography, IconCodeAsterix, IconBarbell, IconTrashX, IconDownload, IconUser, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload } from "@tabler/icons";
+import { IconWriting, IconFileTypography, IconCodeAsterix, IconScale, IconTrashX, IconDownload, IconUser, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload } from "@tabler/icons";
 
-import { useNavigate } from "react-router-dom";
-
-import { AuthContext } from "../../context/AuthContext";
-import BreadCrumb from "../BreadCrumb";
-import { useRequest } from "../../hooks/useRequest";
-import { sectionStyle } from "../../styles/sectionStyle";
-import { FailedNotif, SuccessNotif } from "../notifications/Notifications";
+import BreadCrumb from "../../BreadCrumb";
+import { useRequest } from "../../../hooks/useRequest";
+import { sectionStyle } from "../../../styles/sectionStyle";
+import { FailedNotif, SuccessNotif } from "../../notifications/Notifications";
 
 
 
 const NewProduct = () => {
 
     const { classes } = sectionStyle()
-    const auth = useContext(AuthContext)
     const { Get, Post, Loading } = useRequest()
     const [processType, setProcessType] = useState([])
     const [productType, setProductType] = useState([])
@@ -56,11 +53,11 @@ const NewProduct = () => {
 
     useEffect(() => {
         const fetch = async () => {
-            const productType = await Get(auth.user.token, 'product-type')
-            const processType = await Get(auth.user.token, 'process-type')
-            const productLists = await Get(auth.user.token, 'product-lists')
-            const materialLists = await Get(auth.user.token, 'material-lists')
-            const customerLists = await Get(auth.user.token, 'customer-lists')
+            const productType = await Get('product-type')
+            const processType = await Get('process-type')
+            const productLists = await Get('product-lists')
+            const materialLists = await Get('material-lists')
+            const customerLists = await Get('customer-lists')
 
             setProcessType(processType)
             setProductType(productType)
@@ -70,36 +67,21 @@ const NewProduct = () => {
 
         }
         fetch()
-    }, [auth.user.token])
+    }, [])
 
-    const openSubmitModal = (val) => openConfirmModal({
-        title: `Add new product`,
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be saved.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, save', cancel: "No, don't save it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleSubmitNewProduct(val)
-    })
 
-    const handleSubmitNewProduct = async (val) => {
+    const handleSubmitNewProduct = useCallback(async (val) => {
 
+        let dataProduct
+        if (val.image === null) {
+            const { image, ...restData } = val
+            dataProduct = restData
+        } else {
+            dataProduct = val
+        }
 
         try {
-            let dataProduct
-            if (val.image === null) {
-                const { image, ...restData } = val
-                dataProduct = restData
-            } else {
-                dataProduct = val
-            }
-
-
-            await Post(dataProduct, auth.user.token, 'product-management', 'multipart/form-data')
+            await Post(dataProduct, 'product-management', 'multipart/form-data')
             navigate('/home/ppic/product')
 
             SuccessNotif('New product added successfully')
@@ -111,13 +93,27 @@ const NewProduct = () => {
 
         }
     }
+        , [navigate])
+
+    const openSubmitModal = useCallback((val) => openConfirmModal({
+        title: `Add new product`,
+        children: (
+            <Text size="sm">
+                Are you sure?, data will be saved.
+            </Text>
+        ),
+        radius: 'md',
+        labels: { confirm: 'Yes, save', cancel: "No, don't save it" },
+        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+        confirmProps: { radius: 'md' },
+        onConfirm: () => handleSubmitNewProduct(val)
+    }), [handleSubmitNewProduct])
 
 
 
 
-    const processFields =
-
-        <>
+    const processFields = useMemo(() => {
+        return <>
             {form.values.ppic_process_related.map((process, index) => (
 
                 <Paper style={{ border: `1px solid #ced4da` }} radius='md' shadow='xs' p='xs' key={`${process.id}${index}`} mt='lg' mb='sm'  >
@@ -343,6 +339,7 @@ const NewProduct = () => {
                 </Button>
             </Center>
         </>
+    }, [form.values.ppic_process_related, materialList, processType, productAssemblyList])
 
 
 
@@ -405,7 +402,7 @@ const NewProduct = () => {
                         required
                         radius='md'
                         {...form.getInputProps('weight')}
-                        icon={<IconBarbell />}
+                        icon={<IconScale />}
                         label='Kg/pcs'
                     />
                 </Group>

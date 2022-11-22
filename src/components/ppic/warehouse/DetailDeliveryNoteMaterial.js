@@ -1,27 +1,26 @@
-import React, { useEffect, useState, useContext, useRef } from "react";
+import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../../context/AuthContext";
 import { useRequest } from "../../../hooks/useRequest";
 import BreadCrumb from "../../BreadCrumb";
 
 import { useForm } from "@mantine/form";
 import { Button, TextInput, Group, Paper, Select, NumberInput, Textarea, Text, Stack, Center, Divider, Title, UnstyledButton, FileButton, Image } from "@mantine/core";
 
-import { IconEdit, IconTrashX, IconDownload, IconAsset, IconUpload, IconTrash, IconCalendarEvent } from "@tabler/icons";
+import { IconEdit, IconTrashX, IconDownload, IconAsset, IconUpload, IconTrash, IconCalendarEvent, IconUserCheck, IconCodeAsterix, IconClipboardCheck, IconPackgeImport, IconArchive, IconShoppingCart, IconSortAscending2, IconPlus } from "@tabler/icons";
 import { sectionStyle } from "../../../styles/sectionStyle";
 import BaseAside from "../../layout/BaseAside";
 import useScrollSpy from 'react-use-scrollspy'
 import { openModal, closeAllModals, openConfirmModal } from "@mantine/modals";
 import { FailedNotif, SuccessNotif } from "../../notifications/Notifications";
+import CustomSelectComponent from "../../layout/CustomSelectComponent";
 
 import { DatePicker } from "@mantine/dates";
 
 
 const ModalEditMaterialReceipt = ({ data, setaction, idDn }) => {
 
-    const auth = useContext(AuthContext)
     const { Put, Loading } = useRequest()
     const form = useForm({
         initialValues: {
@@ -32,9 +31,9 @@ const ModalEditMaterialReceipt = ({ data, setaction, idDn }) => {
         }
     })
 
-    const handleSubmit = async (value) => {
+    const handleSubmit = useCallback(async (value) => {
         try {
-            await Put(value.id, value, auth.user.token, 'material-receipt-management')
+            await Put(value.id, value, 'material-receipt-management')
             SuccessNotif('Edit quantity material receipt succes')
             setaction(prev => prev + 1)
             closeAllModals()
@@ -42,7 +41,7 @@ const ModalEditMaterialReceipt = ({ data, setaction, idDn }) => {
             FailedNotif('Edit quantity material receipt failed')
             console.log(e)
         }
-    }
+    }, [setaction, Put])
 
     return (
         <>
@@ -52,6 +51,7 @@ const ModalEditMaterialReceipt = ({ data, setaction, idDn }) => {
                 <Group grow my='lg' >
 
                     <TextInput
+                        icon={<IconAsset />}
                         label='Material'
                         radius='md'
                         value={data.material_order.material.name}
@@ -59,7 +59,8 @@ const ModalEditMaterialReceipt = ({ data, setaction, idDn }) => {
                     />
 
                     <TextInput
-                        label='Purchase order'
+                        icon={<IconCodeAsterix />}
+                        label='Purchase order number'
                         radius='md'
                         value={data.material_order.purchase_order_material.code}
                         readOnly
@@ -71,6 +72,7 @@ const ModalEditMaterialReceipt = ({ data, setaction, idDn }) => {
 
 
                     <NumberInput
+                        icon={<IconShoppingCart />}
                         hideControls
                         radius='md'
                         label='Total quantity order'
@@ -78,6 +80,7 @@ const ModalEditMaterialReceipt = ({ data, setaction, idDn }) => {
                         readOnly
                     />
                     <NumberInput
+                        icon={<IconArchive />}
                         hideControls
                         radius='md'
                         label='Total quantity arrived'
@@ -94,6 +97,7 @@ const ModalEditMaterialReceipt = ({ data, setaction, idDn }) => {
                 />
 
                 <NumberInput
+                    icon={<IconPackgeImport />}
                     hideControls
                     label='Quantity'
                     {...form.getInputProps('quantity')}
@@ -101,6 +105,7 @@ const ModalEditMaterialReceipt = ({ data, setaction, idDn }) => {
                 />
 
                 <Button
+                    leftIcon={<IconDownload />}
                     radius='md'
                     fullWidth
                     my='lg'
@@ -115,26 +120,9 @@ const ModalEditMaterialReceipt = ({ data, setaction, idDn }) => {
     )
 }
 
-const CustomSelectComponent = ({ label, date, ...others }) => {
-
-    return (
-        <div {...others} >
-            <Group noWrap>
-                <div>
-                    <Text size="sm">{label}</Text>
-                    <Text size="xs" color="dimmed">
-                        {date}
-                    </Text>
-                </div>
-            </Group>
-        </div>
-    )
-}
-
 
 const ModalAddMaterialReceipt = ({ setaction, idDn, idSupplier }) => {
 
-    const auth = useContext(AuthContext)
     const { Get, Post, Loading } = useRequest()
     const [materialOrderList, setMaterialOrderList] = useState([])
     const [scheduleMaterialReceipt, setScheduleMaterialReceipt] = useState([])
@@ -146,12 +134,16 @@ const ModalAddMaterialReceipt = ({ setaction, idDn, idSupplier }) => {
             material_order: null,
             quantity: undefined,
             schedules: null,
-        }
+        },
+        validate: (values) => ({
+            material_order: values.material_order === null ? 'This field is required' : null,
+            quantity: values.quantity === undefined ? 'This field is required' : null
+        })
     })
 
-    const handleSubmit = async (value) => {
+    const handleSubmit = useCallback(async (value) => {
         try {
-            await Post(value, auth.user.token, 'material-receipt-management')
+            await Post(value, 'material-receipt-management')
             setaction(prev => prev + 1)
             SuccessNotif('Add material received success')
             closeAllModals()
@@ -159,20 +151,20 @@ const ModalAddMaterialReceipt = ({ setaction, idDn, idSupplier }) => {
             console.log(e)
             FailedNotif('Add material received failed')
         }
-    }
+    }, [setaction, Post])
 
     useEffect(() => {
-        Get(auth.user.token, 'material-order-list').then(data => {
+        Get('material-order-list').then(data => {
             const material_order_list = data.filter(mo => mo.material.supplier.id === parseInt(idSupplier) && mo.purchase_order_material.supplier.id === parseInt(idSupplier))
             setMaterialOrderList(material_order_list)
         })
 
-        Get(auth.user.token, 'material-receipt-schedule').then(data => {
+        Get('material-receipt-schedule').then(data => {
             const scheduleMr = data.filter(schedule => schedule.material_order.material.supplier.id === parseInt(idSupplier) && schedule.material_order.purchase_order_material.supplier.id === parseInt(idSupplier))
             setScheduleMaterialReceipt(scheduleMr)
         })
 
-    }, [])
+    }, [Get, idSupplier])
 
     const handleChangeSelectSchedule = (value) => {
         const schedule = scheduleMaterialReceipt.find(sch => sch.id === parseInt(value))
@@ -209,7 +201,7 @@ const ModalAddMaterialReceipt = ({ setaction, idDn, idSupplier }) => {
                     itemComponent={CustomSelectComponent}
                     placeholder="select the arrival of material from schedule"
                     value={selectSchedule}
-                    data={scheduleMaterialReceipt.map(schedule => ({ value: schedule.id, label: schedule.material_order.material.name, date: schedule.date }))}
+                    data={scheduleMaterialReceipt.map(schedule => ({ value: schedule.id, label: schedule.material_order.material.name, date: schedule.date, quantity: schedule.quantity, unit: schedule.material_order.material.uom.name }))}
                     clearable
                     searchable
                     nothingFound='Not found'
@@ -223,6 +215,7 @@ const ModalAddMaterialReceipt = ({ setaction, idDn, idSupplier }) => {
                 <Select
                     label='Material'
                     radius='md'
+                    icon={<IconAsset />}
                     required
                     searchable
                     placeholder="Select material"
@@ -232,7 +225,8 @@ const ModalAddMaterialReceipt = ({ setaction, idDn, idSupplier }) => {
                 />
 
                 <TextInput
-                    label='Purchase order'
+                    icon={<IconCodeAsterix />}
+                    label='Purchase order number'
                     radius='md'
                     value={form.values.material_order !== null ? materialOrderList.find(mo => mo.id === parseInt(form.values.material_order)).purchase_order_material.code : ''}
                     readOnly
@@ -245,6 +239,7 @@ const ModalAddMaterialReceipt = ({ setaction, idDn, idSupplier }) => {
 
 
                     <NumberInput
+                        icon={<IconShoppingCart />}
                         hideControls
                         radius='md'
                         label='Total quantity order'
@@ -252,6 +247,7 @@ const ModalAddMaterialReceipt = ({ setaction, idDn, idSupplier }) => {
                         readOnly
                     />
                     <NumberInput
+                        icon={<IconArchive />}
                         hideControls
                         radius='md'
                         label='Total quantity arrived'
@@ -261,6 +257,7 @@ const ModalAddMaterialReceipt = ({ setaction, idDn, idSupplier }) => {
                 </Group>
 
                 <NumberInput
+                    icon={<IconSortAscending2 />}
                     hideControls
                     required
                     label='Quantity'
@@ -274,6 +271,7 @@ const ModalAddMaterialReceipt = ({ setaction, idDn, idSupplier }) => {
                     radius='md'
                     fullWidth
                     my='lg'
+                    leftIcon={<IconDownload />}
                     type="submit"
                     disabled={!form.isDirty()}
                 >
@@ -293,8 +291,7 @@ const DetailDeliveryNoteMaterial = () => {
     const navigate = useNavigate()
     const params = useParams() // deliveryNoteMaterialId
     const { classes } = sectionStyle()
-    const { Retrieve, Delete, Put } = useRequest()
-    const auth = useContext(AuthContext)
+    const { Retrieve, Delete, Put, Loading } = useRequest()
 
     const [action, setAction] = useState(0)
     const [materialReceiptList, setMaterialReceiptList] = useState([])
@@ -307,6 +304,18 @@ const DetailDeliveryNoteMaterial = () => {
         note: '',
         image: null,
         date: ''
+    })
+
+    const form = useForm({
+        initialValues: {
+            id: params.deliveryNoteMaterialId,
+            supplier: '',
+            code: '',
+            created: '',
+            note: '',
+            image: null,
+            date: ''
+        }
     })
 
     const sectionRefs = [
@@ -332,19 +341,8 @@ const DetailDeliveryNoteMaterial = () => {
         },
     ]
 
-    const form = useForm({
-        initialValues: {
-            id: params.deliveryNoteMaterialId,
-            supplier: '',
-            code: '',
-            created: '',
-            note: '',
-            image: null,
-            date: ''
-        }
-    })
 
-    const breadcrumb = [
+    const breadcrumb = useMemo(() => [
         {
             path: '/home/ppic',
             label: 'Ppic'
@@ -354,19 +352,76 @@ const DetailDeliveryNoteMaterial = () => {
             label: 'Warehouse'
         },
         {
-            path: `/home/ppic/warehouse/${params.deliveryNoteMaterialId}`,
+            path: `/home/ppic/warehouse/material-receipt/${params.deliveryNoteMaterialId}`,
             label: 'Detail material receipt'
         }
-    ]
+    ], [])
 
-    const openEditMaterialReceipt = (data) => openModal({
+
+    const handleDeleteDeliveryNoteMaterial = useCallback(async (id) => {
+        try {
+            await Delete(id, 'deliverynote-material-management')
+            SuccessNotif('Delete delivery note success')
+            navigate('/home/ppic/warehouse')
+        } catch (e) {
+            console.log(e)
+            FailedNotif('Delete delivery note failed')
+            FailedNotif(e.message.data)
+        }
+    }, [navigate])
+
+
+    const handleDeleteMaterialReceipt = useCallback(async (id) => {
+        try {
+            await Delete(id, 'material-receipt-management')
+            SuccessNotif('Delete material received success')
+            setAction(prev => prev + 1)
+        } catch (e) {
+            console.log(e)
+            FailedNotif('Delete material received failed')
+            FailedNotif(e.message.data)
+        }
+    }, [])
+
+
+    const handleSubmit = useCallback(async (value) => {
+
+        let validated_data
+        const { image, date, ...data } = value
+
+        if (typeof image === 'string') {
+            // checking type of image field first, to prevent error from content-type in server
+            validated_data = data
+        } else {
+            validated_data = { ...data, image: image }
+        }
+
+        if (date) {
+            validated_data = { ...validated_data, date: date.toLocaleDateString('en-CA') }
+        }
+
+        try {
+            await Put(value.id, validated_data, 'deliverynote-material-management', 'multipart/form-data')
+            SuccessNotif('Edit material receipt success')
+            setAction(prev => prev + 1)
+        } catch (e) {
+            FailedNotif('Edit material receipt failed')
+            form.setValues({ ...deliveryNoteMaterial, supplier: deliveryNoteMaterial.supplier.id, date: new Date(deliveryNoteMaterial.date) })
+            console.log(e)
+        } finally {
+            form.resetDirty()
+            setEditable(e => !e)
+        }
+    }, [deliveryNoteMaterial])
+
+    const openEditMaterialReceipt = useCallback((data) => openModal({
         title: 'Edit quantity material arrival',
         size: 'xl',
         radius: 'md',
         children: <ModalEditMaterialReceipt setaction={setAction} data={data} idDn={params.deliveryNoteMaterialId} />
-    })
+    }), [])
 
-    const openDeleteMaterialReceipt = (id) => openConfirmModal({
+    const openDeleteMaterialReceipt = useCallback((id) => openConfirmModal({
         title: 'Delete material received',
         children: (
             <Text size="sm">
@@ -378,9 +433,9 @@ const DetailDeliveryNoteMaterial = () => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleDeleteMaterialReceipt(id)
-    })
+    }), [handleDeleteMaterialReceipt])
 
-    const openDeleteDeliveryNoteMaterial = (id) => openConfirmModal({
+    const openDeleteDeliveryNoteMaterial = useCallback((id) => openConfirmModal({
         title: 'Delete delivery note',
         children: (
             <Text size="sm">
@@ -392,10 +447,10 @@ const DetailDeliveryNoteMaterial = () => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleDeleteDeliveryNoteMaterial(id)
-    })
+    }), [handleDeleteDeliveryNoteMaterial])
 
-    const openSubmitEditDeliveryNoteMaterial = (value) => openConfirmModal({
-        title: 'Edit delivery note',
+    const openSubmitEditDeliveryNoteMaterial = useCallback((value) => openConfirmModal({
+        title: 'Edit receipt note material',
         children: (
             <Text size="sm">
                 Are you sure?, data will be changed.
@@ -406,43 +461,20 @@ const DetailDeliveryNoteMaterial = () => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleSubmit(value)
-    })
+    }), [handleSubmit])
 
-    const handleDeleteDeliveryNoteMaterial = async (id) => {
-        try {
-            await Delete(id, auth.user.token, 'deliverynote-material-management')
-            SuccessNotif('Delete delivery note success')
-            navigate('/home/ppic/warehouse')
-        } catch (e) {
-            console.log(e)
-            FailedNotif('Delete delivery note failed')
-            FailedNotif(e.message.data)
-        }
-    }
 
-    const openAddMaterialReceipt = () => openModal({
+    const openAddMaterialReceipt = useCallback(() => openModal({
         title: 'Add material receipt',
         radius: 'md',
         size: 'xl',
         children: <ModalAddMaterialReceipt setaction={setAction} idDn={params.deliveryNoteMaterialId} idSupplier={form.values.supplier} />
-    })
-
-    const handleDeleteMaterialReceipt = async (id) => {
-        try {
-            await Delete(id, auth.user.token, 'material-receipt-management')
-            SuccessNotif('Delete material received success')
-            setAction(prev => prev + 1)
-        } catch (e) {
-            console.log(e)
-            FailedNotif('Delete material received failed')
-            FailedNotif(e.message.data)
-        }
-    }
+    }), [form.values.supplier])
 
 
     useEffect(() => {
 
-        Retrieve(params.deliveryNoteMaterialId, auth.user.token, 'deliverynote-material').then(data => {
+        Retrieve(params.deliveryNoteMaterialId, 'deliverynote-material').then(data => {
             const { materialreceipt_set, ...restProps } = data
             form.setValues({ ...restProps, supplier: restProps.supplier.id, date: new Date(restProps.date) })
             setDeliveryNoteMaterial(restProps)
@@ -450,126 +482,111 @@ const DetailDeliveryNoteMaterial = () => {
 
         })
 
-    }, [auth.user.token, action])
+    }, [action])
 
 
-    const handleSubmit = async (value) => {
-        let validated_data
 
-        if (typeof value.image === 'string') {
-            // checking type of image field first, to prevent error from content-type in server
-            const { image, ...data } = value
-            validated_data = data
-        } else {
-            validated_data = value
-        }
+    const materialReceipt = useMemo(() => {
 
-        try {
-            await Put(value.id, { ...validated_data, date: validated_data.date.toLocaleDateString('en-CA') }, auth.user.token, 'deliverynote-material-management', 'multipart/form-data')
-            SuccessNotif('Edit material receipt success')
-            setAction(prev => prev + 1)
-        } catch (e) {
-            FailedNotif('Edit material receipt failed')
-            form.setValues({ ...deliveryNoteMaterial, supplier: deliveryNoteMaterial.supplier.id, date: new Date(deliveryNoteMaterial.date) })
-            console.log(e)
-        } finally {
-            form.resetDirty()
-            setEditable(e => !e)
-        }
-    }
+        return materialReceiptList.map((receipt, index) => (
+            <Paper key={receipt.id} m='md' p='xs' style={{ border: `1px solid #ced4da` }} radius='md'  >
 
-    const materialReceipt = materialReceiptList.map((receipt, index) => (
-        <Paper key={receipt.id} m='md' p='xs' style={{ border: `1px solid #ced4da` }} radius='md'  >
+                <UnstyledButton>
+                    <Group>
+                        <IconAsset />
+                        <div>
+                            <Text>Material {index + 1}</Text>
+                        </div>
+                    </Group>
+                </UnstyledButton>
 
-            <UnstyledButton>
-                <Group>
-                    <IconAsset />
-                    <div>
-                        <Text>Material {index + 1}</Text>
-                    </div>
+                <Group position="right" >
+
+                    <Button.Group >
+
+                        <Button
+                            radius='md'
+                            leftIcon={<IconEdit />}
+                            color='blue.6'
+                            size="xs"
+                            onClick={() => openEditMaterialReceipt(receipt)}
+                            disabled={receipt.material_order.done}
+                        >
+                            Edit
+                        </Button>
+
+                        <Button
+                            disabled={receipt.material_order.done}
+                            leftIcon={<IconTrashX />}
+                            size="xs"
+                            radius='md'
+                            color='red.6'
+                            onClick={() => openDeleteMaterialReceipt(receipt.id)}
+                        >
+                            Delete
+                        </Button>
+                    </Button.Group>
                 </Group>
-            </UnstyledButton>
 
-            <Group position="right" >
+                <Group grow my='lg' >
 
-                <Button.Group >
-
-                    <Button
+                    <TextInput
+                        icon={<IconAsset />}
+                        label='Material'
                         radius='md'
-                        leftIcon={<IconEdit />}
-                        color='blue.6'
-                        size="xs"
-                        onClick={() => openEditMaterialReceipt(receipt)}
-                        disabled={receipt.material_order.done}
-                    >
-                        Edit
-                    </Button>
+                        value={receipt.material_order.material.name}
+                        readOnly
+                    />
 
-                    <Button
-                        disabled={receipt.material_order.done}
-                        leftIcon={<IconTrashX />}
-                        size="xs"
+                    <TextInput
+                        icon={<IconCodeAsterix />}
+                        label='Purchase order number'
                         radius='md'
-                        color='red.6'
-                        onClick={() => openDeleteMaterialReceipt(receipt.id)}
-                    >
-                        Delete
-                    </Button>
-                </Button.Group>
-            </Group>
+                        value={receipt.material_order.purchase_order_material.code}
+                        readOnly
+                    />
 
-            <Group grow my='lg' >
+                </Group>
 
-                <TextInput
-                    label='Material'
-                    radius='md'
-                    value={receipt.material_order.material.name}
-                    readOnly
-                />
+                <Group grow >
 
-                <TextInput
-                    label='Purchase order'
-                    radius='md'
-                    value={receipt.material_order.purchase_order_material.code}
-                    readOnly
-                />
+                    <NumberInput
+                        icon={<IconSortAscending2 />}
+                        hideControls
+                        label='Quantity'
+                        value={receipt.quantity}
+                        readOnly
+                        radius='md'
+                    />
 
-            </Group>
+                    <NumberInput
+                        icon={<IconShoppingCart />}
+                        hideControls
+                        radius='md'
+                        label='Total quantity order'
+                        value={receipt.material_order.ordered}
+                        readOnly
+                    />
+                    <NumberInput
+                        icon={<IconArchive />}
+                        hideControls
+                        radius='md'
+                        label='Total quantity arrived'
+                        value={receipt.material_order.arrived}
+                        readOnly
+                    />
+                </Group>
 
-            <Group grow >
-
-                <NumberInput
-                    hideControls
-                    label='Quantity'
-                    value={receipt.quantity}
-                    readOnly
-                    radius='md'
-                />
-
-                <NumberInput
-                    hideControls
-                    radius='md'
-                    label='Total quantity order'
-                    value={receipt.material_order.ordered}
-                    readOnly
-                />
-                <NumberInput
-                    hideControls
-                    radius='md'
-                    label='Total quantity arrived'
-                    value={receipt.material_order.arrived}
-                    readOnly
-                />
-            </Group>
-
-        </Paper>
-    ))
+            </Paper>
+        ))
+    }, [materialReceiptList, openEditMaterialReceipt, openDeleteMaterialReceipt])
 
     return (
         <>
 
             <BreadCrumb links={breadcrumb} />
             <BaseAside links={links} activeSection={activeSection} />
+            <Loading />
             <section id='detail-mr' className={classes.section} ref={sectionRefs[0]} >
                 <Title className={classes.title} >
                     <a href="#detail-mr" className={classes.a_href} >
@@ -622,6 +639,7 @@ const DetailDeliveryNoteMaterial = () => {
                     <Stack spacing='xs'>
 
                         <TextInput
+                            icon={<IconUserCheck />}
                             radius='md'
                             label='Supplier'
                             value={deliveryNoteMaterial.supplier.name}
@@ -629,6 +647,7 @@ const DetailDeliveryNoteMaterial = () => {
                         />
 
                         <DatePicker
+                            icon={<IconCalendarEvent />}
                             radius='md'
                             label='Date'
                             disabled={!editable}
@@ -638,6 +657,7 @@ const DetailDeliveryNoteMaterial = () => {
                         />
 
                         <TextInput
+                            icon={<IconCodeAsterix />}
                             radius='md'
                             required
                             label='Receipt number'
@@ -646,6 +666,7 @@ const DetailDeliveryNoteMaterial = () => {
                         />
 
                         <Textarea
+                            icon={<IconClipboardCheck />}
                             radius='md'
                             label='Note'
                             readOnly={!editable}
@@ -721,6 +742,7 @@ const DetailDeliveryNoteMaterial = () => {
                         radius='md'
                         onClick={openAddMaterialReceipt}
                         my='lg'
+                        leftIcon={<IconPlus />}
                     >
                         Add material received
                     </Button>

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { showNotification } from "@mantine/notifications";
@@ -9,6 +9,9 @@ const ProtectedLayout = () => {
     const auth = useContext(AuthContext)
     const location = useLocation()
     const navigate = useNavigate()
+    const regex = useMemo(() => {
+        return new RegExp('/home/*(?=marketing|purchasing|plant-manager|ppic)')
+    }, [])
 
     useEffect(() => {
         if (auth.user === null) {
@@ -22,7 +25,6 @@ const ProtectedLayout = () => {
             })
             navigate('/', { replace: true })
         } else {
-            const regex = new RegExp('/home\/*(?=marketing|purchasing|plant-manager|ppic)')
             // users are not allowed to visit just /home/ path but must be a sequel path eg. /home/marketing
             if (!regex.test(location.pathname) || !(location.pathname.split('/')[2] === auth.user.division)) {
                 // if auth.user.group marketing navigate to dashboard marketing
@@ -33,14 +35,14 @@ const ProtectedLayout = () => {
         }
 
 
-    }, [])
+    }, [regex, navigate, auth, location.pathname])
 
 
     return (
         <>
 
             {
-                auth.user != null && <Outlet />
+                auth.user !== null && <Outlet />
             }
 
 

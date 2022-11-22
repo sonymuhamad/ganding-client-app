@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { AuthContext } from "../../context/AuthContext";
 import BaseAside from "../layout/BaseAside";
 import BreadCrumb from "../BreadCrumb";
 import { useRequest } from "../../hooks/useRequest";
 import { useSectionProduct } from '../../hooks/useSectionProduct'
 import { sectionStyle } from "../../styles/sectionStyle";
-import { Title, Group, TextInput, Paper, Image, Text } from "@mantine/core";
+import { Title, Group, TextInput, Paper, Image } from "@mantine/core";
 import { IconBarbell, IconWriting, IconCodeAsterix, IconFileTypography, IconTag, IconList } from "@tabler/icons";
 import BaseTable from "../tables/BaseTable";
 
@@ -15,8 +14,7 @@ import BaseTable from "../tables/BaseTable";
 const DetailProduct = () => {
 
     const params = useParams() //customerId productId
-    const { Retrieve } = useRequest()
-    const auth = useContext(AuthContext)
+    const { Retrieve, Loading } = useRequest()
     const { classes } = sectionStyle()
     const { sectionRefs, activeSection } = useSectionProduct()
     const [breadcrumb, setBreadcrumb] = useState([])
@@ -55,7 +53,7 @@ const DetailProduct = () => {
 
         const fetch = async () => {
             try {
-                const product = await Retrieve(params.productId, auth.user.token, 'product-detail')
+                const product = await Retrieve(params.productId, 'product-detail')
                 setBreadcrumb([
                     {
                         path: '/home/marketing',
@@ -84,7 +82,7 @@ const DetailProduct = () => {
 
         fetch()
 
-    }, [params.productId, auth.user.token])
+    }, [params.productId, Retrieve])
 
     const columnProcess = useMemo(() => [
         {
@@ -111,6 +109,8 @@ const DetailProduct = () => {
 
     return (
         <>
+
+            <Loading />
 
             <BaseAside links={links} activeSection={activeSection} />
             <BreadCrumb links={breadcrumb} />

@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { SuccessNotif, FailedNotif } from "../../notifications/Notifications";
 import { useRequest } from "../../../hooks/useRequest";
-import { AuthContext } from "../../../context/AuthContext";
 import BaseTable from "../../tables/BaseTable";
 
 import { openModal, closeAllModals, openConfirmModal } from "@mantine/modals";
@@ -13,7 +12,6 @@ import { useForm } from "@mantine/form";
 const EditBaseConversionMaterial = ({ data, setaction }) => {
 
     const { Put, Get } = useRequest()
-    const auth = useContext(AuthContext)
     const [material, setMaterial] = useState([])
 
     const form = useForm({
@@ -25,19 +23,19 @@ const EditBaseConversionMaterial = ({ data, setaction }) => {
         }
     })
 
-    const handleSubmit = async (value) => {
+    const handleSubmit = useCallback(async (value) => {
         try {
-            await Put(data.id, value, auth.user.token, 'based-conversion-management')
+            await Put(data.id, value, 'based-conversion-management')
             SuccessNotif('Edit base conversion material success')
             setaction(prev => prev + 1)
             closeAllModals()
         } catch (e) {
             FailedNotif(e.message.data.non_field_errors)
         }
-    }
+    }, [Put, data.id, setaction])
 
 
-    const openConfirmSubmit = (value) => openConfirmModal({
+    const openConfirmSubmit = useCallback((value) => openConfirmModal({
         title: `Edit base conversion material`,
         children: (
             <Text size="sm">
@@ -49,12 +47,12 @@ const EditBaseConversionMaterial = ({ data, setaction }) => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleSubmit(value)
-    })
+    }), [handleSubmit])
 
     useEffect(() => {
         const fetchMaterial = async () => {
             try {
-                const materials = await Get(auth.user.token, 'material-lists')
+                const materials = await Get('material-lists')
                 setMaterial(materials)
 
             } catch (e) {
@@ -62,7 +60,7 @@ const EditBaseConversionMaterial = ({ data, setaction }) => {
             }
         }
         fetchMaterial()
-    }, [])
+    }, [Get])
 
     return (
         <>
@@ -84,6 +82,8 @@ const EditBaseConversionMaterial = ({ data, setaction }) => {
                     />
 
                     <NumberInput
+                        hideControls
+                        min={0}
                         radius='md'
                         label='Quantity'
                         required
@@ -108,6 +108,8 @@ const EditBaseConversionMaterial = ({ data, setaction }) => {
                     />
 
                     <NumberInput
+                        hideControls
+                        min={0}
                         radius='md'
                         label='Quantity'
                         required
@@ -130,7 +132,6 @@ const EditBaseConversionMaterial = ({ data, setaction }) => {
 
 const PostBaseConversionMaterial = ({ setaction }) => {
     const { Post, Get } = useRequest()
-    const auth = useContext(AuthContext)
     const [material, setMaterial] = useState([])
 
     const form = useForm({
@@ -142,9 +143,9 @@ const PostBaseConversionMaterial = ({ setaction }) => {
         }
     })
 
-    const handleSubmit = async (value) => {
+    const handleSubmit = useCallback(async (value) => {
         try {
-            await Post(value, auth.user.token, 'based-conversion-management')
+            await Post(value, 'based-conversion-management')
             SuccessNotif('Add base conversion material success')
             setaction(prev => prev + 1)
             closeAllModals()
@@ -152,10 +153,10 @@ const PostBaseConversionMaterial = ({ setaction }) => {
             console.log(e)
             FailedNotif(e.message.data.non_field_errors)
         }
-    }
+    }, [Post, setaction])
 
 
-    const openConfirmSubmit = (value) => openConfirmModal({
+    const openConfirmSubmit = useCallback((value) => openConfirmModal({
         title: `Add base conversion material`,
         children: (
             <Text size="sm">
@@ -167,12 +168,12 @@ const PostBaseConversionMaterial = ({ setaction }) => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleSubmit(value)
-    })
+    }), [handleSubmit])
 
     useEffect(() => {
         const fetchMaterial = async () => {
             try {
-                const materials = await Get(auth.user.token, 'material-lists')
+                const materials = await Get('material-lists')
                 setMaterial(materials)
 
             } catch (e) {
@@ -180,7 +181,7 @@ const PostBaseConversionMaterial = ({ setaction }) => {
             }
         }
         fetchMaterial()
-    }, [])
+    }, [Get])
 
     return (
         <>
@@ -203,6 +204,8 @@ const PostBaseConversionMaterial = ({ setaction }) => {
                     />
 
                     <NumberInput
+                        hideControls
+                        min={0}
                         radius='md'
                         required
                         label='Quantity'
@@ -229,6 +232,8 @@ const PostBaseConversionMaterial = ({ setaction }) => {
                     />
 
                     <NumberInput
+                        hideControls
+                        min={0}
                         required
                         radius='md'
                         placeholder="Input quantity"
@@ -251,9 +256,7 @@ const PostBaseConversionMaterial = ({ setaction }) => {
 const BaseConversionMaterial = () => {
 
     const [basedConversionMaterial, setBasedConversionMaterial] = useState([])
-    const [action, setAction] = useState(0)
     const { Get, Delete } = useRequest()
-    const auth = useContext(AuthContext)
     const [actionBaseConversionMaterial, setActionBaseConversionMaterial] = useState(0)
 
     const columnConversionMaterial = useMemo(() => [
@@ -292,20 +295,20 @@ const BaseConversionMaterial = () => {
         }
     ], [])
 
-    const handleDeleteBaseConversionMaterial = async (id) => {
+    const handleDeleteBaseConversionMaterial = useCallback(async (id) => {
         try {
-            await Delete(id, auth.user.token, 'based-conversion-management')
+            await Delete(id, 'based-conversion-management')
             SuccessNotif('Delete conversion material success')
             setActionBaseConversionMaterial(prev => prev + 1)
         } catch (e) {
             FailedNotif('Delete conversion material failed')
             console.log(e)
         }
-    }
+    }, [])
 
 
 
-    const openDeleteBaseConversionMaterialModal = (id) => openConfirmModal({
+    const openDeleteBaseConversionMaterialModal = useCallback((id) => openConfirmModal({
         title: 'Delete conversion material',
         children: (
             <Text size="sm">
@@ -317,29 +320,29 @@ const BaseConversionMaterial = () => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleDeleteBaseConversionMaterial(id)
-    })
+    }), [handleDeleteBaseConversionMaterial])
 
 
-    const openEditBaseConversionMaterial = (baseConversion) => openModal({
+    const openEditBaseConversionMaterial = useCallback((baseConversion) => openModal({
         title: 'Edit Base conversion material',
         radius: 'md',
         size: 'xl',
         children: <EditBaseConversionMaterial data={baseConversion} setaction={setActionBaseConversionMaterial} />
-    })
+    }), [])
 
-    const openPostBaseConversionMaterial = () => openModal({
+    const openPostBaseConversionMaterial = useCallback(() => openModal({
         title: 'Add Base conversion material',
         radius: 'md',
         size: 'xl',
         children: <PostBaseConversionMaterial setaction={setActionBaseConversionMaterial} />
-    })
+    }), [])
 
     useEffect(() => {
         // effect for conversion material report and base
 
         const fetchConversionMaterial = async () => {
             try {
-                const basedConversion = await Get(auth.user.token, 'based-conversion-detail')
+                const basedConversion = await Get('based-conversion-detail')
 
                 setBasedConversionMaterial(basedConversion.map(based => ({
                     ...based, buttonEdit:
@@ -372,7 +375,7 @@ const BaseConversionMaterial = () => {
 
         fetchConversionMaterial()
 
-    }, [auth.user.token, actionBaseConversionMaterial])
+    }, [actionBaseConversionMaterial, openDeleteBaseConversionMaterialModal, openEditBaseConversionMaterial])
 
 
     return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useContext } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 
 import { Group, Card, Text, RingProgress, Title, Button, Progress, Chip } from "@mantine/core";
 import { Link } from "react-router-dom";
@@ -9,7 +9,6 @@ import BreadCrumb from "../BreadCrumb";
 import BaseTableExpanded from "../tables/BaseTableExpanded";
 import BaseTableDefaultExpanded from '../tables/BaseTableDefaultExpanded'
 import { useRequest } from "../../hooks/useRequest";
-import { AuthContext } from "../../context/AuthContext";
 import ExpandedDn from "../layout/ExpandedDn";
 import { IconDotsCircleHorizontal } from "@tabler/icons";
 import FullCalendar from "@fullcalendar/react";
@@ -19,12 +18,16 @@ import listPlugin from '@fullcalendar/list'
 
 const ExpandProgress = ({ data }) => {
 
+    const currentProgress = useMemo(() => {
+        return Math.round(((data.productdelivered / data.productordered) * 100) * 10) / 10
+    }, [data])
+
     return (
         <>
             <Progress
-                value={Math.round(((data.productdelivered / data.productordered) * 100) * 10) / 10}
+                value={currentProgress}
 
-                label={Math.round(((data.productdelivered / data.productordered) * 100) * 10) / 10 >= 100 ? 'finished 100%' : `${Math.round(((data.productdelivered / data.productordered) * 100) * 10) / 10} %`}
+                label={currentProgress >= 100 ? 'finished 100%' : `${currentProgress} %`}
                 size="xl" radius="xl"
             />
         </>
@@ -37,8 +40,7 @@ export default function MarketingDashboard() {
 
     const { classes, theme } = marketingDashboardStyle()
     const { sectionRefs, activeSection } = useSection()
-    const { Get } = useRequest()
-    const auth = useContext(AuthContext)
+    const { Get, Loading } = useRequest()
     const [dataSo, setDataSo] = useState([])
     const [event, setEvent] = useState([])
     const [dataCard, setDataCard] = useState({
@@ -78,27 +80,29 @@ export default function MarketingDashboard() {
         }
     ]
 
-    const stats = [
-        {
-            label: 'Completed',
-            value: dataCard.done
-        },
-        {
-            label: 'In progress',
-            value: dataCard.progress
-        },
-        {
-            label: 'Pending',
-            value: dataCard.pending
-        }
-    ]
+    const stats = useMemo(() => {
+        return [
+            {
+                label: 'Completed',
+                value: dataCard.done
+            },
+            {
+                label: 'In progress',
+                value: dataCard.progress
+            },
+            {
+                label: 'Pending',
+                value: dataCard.pending
+            }
+        ]
+    }, [dataCard])
 
 
     useEffect(() => {
         const fetch = async () => {
             try {
-                const salesOrder = await Get(auth.user.token, 'sales-order-this-month')
-                const deliverynotes = await Get(auth.user.token, 'delivery-notes-pending')
+                const salesOrder = await Get('sales-order-this-month')
+                const deliverynotes = await Get('delivery-notes-pending')
 
                 const event = salesOrder.reduce((prev, current) => {
                     let temp = []
@@ -170,7 +174,7 @@ export default function MarketingDashboard() {
 
         fetch()
 
-    }, [auth.user.token])
+    }, [Get])
 
     const columns = useMemo(() => [
         {
@@ -214,20 +218,23 @@ export default function MarketingDashboard() {
     ], [])
 
 
-    const items = stats.map((stat) => (
-        <div key={stat.label}>
-            <Text className={classes.label}>{stat.value}</Text>
-            <Text size="xs" color="dimmed">
-                {stat.label}
-            </Text>
-        </div>
-    ));
+    const items = useMemo(() => {
+        return stats.map((stat) => (
+            <div key={stat.label}>
+                <Text className={classes.label}>{stat.value}</Text>
+                <Text size="xs" color="dimmed">
+                    {stat.label}
+                </Text>
+            </div>
+        ))
+    }, [classes, stats])
 
 
     return (
         <>
             <BreadCrumb links={breadcrumb} />
             <BaseAside links={links} activeSection={activeSection} />
+            <Loading />
 
             <section id='so-of-month' className={classes.section} ref={sectionRefs[0]} >
                 <Title className={classes.title} >

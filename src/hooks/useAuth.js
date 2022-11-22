@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { showNotification } from "@mantine/notifications";
 import { IconCheck, IconHandRock, IconAccessPointOff } from "@tabler/icons";
 import { AuthException, Url } from "../services/External";
 import { useParams } from "react-router-dom";
+import { closeAllModals } from "@mantine/modals";
 
 const sign_in_url = `${Url}/plant-manager/sign-in/`
 const sign_out_url = `${Url}/plant-manager/sign-out/`
@@ -13,14 +14,13 @@ const sign_out_url = `${Url}/plant-manager/sign-out/`
 export const useAuth = () => {
     // handle user login logout and authentication
 
-    const initialCompute = () => {
+    const initialCompute = useCallback(() => {
         // initial computation to get user is authenticate or null
 
         const auth = window.localStorage.getItem('loggedUser')
         return JSON.parse(auth)
-    }
+    }, [])
 
-    let redirect
     const params = useParams()
     const navigate = useNavigate()
     const [user, setUser] = useState(() => {
@@ -29,7 +29,8 @@ export const useAuth = () => {
     })
 
 
-    const signIn = async (data) => {
+    const signIn = useCallback(async (data) => {
+        let redirect
         try {
             const response = await axios.post(sign_in_url, data)
             const data_user = {
@@ -43,7 +44,7 @@ export const useAuth = () => {
 
             showNotification({
                 title: 'Sign In success',
-                message: 'Have a great day 🤥',
+                message: 'Have a great day',
                 disallowClose: true,
                 autoClose: 3000,
                 icon: <IconCheck />
@@ -63,26 +64,27 @@ export const useAuth = () => {
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
-    }
+    }, [params, navigate])
 
-    const signOut = async (token) => {
+    const signOut = useCallback(async (token) => {
         try {
             await axios.post(sign_out_url, { access_token: token })
             setUser(null)
             window.localStorage.removeItem('loggedUser')
             showNotification({
-                title: 'See ya 👋',
+                title: 'Sign out success',
                 disallowClose: true,
                 autoClose: 3000,
                 icon: <IconHandRock />
             })
+            closeAllModals()
             navigate(`/`)
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
-    }
+    }, [navigate])
 
-    const resetToken = async (token, redirect) => {
+    const resetToken = useCallback(async (token, redirect) => {
         try {
             await axios.post(sign_out_url, { access_token: token })
             setUser(null)
@@ -95,12 +97,13 @@ export const useAuth = () => {
                 color: 'red',
                 icon: <IconAccessPointOff />
             })
+            closeAllModals()
             navigate(`/login/next=${redirect}`)
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
 
-    }
+    }, [navigate])
 
     return {
         signIn,

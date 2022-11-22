@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 
 import { Button } from "@mantine/core";
-import { AuthContext } from "../../../context/AuthContext";
 import { useRequest } from "../../../hooks/useRequest";
 import BaseTable from "../../tables/BaseTable";
 import { IconAffiliate } from "@tabler/icons";
@@ -10,8 +9,7 @@ import { Link } from "react-router-dom";
 
 const ProductionPriority = () => {
 
-    const auth = useContext(AuthContext)
-    const { Get } = useRequest()
+    const { Get, Loading } = useRequest()
     const [dataPriority, setDataPriority] = useState([])
 
     const columnProductionPriority = useMemo(() => [
@@ -38,7 +36,7 @@ const ProductionPriority = () => {
     ], [])
 
     useEffect(() => {
-        Get(auth.user.token, 'production-priority').then(data => {
+        Get('production-priority').then(data => {
 
             const priority = data.reduce((prev, current) => {
                 const { ppic_process_related } = current
@@ -63,10 +61,11 @@ const ProductionPriority = () => {
             setDataPriority(priority)
 
         })
-    }, [auth.user.token])
+    }, [])
 
     return (
         <>
+            <Loading />
             <BaseTable
                 column={columnProductionPriority}
                 data={dataPriority}

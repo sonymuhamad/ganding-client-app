@@ -1,11 +1,10 @@
-import React, { useMemo, useState, useEffect, useContext } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import BaseTableExpanded from "../tables/BaseTableExpanded";
 import ExpandedDn from "../layout/ExpandedDn";
 import { useRequest } from "../../hooks/useRequest";
 import { IconSearch, IconDotsCircleHorizontal } from "@tabler/icons";
 import { TextInput, Button, Group } from "@mantine/core";
 import BreadCrumb from "../BreadCrumb";
-import { AuthContext } from "../../context/AuthContext";
 import { Link } from "react-router-dom";
 
 export default function DeliveryNote() {
@@ -13,14 +12,13 @@ export default function DeliveryNote() {
     const [deliveryNotes, setDeliveryNotes] = useState([])
     const { Get } = useRequest()
     const [searchVal, setSearchVal] = useState('')
-    const auth = useContext(AuthContext)
 
     const filteredDeliveryNotes = useMemo(() => {
 
         const valFiltered = searchVal.toLowerCase()
         return deliveryNotes.filter((dn) => dn.customer.name.toLowerCase().includes(valFiltered) || dn.created.includes(valFiltered) || dn.code.includes(valFiltered))
 
-    }, [deliveryNotes])
+    }, [deliveryNotes, searchVal])
 
     const breadcrumb = [
         {
@@ -34,9 +32,9 @@ export default function DeliveryNote() {
     ]
 
     useEffect(() => {
-        const fetch = async (token, endpoint) => {
+        const fetch = async () => {
             try {
-                const deliveryNotes = await Get(token, endpoint)
+                const deliveryNotes = await Get('delivery-notes')
 
                 const dn = deliveryNotes.map(dn => {
                     dn['detailDeliveryNoteButton'] = <Button
@@ -59,8 +57,8 @@ export default function DeliveryNote() {
                 console.log(e)
             }
         }
-        fetch(auth.user.token, 'delivery-notes')
-    }, [auth.user.token])
+        fetch()
+    }, [Get])
 
 
 

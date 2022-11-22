@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 
 import { SegmentedControl, Button, Collapse, Group, TextInput } from "@mantine/core";
 import { IconDotsCircleHorizontal, IconPlus, IconSearch } from "@tabler/icons";
@@ -7,15 +7,13 @@ import { Link } from "react-router-dom";
 
 import BaseTableExpanded from "../tables/BaseTableExpanded";
 import BreadCrumb from "../BreadCrumb";
-import { AuthContext } from "../../context/AuthContext";
 import { useRequest } from "../../hooks/useRequest";
 import ExpandedSo from "../layout/ExpandedSo";
 
 
 export default function SalesOrder() {
 
-    const auth = useContext(AuthContext)
-    const { Get } = useRequest()
+    const { Get, Loading } = useRequest()
     const [activeSegment, setActiveSegment] = useState('on_progress')
     const [salesOrderProgress, setSalesOrderProgress] = useState([])
     const [salesOrderPending, setSalesOrderPending] = useState([])
@@ -46,7 +44,7 @@ export default function SalesOrder() {
     }, [searchVal, salesOrderPending])
 
 
-    const breadcrumb = [
+    const breadcrumb = useMemo(() => [
         {
             path: '/home/marketing',
             label: 'Marketing'
@@ -55,7 +53,7 @@ export default function SalesOrder() {
             path: '/home/marketing/sales-order',
             label: 'Sales Order'
         }
-    ]
+    ], [])
 
     const columnSo = useMemo(() => [
         // columns for sales order tables
@@ -89,9 +87,9 @@ export default function SalesOrder() {
     ], [])
 
     useEffect(() => {
-        const fetch = async (get, token) => {
+        const fetch = async () => {
             try {
-                const salesorders = await get(token, 'sales-order-list')
+                const salesorders = await Get('sales-order-list')
                 let on_progress = []
                 let pending = []
                 let done = []
@@ -130,17 +128,14 @@ export default function SalesOrder() {
             }
         }
 
-        fetch(Get, auth.user.token)
-    }, [auth.user.token])
+        fetch()
+    }, [Get])
 
 
     return (
         <>
             <BreadCrumb links={breadcrumb} />
-
-
-
-
+            <Loading />
             <Group position="apart" >
 
                 <SegmentedControl

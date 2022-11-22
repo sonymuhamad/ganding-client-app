@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useContext, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { AuthContext } from "../../../context/AuthContext";
 import { useRequest } from "../../../hooks/useRequest";
 import BaseTableExpanded from "../../tables/BaseTableExpanded";
 import { Button, Textarea, Paper, TextInput, NumberInput, Group, NativeSelect, Text, FileButton } from "@mantine/core";
-import { IconDotsCircleHorizontal, IconClipboard, IconPlus, IconUpload, IconTrash, IconSearch } from "@tabler/icons";
-import { openModal, closeAllModals, openConfirmModal } from "@mantine/modals";
+import { IconDotsCircleHorizontal, IconClipboard, IconPlus, IconUpload, IconTrash, IconSearch, IconAsset, IconPackgeImport, IconCodeAsterix, IconUserCheck, IconClipboardCheck } from "@tabler/icons";
+import { openModal, closeAllModals } from "@mantine/modals";
 import { useForm } from "@mantine/form";
 import { FailedNotif, SuccessNotif } from "../../notifications/Notifications";
 import { useNavigate } from "react-router-dom";
@@ -14,44 +13,56 @@ import { useNavigate } from "react-router-dom";
 
 const ExpandedMaterialReceipt = ({ data }) => {
 
-    const materialReceipts = data.materialreceipt_set.map(mr => (
-        <Group key={mr.id} grow my='lg' >
+    const materialReceipts = useMemo(() => {
+        return data.materialreceipt_set.map(mr => (
+            <Group key={mr.id} grow my='lg' >
 
-            <TextInput
-                label='Material'
-                radius='md'
-                value={mr.material_order.material.name}
-                readOnly
-            />
+                <TextInput
+                    icon={<IconAsset />}
+                    label='Material'
+                    radius='md'
+                    value={mr.material_order.material.name}
+                    readOnly
+                />
 
-            <NumberInput
-                hideControls
-                label='Quantity'
-                value={mr.quantity}
-                readOnly
-            />
+                <NumberInput
+                    icon={<IconPackgeImport />}
+                    radius='md'
+                    hideControls
+                    label='Quantity'
+                    value={mr.quantity}
+                    readOnly
+                />
 
-            <TextInput
-                label='Purchase order'
-                radius='md'
-                value={mr.material_order.purchase_order_material.code}
-                readOnly
-            />
+                <TextInput
+                    icon={<IconCodeAsterix />}
+                    label='Purchase order'
+                    radius='md'
+                    value={mr.material_order.purchase_order_material.code}
+                    readOnly
+                />
 
-        </Group>
-    ))
+            </Group>
+        ))
+    }, [data])
 
     return (
-        <Paper p='lg' >
+        <Paper m='xs' p='xs' >
+
             <Textarea
                 icon={<IconClipboard />}
-                label='Notes'
+                label='Receipt descriptions'
                 readOnly
                 value={data.note}
                 radius='md'
             />
 
-            {materialReceipts}
+            {materialReceipts.length === 0 ?
+                <Text align="center" size='sm' color='dimmed' my='md' >
+                    This receipt note doesn't have material received
+                </Text>
+                : materialReceipts}
+
         </Paper>
     )
 }
@@ -59,58 +70,48 @@ const ExpandedMaterialReceipt = ({ data }) => {
 const ModalAddDeliveryNoteMaterial = () => {
 
     const [supplierList, setSupplierList] = useState([])
-    const auth = useContext(AuthContext)
     const navigate = useNavigate()
     const { Get, Loading, Post } = useRequest()
     const form = useForm({
         initialValues: {
-            supplier: '',
+            supplier: null,
             code: '',
             note: '',
             image: null
+        },
+        validate: {
+            supplier: value => value === null ? 'Please select supplier' : null,
+            code: value => value === '' ? 'This field is required' : null
         }
     })
 
     useEffect(() => {
-        Get(auth.user.token, 'supplier-list').then(data => {
+        Get('supplier-list').then(data => {
             setSupplierList(data)
         })
-    }, [])
+    }, [Get])
 
-    const handleSubmit = async (value) => {
+    const handleSubmit = useCallback(async (value) => {
         try {
-            const newDnMaterial = await Post(value, auth.user.token, 'deliverynote-material-management', 'multipart/form-data')
+            const newDnMaterial = await Post(value, 'deliverynote-material-management', 'multipart/form-data')
             SuccessNotif('Add material delivery note success')
             closeAllModals()
-            navigate(`/home/ppic/warehouse/${newDnMaterial.id}`)
+            navigate(`/home/ppic/warehouse/material-receipt/${newDnMaterial.id}`)
         } catch (e) {
             console.log(e)
             FailedNotif('Add material delivery note failed')
         }
-    }
+    }, [Post, navigate])
 
-
-    const openConfirmSubmit = (value) => openConfirmModal({
-        title: `Add receipt note`,
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be saved.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, save', cancel: "No, don't save it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleSubmit(value)
-    })
 
     return (
         <>
             <Loading />
 
-            <form onSubmit={form.onSubmit(openConfirmSubmit)} >
+            <form onSubmit={form.onSubmit(handleSubmit)} >
 
                 <NativeSelect
+                    icon={<IconUserCheck />}
                     radius='md'
                     label='Supplier'
                     placeholder="Select supplier"
@@ -121,18 +122,20 @@ const ModalAddDeliveryNoteMaterial = () => {
 
 
                 <TextInput
+                    icon={<IconCodeAsterix />}
                     my='lg'
                     label='Receipt number'
                     radius='md'
                     required
-                    placeholder="Input delivery note number"
+                    placeholder="Input receipt note number"
                     {...form.getInputProps('code')}
                 />
 
                 <Textarea
-                    label='Note'
+                    icon={<IconClipboardCheck />}
+                    label='Material receipt description'
                     radius='md'
-                    placeholder="Put notes for this material delivery"
+                    placeholder="Input description for this material receipt"
                     {...form.getInputProps('note')}
                 />
 
@@ -187,7 +190,6 @@ const ModalAddDeliveryNoteMaterial = () => {
 
 const MaterialReceipt = () => {
 
-    const auth = useContext(AuthContext)
     const { Get } = useRequest()
     const [data, setData] = useState([])
     const [searchVal, setSearchVal] = useState('')
@@ -216,34 +218,25 @@ const MaterialReceipt = () => {
         {
             name: 'Amount of material received',
             selector: row => row.materialreceipt_set.length,
-            style: {
-                padding: -5,
-                margin: -10
-            }
         },
         {
             name: '',
             selector: row => row.buttonDetail,
-            style: {
-                padding: -5,
-                margin: -10
-            }
-
         }
     ], [])
 
-    const openAddDeliveryNoteMaterial = () => openModal({
+    const openAddDeliveryNoteMaterial = useCallback(() => openModal({
         title: 'Add material receipt note',
         radius: 'md',
-        size: 'lg',
+        size: 'xl',
         children: <ModalAddDeliveryNoteMaterial />
-    })
+    }), [])
 
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const data = await Get(auth.user.token, 'deliverynote-material')
+                const data = await Get('deliverynote-material')
                 const dataDeliveryNotes = data.map(dn => ({
                     ...dn, buttonDetail: <Button
                         leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
@@ -251,7 +244,7 @@ const MaterialReceipt = () => {
                         variant='subtle'
                         radius='md'
                         component={Link}
-                        to={`/home/ppic/warehouse/${dn.id}`}
+                        to={`/home/ppic/warehouse/material-receipt/${dn.id}`}
                     >
                         Detail
                     </Button>
@@ -264,7 +257,7 @@ const MaterialReceipt = () => {
             }
         }
         fetchData()
-    }, [auth.user.token])
+    }, [])
 
 
     return (
