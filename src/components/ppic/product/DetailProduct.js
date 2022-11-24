@@ -319,7 +319,6 @@ const DetailProduct = () => {
             } else {
                 FailedNotif('Edit data failed')
             }
-            console.log(e)
 
         }
 

@@ -40,11 +40,11 @@ const Customers = () => {
     const [action, setAction] = useState(0)
     const [opened, setOpened] = useState(false)
     const [dataCustomer, setDataCustomer] = useState([])
-    const { Get, Post, Loading } = useRequest()
+    const { Get, Post, Loading, GetAndExpiredTokenHandler } = useRequest()
 
     const fetch = useCallback(async () => {
         try {
-            let data_customers = await Get('customer')
+            let data_customers = await GetAndExpiredTokenHandler('customer')
 
             data_customers = data_customers.map((customer) => {
                 return ({ ...customer, detailButton: <Button component={Link} to={`/home/marketing/customers/${customer.id}`} leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />} color='teal.8' variant='subtle' radius='md' >Detail</Button> })

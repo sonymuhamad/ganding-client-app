@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 export default function DeliveryNote() {
 
     const [deliveryNotes, setDeliveryNotes] = useState([])
-    const { Get } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
     const [searchVal, setSearchVal] = useState('')
 
     const filteredDeliveryNotes = useMemo(() => {
@@ -34,7 +34,7 @@ export default function DeliveryNote() {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const deliveryNotes = await Get('delivery-notes')
+                const deliveryNotes = await GetAndExpiredTokenHandler('delivery-notes')
 
                 const dn = deliveryNotes.map(dn => {
                     dn['detailDeliveryNoteButton'] = <Button
@@ -58,7 +58,7 @@ export default function DeliveryNote() {
             }
         }
         fetch()
-    }, [Get])
+    }, [])
 
 
 

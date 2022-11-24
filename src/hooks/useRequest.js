@@ -73,6 +73,30 @@ export const useRequest = () => {
             return res.data
 
         } catch (err) {
+
+            if (err.response.status === 404) {
+                navigate(-1, { replace: true })
+            }
+            throw new AuthException(err.response)
+        } finally {
+            setVisible(v => !v)
+        }
+
+    }, [auth, location.pathname, navigate])
+
+    const GetAndExpiredTokenHandler = useCallback(async (endpoint) => {
+        const url = `${Url}/${auth.user.division}/${endpoint}/`
+        setVisible(v => !v)
+
+        try {
+            const res = await axios.get(url, {
+                headers: {
+                    'Authorization': `Bearer ${auth.user.token}`
+                }
+            })
+            return res.data
+
+        } catch (err) {
             if (err.response.status === 401) {
                 auth.resetToken(auth.user.token, location.pathname)
                 // expired token handle
@@ -86,6 +110,8 @@ export const useRequest = () => {
         }
 
     }, [auth, location.pathname, navigate])
+
+
 
 
     const Delete = useCallback(async (id, endpoint) => {
@@ -142,7 +168,7 @@ export const useRequest = () => {
     }
 
     return {
-        Post, Put, Get, Delete, Retrieve, Loading
+        Post, Put, Get, Delete, Retrieve, Loading, GetAndExpiredTokenHandler
     }
 
 }

@@ -14,7 +14,7 @@ const NewSalesOrder = () => {
 
     const { classes } = customStyle()
     const [customer, setCustomer] = useState([])
-    const { Get, Post, Loading } = useRequest()
+    const { Post, Loading, GetAndExpiredTokenHandler } = useRequest()
     const navigate = useNavigate()
 
     const form = useForm({
@@ -77,7 +77,7 @@ const NewSalesOrder = () => {
 
         const fetch = async () => {
             try {
-                const customer = await Get('product-customer')
+                const customer = await GetAndExpiredTokenHandler('product-customer')
                 setCustomer(customer)
 
             } catch (e) {
@@ -86,7 +86,7 @@ const NewSalesOrder = () => {
         }
 
         fetch()
-    }, [Get])
+    }, [])
 
 
     const handleSubmit = useCallback(async (data) => {

@@ -67,7 +67,7 @@ const ExpandedProduct = ({ data }) => {
 
 const ProductList = () => {
 
-    const { Get, Loading } = useRequest()
+    const { Loading, GetAndExpiredTokenHandler } = useRequest()
     const [productCustomer, setProductCustomer] = useState([])
     const [searchVal, setSearchVal] = useState('')
     const filteredProductCustomer = useMemo(() => {
@@ -106,7 +106,7 @@ const ProductList = () => {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const productCustomer = await Get('product-list')
+                const productCustomer = await GetAndExpiredTokenHandler('product-list')
                 setProductCustomer(productCustomer)
 
             } catch (e) {

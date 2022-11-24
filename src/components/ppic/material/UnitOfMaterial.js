@@ -125,7 +125,7 @@ const PostUnitOfMaterial = ({ setaction }) => {
 
 const UnitOfMaterial = () => {
 
-    const { Get, Delete, Loading } = useRequest()
+    const { Get, Delete } = useRequest()
     const [uoms, setUoms] = useState([])
     const [uomAction, setUomAction] = useState(0)
     const columnUoms = useMemo(() => [
@@ -229,7 +229,7 @@ const UnitOfMaterial = () => {
 
     return (
         <>
-            <Loading />
+
             <Group position="right" >
                 <Button
                     leftIcon={<IconPlus />}

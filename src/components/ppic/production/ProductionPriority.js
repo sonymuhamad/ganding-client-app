@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 
 const ProductionPriority = () => {
 
-    const { Get, Loading } = useRequest()
+    const { Loading, GetAndExpiredTokenHandler } = useRequest()
     const [dataPriority, setDataPriority] = useState([])
 
     const columnProductionPriority = useMemo(() => [
@@ -36,7 +36,7 @@ const ProductionPriority = () => {
     ], [])
 
     useEffect(() => {
-        Get('production-priority').then(data => {
+        GetAndExpiredTokenHandler('production-priority').then(data => {
 
             const priority = data.reduce((prev, current) => {
                 const { ppic_process_related } = current

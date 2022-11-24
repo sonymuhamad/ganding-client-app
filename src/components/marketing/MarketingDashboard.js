@@ -40,7 +40,7 @@ export default function MarketingDashboard() {
 
     const { classes, theme } = marketingDashboardStyle()
     const { sectionRefs, activeSection } = useSection()
-    const { Get, Loading } = useRequest()
+    const { Get, Loading, GetAndExpiredTokenHandler } = useRequest()
     const [dataSo, setDataSo] = useState([])
     const [event, setEvent] = useState([])
     const [dataCard, setDataCard] = useState({
@@ -101,7 +101,7 @@ export default function MarketingDashboard() {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const salesOrder = await Get('sales-order-this-month')
+                const salesOrder = await GetAndExpiredTokenHandler('sales-order-this-month')
                 const deliverynotes = await Get('delivery-notes-pending')
 
                 const event = salesOrder.reduce((prev, current) => {

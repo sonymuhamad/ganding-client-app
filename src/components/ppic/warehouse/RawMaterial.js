@@ -211,7 +211,7 @@ const RawMaterial = ({ actions }) => {
     const [searchVal, setSearchVal] = useState('')
     const [uom, setUom] = useState([])
     const [actionWhMaterial, setActionWhMaterial] = useState(0)
-    const { Get, Loading } = useRequest()
+    const { Loading, GetAndExpiredTokenHandler } = useRequest()
 
     const filteredUom = useMemo(() => {
 
@@ -253,7 +253,7 @@ const RawMaterial = ({ actions }) => {
         const fetchUomMaterial = async () => {
 
             try {
-                const uomMaterial = await Get('warehouse-material')
+                const uomMaterial = await GetAndExpiredTokenHandler('warehouse-material')
 
                 const dataUomMaterial = uomMaterial.map(uom => ({ ...uom, material_set: uom.material_set.map(material => ({ ...material, action: setActionWhMaterial })) }))
 

@@ -13,7 +13,7 @@ import ExpandedSo from "../layout/ExpandedSo";
 
 export default function SalesOrder() {
 
-    const { Get, Loading } = useRequest()
+    const { Loading, GetAndExpiredTokenHandler } = useRequest()
     const [activeSegment, setActiveSegment] = useState('on_progress')
     const [salesOrderProgress, setSalesOrderProgress] = useState([])
     const [salesOrderPending, setSalesOrderPending] = useState([])
@@ -89,7 +89,7 @@ export default function SalesOrder() {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const salesorders = await Get('sales-order-list')
+                const salesorders = await GetAndExpiredTokenHandler('sales-order-list')
                 let on_progress = []
                 let pending = []
                 let done = []
@@ -129,7 +129,7 @@ export default function SalesOrder() {
         }
 
         fetch()
-    }, [Get])
+    }, [])
 
 
     return (

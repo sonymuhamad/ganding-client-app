@@ -69,7 +69,7 @@ const ExpandedMaterial = ({ data }) => {
 
 const MaterialList = () => {
 
-    const { Get, Loading } = useRequest()
+    const { Loading, GetAndExpiredTokenHandler } = useRequest()
     const [supplierMaterial, setSupplierMaterial] = useState([])
     const [searchVal, setSearchVal] = useState('')
 
@@ -107,7 +107,7 @@ const MaterialList = () => {
 
     const fetchMaterials = useCallback(async () => {
         try {
-            const supplierMaterials = await Get('supplier-material-list')
+            const supplierMaterials = await GetAndExpiredTokenHandler('supplier-material-list')
 
             setSupplierMaterial(supplierMaterials)
 
