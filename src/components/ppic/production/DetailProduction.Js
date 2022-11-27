@@ -8,10 +8,11 @@ import BreadCrumb from "../../BreadCrumb";
 import { sectionStyle } from "../../../styles/sectionStyle";
 
 import { useForm } from "@mantine/form";
-import { IconBarcode, IconCodeAsterix, IconTimeline, IconFileTypography, IconSortAscending2, IconBuildingFactory, IconUser, IconArchive, IconEdit, IconX, IconDownload, IconTrashX, IconAsset, IconSum, IconPerspective, IconScale, IconRuler2, IconDimensions, IconRulerMeasure, IconAtom2, } from "@tabler/icons";
+import { IconBarcode, IconCodeAsterix, IconTimeline, IconFileTypography, IconSortAscending2, IconBuildingFactory, IconUser, IconArchive, IconEdit, IconX, IconDownload, IconTrashX, IconAsset, IconSum, IconPerspective, IconScale, IconRuler2, IconDimensions, IconRulerMeasure, IconAtom2, IconCalendar, } from "@tabler/icons";
 import { openConfirmModal } from "@mantine/modals";
 import { FailedNotif, SuccessNotif } from "../../notifications/Notifications";
 import { useNavigate } from "react-router-dom";
+import { DatePicker } from "@mantine/dates";
 
 
 const DetailProduction = () => {
@@ -42,6 +43,7 @@ const DetailProduction = () => {
             code: '',
         },
         last_update: '',
+        date: '',
         materialproductionreport_set: [],
         productproductionreport_set: []
     })
@@ -72,7 +74,8 @@ const DetailProduction = () => {
                 name: '',
                 code: '',
             },
-            last_update: ''
+            last_update: '',
+            date: null
         }
     })
 
@@ -94,8 +97,8 @@ const DetailProduction = () => {
     useEffect(() => {
 
         Retrieve(params.productionId, 'production-report').then(data => {
-            const { operator, machine, ...restProps } = data
-            const detailProductionReport = { ...restProps, machine: machine.id, operator: operator.id }
+            const { operator, machine, date, ...restProps } = data
+            const detailProductionReport = { ...restProps, machine: machine.id, operator: operator.id, date: new Date(date) }
 
             setDetailProduction(detailProductionReport)
             form.setValues(detailProductionReport)
@@ -145,10 +148,18 @@ const DetailProduction = () => {
     }), [handleDeleteProduction])
 
     const handleSubmit = async (data) => {
-        const { process, product, ...restProps } = data
+        let validate_data
+        const { process, product, date, ...restProps } = data
+        const tempData = { ...restProps, process: process.id, product: product.id }
+
+        if (date) {
+            validate_data = { ...tempData, date: date.toLocaleDateString('en-CA') }
+        } else {
+            validate_data = tempData
+        }
 
         try {
-            await Put(params.productionId, { ...restProps, process: process.id, product: product.id }, 'production-report-management')
+            await Put(params.productionId, validate_data, 'production-report-management')
             setAction(prev => prev + 1)
             SuccessNotif('Edit data production success')
             setDetailProduction(prev => ({ ...prev, machine: data.machine, operator: data.operator, quantity: data.quantity, quantity_not_good: data.quantity_not_good }))
@@ -438,6 +449,14 @@ const DetailProduction = () => {
 
                 <Group grow m='xs' >
 
+                    <DatePicker
+                        label='Production date'
+                        placeholder="Select production date"
+                        {...form.getInputProps('date')}
+                        radius='md'
+                        icon={<IconCalendar />}
+                        disabled={!editAccess}
+                    />
 
 
                     <NumberInput
@@ -447,7 +466,7 @@ const DetailProduction = () => {
                         radius='md'
                         required
                         min={0}
-                        readOnly={!editAccess}
+                        disabled={!editAccess}
                         placeholder="input quantity production"
                         {...form.getInputProps('quantity')}
                     />
@@ -457,7 +476,7 @@ const DetailProduction = () => {
                         icon={<IconArchive />}
                         hideControls
                         min={0}
-                        readOnly={!editAccess}
+                        disabled={!editAccess}
                         label='Quantity not good'
                         required
                         radius='md'

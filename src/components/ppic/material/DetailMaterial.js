@@ -333,9 +333,8 @@ const DetailMaterial = () => {
 
                         />
 
-                        <NumberInput
+                        <TextInput
                             icon={<IconBuildingWarehouse />}
-                            hideControls
                             label='Stock in warehouse'
                             radius='md'
                             value={detailMaterial.warehousematerial.quantity}
@@ -355,7 +354,7 @@ const DetailMaterial = () => {
                             step={0.5}
                             hideControls
                             label='Length'
-                            readOnly={!editAccess}
+                            disabled={!editAccess}
                             radius='md'
                             {...form.getInputProps('length')}
                             placeholder="length of material"
@@ -369,7 +368,7 @@ const DetailMaterial = () => {
                             step={0.5}
                             hideControls
                             label='Width'
-                            readOnly={!editAccess}
+                            disabled={!editAccess}
                             {...form.getInputProps('width')}
                             placeholder="width of material"
                             radius='md'
@@ -383,7 +382,7 @@ const DetailMaterial = () => {
                             step={0.5}
                             hideControls
                             label='Thickness'
-                            readOnly={!editAccess}
+                            disabled={!editAccess}
                             {...form.getInputProps('thickness')}
                             placeholder="thickness of material"
                             radius='md'
@@ -396,7 +395,7 @@ const DetailMaterial = () => {
                             step={0.5}
                             hideControls
                             label='Kg/pcs'
-                            readOnly={!editAccess}
+                            disabled={!editAccess}
                             {...form.getInputProps('weight')}
                             placeholder="weight of material"
                             radius='md'

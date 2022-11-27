@@ -3,12 +3,12 @@ import { Link } from "react-router-dom";
 import { useRequest } from "../../../hooks/useRequest";
 import BaseTableExpanded from "../../tables/BaseTableExpanded";
 import { Button, Textarea, Paper, TextInput, NumberInput, Group, NativeSelect, Text, FileButton } from "@mantine/core";
-import { IconDotsCircleHorizontal, IconClipboard, IconPlus, IconUpload, IconTrash, IconSearch, IconAsset, IconPackgeImport, IconCodeAsterix, IconUserCheck, IconClipboardCheck } from "@tabler/icons";
+import { IconDotsCircleHorizontal, IconClipboard, IconPlus, IconUpload, IconTrash, IconSearch, IconAsset, IconPackgeImport, IconCodeAsterix, IconUserCheck, IconClipboardCheck, IconCalendar } from "@tabler/icons";
 import { openModal, closeAllModals } from "@mantine/modals";
 import { useForm } from "@mantine/form";
 import { FailedNotif, SuccessNotif } from "../../notifications/Notifications";
 import { useNavigate } from "react-router-dom";
-
+import { DatePicker } from "@mantine/dates";
 
 
 const ExpandedMaterialReceipt = ({ data }) => {
@@ -77,7 +77,8 @@ const ModalAddDeliveryNoteMaterial = () => {
             supplier: null,
             code: '',
             note: '',
-            image: null
+            image: null,
+            date: null
         },
         validate: {
             supplier: value => value === null ? 'Please select supplier' : null,
@@ -92,8 +93,16 @@ const ModalAddDeliveryNoteMaterial = () => {
     }, [Get])
 
     const handleSubmit = useCallback(async (value) => {
+        let validate_data
+
+        if (value.date) {
+            validate_data = { ...value, date: value.date.toLocaleDateString('en-CA') }
+        } else {
+            validate_data = value
+        }
+
         try {
-            const newDnMaterial = await Post(value, 'deliverynote-material-management', 'multipart/form-data')
+            const newDnMaterial = await Post(validate_data, 'deliverynote-material-management', 'multipart/form-data')
             SuccessNotif('Add material delivery note success')
             closeAllModals()
             navigate(`/home/ppic/warehouse/material-receipt/${newDnMaterial.id}`)
@@ -113,6 +122,7 @@ const ModalAddDeliveryNoteMaterial = () => {
                 <NativeSelect
                     icon={<IconUserCheck />}
                     radius='md'
+                    m='xs'
                     label='Supplier'
                     placeholder="Select supplier"
                     data={supplierList.map(supplier => ({ value: supplier.id, label: supplier.name }))}
@@ -123,7 +133,7 @@ const ModalAddDeliveryNoteMaterial = () => {
 
                 <TextInput
                     icon={<IconCodeAsterix />}
-                    my='lg'
+                    m='xs'
                     label='Receipt number'
                     radius='md'
                     required
@@ -131,7 +141,18 @@ const ModalAddDeliveryNoteMaterial = () => {
                     {...form.getInputProps('code')}
                 />
 
+                <DatePicker
+                    icon={<IconCalendar />}
+                    label='Receipt date'
+                    m='xs'
+                    placeholder="Select receipt date"
+                    radius='md'
+                    required
+                    {...form.getInputProps('date')}
+                />
+
                 <Textarea
+                    m='xs'
                     icon={<IconClipboardCheck />}
                     label='Material receipt description'
                     radius='md'
@@ -140,7 +161,7 @@ const ModalAddDeliveryNoteMaterial = () => {
                 />
 
 
-                <Group>
+                <Group m='xs' >
 
                     <FileButton
                         mt='md'

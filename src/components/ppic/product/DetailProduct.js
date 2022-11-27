@@ -525,7 +525,7 @@ const DetailProduct = () => {
                         my='xs'
                         required
                         icon={<IconArrowsSort />}
-                        readOnly={!processEditAccess ? true : processEditAccess !== index + 1}
+                        disabled={!processEditAccess ? true : processEditAccess !== index + 1}
                         {...form.getInputProps(`ppic_process_related.${index}.order`)}
                     />
 
@@ -577,7 +577,7 @@ const DetailProduct = () => {
                                     placeholder="input quantity of consumption bill of material"
                                     icon={<IconTransferIn />}
                                     label='Consumption'
-                                    readOnly={!processEditAccess ? true : processEditAccess !== index + 1}
+                                    disabled={!processEditAccess ? true : processEditAccess !== index + 1}
                                     {...form.getInputProps(`ppic_process_related.${index}.requirementmaterial_set.${j}.input`)}
                                 />
 
@@ -586,7 +586,7 @@ const DetailProduct = () => {
                                     required
                                     icon={<IconTransferOut />}
                                     placeholder='input quantity output product'
-                                    readOnly={!processEditAccess ? true : processEditAccess !== index + 1}
+                                    disabled={!processEditAccess ? true : processEditAccess !== index + 1}
                                     radius='md'
                                     label='Output'
                                     {...form.getInputProps(`ppic_process_related.${index}.requirementmaterial_set.${j}.output`)}
@@ -655,7 +655,7 @@ const DetailProduct = () => {
                                 <NumberInput
                                     hideControls
                                     required
-                                    readOnly={!processEditAccess ? true : processEditAccess !== index + 1}
+                                    disabled={!processEditAccess ? true : processEditAccess !== index + 1}
                                     radius='md'
                                     placeholder="input quantity consumption product assembly"
                                     icon={<IconTransferIn />}
@@ -667,7 +667,7 @@ const DetailProduct = () => {
                                     hideControls
                                     placeholder='input quantity output product'
                                     icon={<IconTransferOut />}
-                                    readOnly={!processEditAccess ? true : processEditAccess !== index + 1}
+                                    disabled={!processEditAccess ? true : processEditAccess !== index + 1}
                                     radius='md'
                                     label='Output'
                                     {...form.getInputProps(`ppic_process_related.${index}.requirementproduct_set.${i}.output`)}

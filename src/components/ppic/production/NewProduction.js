@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react"
 import { TextInput, NumberInput, Select, Button, Paper, ThemeIcon, UnstyledButton, Group, Text, Title } from "@mantine/core"
-import { IconSortAscending2, IconBarcode, IconFileTypography, IconBuildingFactory, IconCodeAsterix, IconTimeline, IconArchive, IconAsset, IconCircleDotted, IconCircleCheck, IconXboxX, IconUser } from "@tabler/icons"
+import { IconSortAscending2, IconBarcode, IconFileTypography, IconBuildingFactory, IconCodeAsterix, IconTimeline, IconArchive, IconAsset, IconCircleDotted, IconCircleCheck, IconXboxX, IconUser, IconCalendar } from "@tabler/icons"
 import { useNavigate } from "react-router-dom"
 import { openConfirmModal } from "@mantine/modals"
-
+import { DatePicker } from "@mantine/dates"
 import { useRequest } from "../../../hooks/useRequest"
 import { sectionStyle } from "../../../styles/sectionStyle"
 import BreadCrumb from "../../BreadCrumb"
@@ -13,7 +13,7 @@ import CustomSelectComponentProcess from "../../layout/CustomSelectComponentProc
 
 const NewProduction = () => {
 
-    const { Get, Post, Loading } = useRequest()
+    const { Get, Post, Loading, GetAndExpiredTokenHandler } = useRequest()
     const { classes } = sectionStyle()
     const [machineList, setMachineList] = useState([])
     const [operatorList, setOperatorList] = useState([])
@@ -26,6 +26,7 @@ const NewProduction = () => {
     const [quantityNotGood, setQuantityNotGood] = useState(0)
     const [machine, setMachine] = useState('')
     const [operator, setOperator] = useState('')
+    const [date, setDate] = useState(null)
     const navigate = useNavigate()
 
     const breadcrumb = [
@@ -45,8 +46,18 @@ const NewProduction = () => {
 
     const handleSubmit = async () => {
 
+        let validate_data
+        const data = { product: product, quantity: quantity, quantity_not_good: quantityNotGood, machine: machine, operator: operator, process: process }
+
+        if (date) {
+            validate_data = { ...data, date: date.toLocaleDateString('en-CA') }
+        } else {
+            validate_data = data
+        }
+
+
         try {
-            await Post({ product: product, quantity: quantity, quantity_not_good: quantityNotGood, machine: machine, operator: operator, process: process }, 'production-report-management')
+            await Post(validate_data, 'production-report-management')
             SuccessNotif('Add production success')
             navigate('/home/ppic/production')
         } catch (e) {
@@ -84,7 +95,7 @@ const NewProduction = () => {
 
     useEffect(() => {
 
-        Get('production-list').then(data => {
+        GetAndExpiredTokenHandler('production-list').then(data => {
             setProductionList(data)
         })
 
@@ -134,6 +145,7 @@ const NewProduction = () => {
                 />
 
                 <TextInput
+                    variant="filled"
                     radius='md'
                     label='Product number'
                     icon={<IconCodeAsterix />}
@@ -159,6 +171,7 @@ const NewProduction = () => {
                     />
 
                     <TextInput
+                        variant="filled"
                         radius='md'
                         label='Process type'
                         icon={<IconFileTypography />}
@@ -167,6 +180,7 @@ const NewProduction = () => {
                     />
 
                     <TextInput
+                        variant="filled"
                         icon={<IconSortAscending2 />}
                         radius='md'
                         label='wip'
@@ -201,7 +215,14 @@ const NewProduction = () => {
                 />
 
                 <Group grow m='xs' >
-
+                    <DatePicker
+                        icon={<IconCalendar />}
+                        label='Production date'
+                        placeholder="Select production date"
+                        radius='md'
+                        value={date}
+                        onChange={(value) => setDate(value)}
+                    />
 
 
                     <NumberInput

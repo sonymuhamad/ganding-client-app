@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useRequest } from "../../../hooks/useRequest";
 
+import { DatePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { TextInput, Button, NumberInput, Select, UnstyledButton, Paper, Group, Text, ThemeIcon, Title } from "@mantine/core";
 
-import { IconBarcode, IconAsset, IconCircleDotted, IconCircleCheck, IconXboxX, IconBuildingFactory, IconUser } from "@tabler/icons";
+import { IconBarcode, IconAsset, IconCircleDotted, IconCircleCheck, IconXboxX, IconBuildingFactory, IconUser, IconCalendar } from "@tabler/icons";
 import { SuccessNotif, FailedNotif } from "../../notifications/Notifications";
 import { openConfirmModal } from "@mantine/modals";
 import { sectionStyle } from "../../../styles/sectionStyle";
@@ -46,6 +47,7 @@ const NewProductionPriority = () => {
             quantity_not_good: 0,
             machine: null,
             operator: null,
+            date: null,
             process: '',
             product: ''
         },
@@ -71,9 +73,18 @@ const NewProductionPriority = () => {
         }
     ]
 
-    const handleSubmit = useCallback(async (data) => {
+    const handleSubmit = useCallback(async (value) => {
+
+        let validate_data
+
+        if (value.date) {
+            validate_data = { ...value, date: value.date.toLocaleDateString('en-CA') }
+        } else {
+            validate_data = value
+        }
+
         try {
-            await Post(data, 'production-report-management')
+            await Post(validate_data, 'production-report-management')
             SuccessNotif('Add new production success')
             navigate('/home/ppic/production')
         } catch (e) {
@@ -224,6 +235,14 @@ const NewProductionPriority = () => {
                 />
 
                 <Group grow m='xs' >
+
+                    <DatePicker
+                        label='Production date'
+                        placeholder="Select production date"
+                        radius='md'
+                        icon={<IconCalendar />}
+                        {...form.getInputProps('date')}
+                    />
 
                     <NumberInput
                         placeholder="input quantity production"

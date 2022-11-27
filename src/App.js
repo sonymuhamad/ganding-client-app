@@ -1,13 +1,16 @@
 import './App.css'
-import { Link, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { MantineProvider } from '@mantine/core'
 import { AuthContext } from './context/AuthContext'
-import { useMemo, useEffect } from 'react'
+import { useMemo } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { NotificationsProvider } from '@mantine/notifications'
 import { ModalsProvider } from '@mantine/modals'
 
+import { Chart, registerables } from 'chart.js';
+
 function App() {
+  Chart.register(...registerables)
   const { signIn, signOut, user, resetToken } = useAuth()
   const value = useMemo(() => ({ user, signIn, signOut, resetToken }))
 

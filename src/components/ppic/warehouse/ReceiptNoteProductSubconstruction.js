@@ -97,10 +97,18 @@ const ModalAddReceiptNoteSubcont = () => {
     }, [fetch])
 
 
-    const handleSubmit = useCallback(async (data) => {
+    const handleSubmit = useCallback(async (value) => {
+        let validate_data
+
+        if (value.date) {
+            validate_data = { ...value, date: value.date.toLocaleDateString('en-CA') }
+        } else {
+            validate_data = value
+        }
+
 
         try {
-            const newReceiptNote = await Post(data, 'receipt-note-subcont-management', 'multipart/form-data')
+            const newReceiptNote = await Post(validate_data, 'receipt-note-subcont-management', 'multipart/form-data')
             SuccessNotif('Add receipt note product subconstruction success')
             navigate(`/home/ppic/warehouse/subcont-receipt/${newReceiptNote.id}`)
             closeAllModals()

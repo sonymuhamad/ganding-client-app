@@ -1,6 +1,6 @@
 import React from "react";
 import { AppShell, Navbar, Header, Footer, Group, Menu, Text, Button, Image, ScrollArea, NavLink } from "@mantine/core";
-import { IconUserCircle, IconPencil, IconLogout } from "@tabler/icons";
+import { IconUserCircle, IconLogout } from "@tabler/icons";
 import { appshellStyle } from "../../styles/appshellStyle";
 import Time from "./Time";
 import { useContext } from "react";
@@ -114,17 +114,6 @@ const BaseLayout = ({ outlet, navlink }) => {
 
 
                         <Navbar.Section className={classes.footerNav} >
-
-
-                            <NavLink label=
-                                {
-                                    <Text weight={600} className={classes.responsiveText}>
-                                        Edit profile
-                                    </Text>
-                                }
-                                icon={<IconPencil size={19} stroke={2} />}
-
-                                className={classes.link} />
 
                             <NavLink label=
                                 {
