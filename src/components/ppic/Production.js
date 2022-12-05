@@ -5,11 +5,7 @@ import { Title, Divider } from "@mantine/core";
 import BaseAside from "../layout/BaseAside";
 import BreadCrumb from "../BreadCrumb";
 import { sectionStyle } from "../../styles/sectionStyle";
-import Machine from "./production/Machine";
-import Operator from "./production/Operator";
-import ProductionReport from "./production/ProductionReport";
-import ProductionPriority from "./production/ProductionPriority";
-import ProductSubconstruction from "./production/ProductSubconstruction";
+import { Machine, Operator, ProductSubconstruction, ProductionPriority, ProductionReport, } from './production_components'
 
 export default function Production() {
 

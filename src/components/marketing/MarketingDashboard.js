@@ -1,15 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 
 import { Group, Card, Text, RingProgress, Title, Button, Progress, Chip } from "@mantine/core";
-import { Link } from "react-router-dom";
-import { marketingDashboardStyle } from "../../styles/marketingDashboardStyle";
-import BaseAside from "../layout/BaseAside";
-import { useSection } from '../../hooks/useSection'
-import BreadCrumb from "../BreadCrumb";
-import BaseTableExpanded from "../tables/BaseTableExpanded";
-import BaseTableDefaultExpanded from '../tables/BaseTableDefaultExpanded'
-import { useRequest } from "../../hooks/useRequest";
-import ExpandedDn from "../layout/ExpandedDn";
+import { Link } from "react-router-dom"
+import { marketingDashboardStyle } from "../../styles"
+import { BaseAside, ExpandedDn } from "../layout"
+import BreadCrumb from "../BreadCrumb"
+import { BaseTableExpanded, BaseTableDefaultExpanded } from "../tables"
+import { useRequest, useSection } from "../../hooks"
 import { IconDotsCircleHorizontal } from "@tabler/icons";
 import FullCalendar from "@fullcalendar/react";
 import listPlugin from '@fullcalendar/list'

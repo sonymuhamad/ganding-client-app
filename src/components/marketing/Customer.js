@@ -7,16 +7,12 @@ import { openConfirmModal } from "@mantine/modals";
 
 import { IconUser, IconDeviceMobile, IconMapPin, IconAt, IconEdit, IconX, IconDownload, IconTrashX, IconBrandProducthunt, IconFileCheck, IconClock, IconPlus, IconChevronDown, IconDotsCircleHorizontal } from "@tabler/icons";
 
-import { SuccessNotif, FailedNotif } from "../notifications/Notifications";
-import { sectionStyle } from "../../styles/sectionStyle";
-import { useRequest } from "../../hooks/useRequest";
-import BaseTableExpanded from "../tables/BaseTableExpanded";
-import ExpandedSo from "../layout/ExpandedSo";
-import ExpandedProduct from "../layout/ExpandedProduct";
-import BreadCrumb from "../BreadCrumb";
-import ExpandedDn from "../layout/ExpandedDn";
-import { useSection } from "../../hooks/useSection";
-import BaseAside from "../layout/BaseAside";
+import { SuccessNotif, FailedNotif } from "../notifications";
+import { sectionStyle } from "../../styles";
+import { useRequest, useSection } from "../../hooks";
+import { BaseTableExpanded } from "../tables";
+import BreadCrumb from "../BreadCrumb"
+import { BaseAside, ExpandedDn, ExpandedSo, ExpandedProduct } from "../layout";
 
 const Customer = () => {
 

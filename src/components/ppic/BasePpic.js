@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
-import NavLinks from "../layout/NavLinks";
-import BaseLayout from "../layout/BaseLayout";
+import { NavLinks, BaseLayout } from "../layout";
 
 import { Outlet } from "react-router-dom";
 import { IconLayoutDashboard, IconAsset, IconBuildingWarehouse, IconBuildingFactory, IconBarcode, IconTruckDelivery } from "@tabler/icons";

@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useForm } from "@mantine/form";
 import { Title, TextInput, NumberInput, NativeSelect, Stack, Button, Center, Paper, ActionIcon, Group, Text } from "@mantine/core";
-import { customStyle } from '../../styles/customStyle'
+import { customStyle } from '../../styles'
 import { DatePicker } from "@mantine/dates";
 import { IconUser, IconCodeAsterix, IconCalendar, IconTrash, IconCalendarPlus, IconDownload, IconClipboardPlus } from "@tabler/icons";
-import { SuccessNotif, FailedNotif } from "../notifications/Notifications";
+import { SuccessNotif, FailedNotif } from "../notifications";
 import { useNavigate } from "react-router-dom";
-import { useRequest } from "../../hooks/useRequest";
+import { useRequest } from "../../hooks";
 import { openConfirmModal } from "@mantine/modals";
 import BreadCrumb from "../BreadCrumb";
 

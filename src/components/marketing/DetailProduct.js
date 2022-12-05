@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import BaseAside from "../layout/BaseAside";
+import { BaseAside } from "../layout";
 import BreadCrumb from "../BreadCrumb";
-import { useRequest } from "../../hooks/useRequest";
-import { useSectionProduct } from '../../hooks/useSectionProduct'
-import { sectionStyle } from "../../styles/sectionStyle";
+import { useRequest, useSection } from "../../hooks";
+import { sectionStyle } from "../../styles";
 import { Title, Group, TextInput, Paper, Image } from "@mantine/core";
 import { IconBarbell, IconWriting, IconCodeAsterix, IconFileTypography, IconTag, IconList } from "@tabler/icons";
-import BaseTable from "../tables/BaseTable";
+import { BaseTable } from "../tables";
 
 
 
@@ -16,7 +15,7 @@ const DetailProduct = () => {
     const params = useParams() //customerId productId
     const { Retrieve, Loading } = useRequest()
     const { classes } = sectionStyle()
-    const { sectionRefs, activeSection } = useSectionProduct()
+    const { sectionRefs, activeSection } = useSection()
     const [breadcrumb, setBreadcrumb] = useState([])
 
     const [product, setProduct] = useState({

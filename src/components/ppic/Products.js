@@ -3,13 +3,11 @@ import { Title, Divider } from "@mantine/core";
 
 import BreadCrumb from '../BreadCrumb'
 
-import { sectionStyle } from "../../styles/sectionStyle";
+import { sectionStyle } from "../../styles";
 import useScrollSpy from 'react-use-scrollspy'
-import BaseAside from "../layout/BaseAside";
+import { BaseAside } from "../layout";
 
-import ProductType from "./product/ProductType";
-import ProductList from "./product/ProductList";
-import ProcessType from "./product/ProcessType";
+import { ProductList, ProcessType, ProductType } from "./product_components";
 
 
 

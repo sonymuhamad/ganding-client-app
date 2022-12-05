@@ -3,20 +3,17 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { IconDotsCircleHorizontal, IconEdit, IconDownload, IconTrashX, IconCodeAsterix, IconCalendar, IconCalendarTime, IconCircleCheck, IconCaretDown, IconCaretRight, IconX, IconCalendarEvent, IconTrash, IconCalendarPlus, IconSum, IconBarcode, IconUser, IconPencil, IconClock2 } from "@tabler/icons";
 
 import { useParams, Link } from "react-router-dom";
-import { useRequest } from "../../hooks/useRequest";
-import BaseTableExpanded from "../tables/BaseTableExpanded";
+import { useRequest, useSection } from "../../hooks";
+import { BaseTableExpanded } from "../tables";
 import { Button, Group, TextInput, Checkbox, Title, Stack, Progress, Text, ActionIcon, Collapse, CloseButton, NumberInput, Center, NativeSelect, Tooltip, Mark } from "@mantine/core";
 import BreadCrumb from "../BreadCrumb";
 import { DatePicker } from "@mantine/dates";
-import { useSection } from "../../hooks/useSection";
-import { salesorderStyle } from "../../styles/salesorderStyle";
-import BaseAside from "../layout/BaseAside";
+import { salesorderStyle } from "../../styles";
+import { BaseAside, ExpandedDeliveryNote } from "../layout";
 import { useForm } from "@mantine/form";
-import { FailedNotif } from "../notifications/Notifications";
-import { SuccessNotif } from "../notifications/Notifications";
+import { FailedNotif, SuccessNotif } from "../notifications";
 import { openConfirmModal } from "@mantine/modals";
 import { useNavigate } from "react-router-dom";
-import ExpandedDeliveryNote from "../layout/ExpandedDeliveryNote";
 
 
 const DetailSalesOrder = () => {

@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { NavLink, Text } from "@mantine/core";
-import { navbarStyle } from '../../styles/navbarStyle'
-import { usePath } from "../../hooks/usePath";
+import { navbarStyle } from '../../styles'
+import { usePath } from "../../hooks";
 
 
 const NavLinks = ({ links }) => {

@@ -1,14 +1,11 @@
 import React, { useMemo, useRef } from "react";
 import { Title, Divider } from "@mantine/core";
-import BaseAside from '../layout/BaseAside'
-import { sectionStyle } from "../../styles/sectionStyle";
+import { BaseAside } from '../layout'
+import { sectionStyle } from "../../styles";
 import useScrollSpy from 'react-use-scrollspy'
 
 import BreadCrumb from "../BreadCrumb";
-import MaterialList from "./material/MaterialList";
-import MaterialRequirementPlanning from "./material/MaterialRequirementPlanning";
-import UnitOfMaterial from "./material/UnitOfMaterial";
-
+import { MaterialList, MaterialRequirementPlanning, UnitOfMaterial } from './material_components'
 
 
 export default function Materials() {

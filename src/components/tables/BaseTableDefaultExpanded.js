@@ -1,5 +1,5 @@
 import React from "react";
-import { customTableStyle } from "../../services/External";
+import { customTableStyle } from "../../services";
 import DataTable from "react-data-table-component";
 
 export default function BaseTableDefaultExpanded({ column, data, expandComponent, pagination = true, condition = row => row.id }) {

@@ -1,7 +1,5 @@
-import React, { useContext } from "react";
-import { AuthContext } from '../../context/AuthContext'
-import NavLinks from '../layout/NavLinks';
-import BaseLayout from '../layout/BaseLayout';
+import React, { useMemo } from "react";
+import { NavLinks, BaseLayout } from '../layout'
 
 import { IconUserCheck, IconReportAnalytics, IconCalendarEvent, IconReportMoney, IconGitPullRequestDraft, IconLayoutDashboard } from "@tabler/icons";
 import { Outlet } from "react-router-dom";
@@ -11,7 +9,7 @@ import { Outlet } from "react-router-dom";
 
 export default function BasePlantManager() {
 
-    const links = [
+    const links = useMemo(() => [
 
         {
             label: 'Dashboard',
@@ -50,7 +48,7 @@ export default function BasePlantManager() {
 
             ]
         }
-    ]
+    ], [])
 
 
     return (

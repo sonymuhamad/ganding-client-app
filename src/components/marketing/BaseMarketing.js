@@ -3,8 +3,7 @@ import React, { useMemo } from 'react'
 import { IconLayoutDashboard, IconClipboardText, IconReportMoney, IconUsers, } from "@tabler/icons";
 import { Outlet } from "react-router-dom";
 
-import NavLinks from '../layout/NavLinks';
-import BaseLayout from '../layout/BaseLayout';
+import { NavLinks, BaseLayout } from '../layout'
 
 
 const BaseMarketing = () => {

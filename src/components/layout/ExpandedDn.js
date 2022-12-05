@@ -1,5 +1,5 @@
 import React from "react";
-import { Group, Text, TextInput, Textarea } from "@mantine/core";
+import { Group, TextInput, Textarea } from "@mantine/core";
 import { IconNotes, IconAssembly, IconFileDollar, IconPackgeExport } from "@tabler/icons";
 
 

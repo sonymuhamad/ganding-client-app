@@ -1,10 +1,9 @@
-import React from "react";
+import React, { useContext } from "react";
 import { AppShell, Navbar, Header, Footer, Group, Menu, Text, Button, Image, ScrollArea, NavLink } from "@mantine/core";
 import { IconUserCircle, IconLogout } from "@tabler/icons";
-import { appshellStyle } from "../../styles/appshellStyle";
+import { appshellStyle } from "../../styles";
 import Time from "./Time";
-import { useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext } from "../../context";
 
 
 const BaseLayout = ({ outlet, navlink }) => {

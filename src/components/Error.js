@@ -1,6 +1,6 @@
 import { Title, Text, Button, Container, Group } from '@mantine/core';
 import { Link } from 'react-router-dom';
-import { useErrorPageStyle } from '../styles/useErrorPageStyle';
+import { useErrorPageStyle } from '../styles';
 
 export default function Error() {
     const { classes } = useErrorPageStyle()

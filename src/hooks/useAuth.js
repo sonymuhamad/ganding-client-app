@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { showNotification } from "@mantine/notifications";
 import { IconCheck, IconHandRock, IconAccessPointOff } from "@tabler/icons";
-import { AuthException, Url } from "../services/External";
+import { AuthException, Url } from "../services";
 import { useParams } from "react-router-dom";
 import { closeAllModals } from "@mantine/modals";
 

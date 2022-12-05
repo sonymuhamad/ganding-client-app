@@ -3,21 +3,12 @@ import React, { useState, useRef, useMemo } from "react";
 import { Title, Divider } from "@mantine/core";
 import useScrollSpy from 'react-use-scrollspy'
 
-import BaseAside from "../layout/BaseAside";
+import { BaseAside } from "../layout";
 import BreadCrumb from "../BreadCrumb";
-import { sectionStyle } from "../../styles/sectionStyle";
+import { sectionStyle } from "../../styles";
 
-import RawMaterial from "./warehouse/RawMaterial";
-import FinishGood from "./warehouse/FinishGood";
-import Wip from "./warehouse/Wip";
-import ConversionUom from "./warehouse/ConversionUom";
-import BaseConversionMaterial from "./warehouse/BaseConversionMaterial";
-import ConvertMaterial from "./warehouse/ConvertMaterial";
-import MaterialReceipt from "./warehouse/MaterialReceipt";
-import ReceiptSchedule from './warehouse/ReceiptSchedule'
+import { RawMaterial, FinishGood, Wip, ConversionUom, BaseConversionMaterial, ConvertMaterial, MaterialReceipt, ReceiptSchedule, ReceiptNoteProductSubconstruction, ReceiptSubcontSchedule } from './warehouse_components'
 
-import ReceiptNoteProductSubconstruction from "./warehouse/ReceiptNoteProductSubconstruction";
-import ReceiptSubcontSchedule from "./warehouse/ReceiptSubcontSchedule";
 
 
 export default function Warehouse() {

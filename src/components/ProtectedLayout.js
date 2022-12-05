@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useMemo } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
 import { showNotification } from "@mantine/notifications";
 import { IconX } from "@tabler/icons";
+import { AuthContext } from '../context'
 
 const ProtectedLayout = () => {
 

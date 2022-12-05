@@ -1,18 +1,14 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Line } from "react-chartjs-2";
+import React, { useState, useEffect } from "react"
 
-import { useRequest } from "../../../hooks/useRequest";
-
+import { useRequest } from "../../../hooks";
+import { LineChart } from "../../charts";
+import { Months } from "../../../services";
 
 const ProductionChart = () => {
 
     const [label, setLabel] = useState([])
     const [data, setData] = useState([])
     const { GetAndExpiredTokenHandler, Loading } = useRequest()
-
-    const months = useMemo(() => {
-        return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
-    }, [])
 
     useEffect(() => {
 
@@ -24,7 +20,7 @@ const ProductionChart = () => {
                 let data = []
 
                 for (const production of report) {
-                    labels.push(`${months[production.date__month - 1]} ${production.date__year}`)
+                    labels.push(`${Months[production.date__month - 1]} ${production.date__year}`)
                     data.push(production.total_production)
                 }
 
@@ -46,39 +42,14 @@ const ProductionChart = () => {
 
             <Loading />
 
-            <Line
-                datasetIdKey='id'
-                data={{
-                    labels: label,
-                    datasets: [
-                        {
-                            id: 1,
-                            label: 'Total production',
-                            data: data,
-                        },
-                    ],
-                }}
-
-
-                options={{
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: "Monthly production volume",
-                        },
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        },
-
-                    },
-
-                    responsive: true,
-                    animation: {
-                        duration: 1500,
-                        easing: 'easeOutSine',
-                    },
-                }}
+            <LineChart label={label} dataset={[
+                {
+                    id: 1,
+                    label: 'Total production',
+                    data: data,
+                },
+            ]}
+                title='Monthly production volume'
             />
 
         </>

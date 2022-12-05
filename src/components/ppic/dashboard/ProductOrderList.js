@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 
-import { useRequest } from '../../../hooks/useRequest'
+import { useRequest } from '../../../hooks'
 
-import BaseTableExpanded from '../../tables/BaseTableExpanded'
+import { BaseTableExpanded } from '../../tables'
 import { TextInput, Paper } from "@mantine/core";
 
 import { IconBarcode, IconCodeAsterix, IconUserCheck, } from "@tabler/icons";

@@ -1,13 +1,9 @@
 import React, { useMemo, useRef } from "react";
-import BaseAside from "../layout/BaseAside";
+import { BaseAside } from "../layout";
 import BreadCrumb from "../BreadCrumb";
-import { sectionStyle } from "../../styles/sectionStyle";
+import { sectionStyle } from "../../styles";
 import useScrollSpy from 'react-use-scrollspy'
-import DeliveryNote from './delivery/DeliveryNote'
-import DeliveryNoteSubcont from './delivery/DeliveryNoteSubcont'
-import DeliverySchedule from './delivery/DeliverySchedule'
-import Vehicle from "./delivery/Vehicle";
-import Driver from "./delivery/Driver";
+import { DeliveryNote, DeliveryNoteSubcont, DeliverySchedule, Driver, Vehicle } from "./delivery_components";
 
 import { Title, Divider } from "@mantine/core";
 

@@ -5,10 +5,10 @@ import { IconDotsCircleHorizontal, IconPlus, IconSearch } from "@tabler/icons";
 
 import { Link } from "react-router-dom";
 
-import BaseTableExpanded from "../tables/BaseTableExpanded";
+import { BaseTableExpanded } from "../tables";
 import BreadCrumb from "../BreadCrumb";
-import { useRequest } from "../../hooks/useRequest";
-import ExpandedSo from "../layout/ExpandedSo";
+import { useRequest } from "../../hooks";
+import { ExpandedSo } from "../layout";
 
 
 export default function SalesOrder() {

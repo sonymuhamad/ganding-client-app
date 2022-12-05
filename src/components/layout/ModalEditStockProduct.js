@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react"
 
-import { useRequest } from "../../hooks/useRequest"
+import { useRequest } from "../../hooks"
 import { closeAllModals, openConfirmModal } from "@mantine/modals"
-import { SuccessNotif, FailedNotif } from "../notifications/Notifications"
+import { SuccessNotif, FailedNotif } from "../notifications"
 import { Button, NumberInput, Text } from "@mantine/core"
 
 

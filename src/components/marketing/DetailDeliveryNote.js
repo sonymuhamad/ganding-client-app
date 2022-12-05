@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { useRequest } from "../../hooks/useRequest";
+import { useRequest } from "../../hooks";
 import { useForm } from "@mantine/form";
 import { TextInput, Textarea, Button, Text, Title, Group } from "@mantine/core";
 import { IconPackgeExport, IconFileDollar, IconAssembly, IconStatusChange, IconQrcode, IconUserCircle, IconClock2, IconCar, IconUser, IconNotes } from "@tabler/icons";
 import { openConfirmModal } from "@mantine/modals";
 import BreadCrumb from "../BreadCrumb";
-import { customStyle } from '../../styles/customStyle'
+import { customStyle } from '../../styles'
 
 
 

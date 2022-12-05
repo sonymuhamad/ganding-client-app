@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
-import { TextInput, Group, Text, Container } from "@mantine/core";
-import { IconWriting, IconTransferIn, IconTransferOut, } from "@tabler/icons";
+import { Text, Container } from "@mantine/core";
 import DataTable from "react-data-table-component";
 
 

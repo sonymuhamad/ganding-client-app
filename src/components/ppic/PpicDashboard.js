@@ -1,14 +1,10 @@
 import React, { useRef, useMemo } from "react";
 import { Title, Divider } from "@mantine/core";
-import BaseAside from '../layout/BaseAside'
+import { BaseAside } from '../layout'
 import BreadCrumb from '../BreadCrumb'
-import { sectionStyle } from "../../styles/sectionStyle";
+import { sectionStyle } from "../../styles";
 import useScrollSpy from 'react-use-scrollspy'
-
-import ProductionChart from "./dashboard/ProductionChart";
-import ProductOrderList from "./dashboard/ProductOrderList";
-import MaterialOrderList from "./dashboard/MaterialOrderList";
-
+import { ProductionChart, ProductOrderList, MaterialOrderList } from "./dashboard";
 
 
 export default function PpicDashboard() {

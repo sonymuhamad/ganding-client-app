@@ -8,11 +8,11 @@ import DataTable from 'react-data-table-component'
 import { IconPlus, IconDotsCircleHorizontal, IconAt, IconDeviceMobile, IconMapPin, IconSquarePlus, IconUserPlus } from '@tabler/icons'
 
 
-import { customTableStyle } from '../../services/External'
+import { customTableStyle } from '../../services'
 import BreadCrumb from '../BreadCrumb'
-import { FailedNotif, SuccessNotif } from '../notifications/Notifications'
-import { useRequest } from '../../hooks/useRequest'
-import { customerPageStyle } from '../../styles/customerPageStyle'
+import { FailedNotif, SuccessNotif } from '../notifications'
+import { useRequest } from '../../hooks'
+import { customerPageStyle } from '../../styles'
 
 
 const Customers = () => {

@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
-import BaseTableExpanded from "../tables/BaseTableExpanded";
-import ExpandedDn from "../layout/ExpandedDn";
-import { useRequest } from "../../hooks/useRequest";
+import { BaseTableExpanded } from "../tables";
+import { ExpandedDn } from "../layout";
+import { useRequest } from "../../hooks";
 import { IconSearch, IconDotsCircleHorizontal } from "@tabler/icons";
 import { TextInput, Button, Group } from "@mantine/core";
 import BreadCrumb from "../BreadCrumb";

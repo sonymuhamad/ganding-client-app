@@ -9,6 +9,13 @@ export const useSection = () => {
         useRef(null),
         useRef(null),
         useRef(null),
+        useRef(null),
+        useRef(null),
+        useRef(null),
+        useRef(null),
+        useRef(null),
+        useRef(null),
+        useRef(null),
     ]
 
     const activeSection = useScrollSpy({
