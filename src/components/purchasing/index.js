@@ -6,6 +6,8 @@ import Suppliers from './Suppliers'
 import { DetailPurchaseOrder } from './purchaseorders'
 import { DetailSupplier } from './supplier'
 import { DetailMaterial } from './materials'
+import ReceiptNote from './ReceiptNote'
+import { DetailMaterialReceiptNote, DetailSubcontReceiptNote, DetailDeliveryNoteSubcont as PurchasingDetailDeliveryNoteSubcont } from './receiptnote_components'
 
 export {
     BasePurchasing,
@@ -15,6 +17,10 @@ export {
     Suppliers,
     DetailPurchaseOrder,
     DetailSupplier,
-    DetailMaterial
+    DetailMaterial,
+    ReceiptNote,
+    DetailMaterialReceiptNote,
+    DetailSubcontReceiptNote,
+    PurchasingDetailDeliveryNoteSubcont
 }
 

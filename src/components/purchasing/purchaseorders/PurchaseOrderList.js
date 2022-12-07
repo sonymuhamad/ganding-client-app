@@ -7,7 +7,7 @@ import { openModal, closeAllModals } from "@mantine/modals";
 import { DatePicker } from "@mantine/dates";
 import { useRequest } from "../../../hooks";
 import { ExpandedPurchaseOrder } from "../../layout";
-import BaseTableExpanded from "../../tables";
+import { BaseTableExpanded } from "../../tables";
 import { FailedNotif, SuccessNotif } from "../../notifications";
 
 

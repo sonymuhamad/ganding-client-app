@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { BaseLayout, NavLinks } from "../layout";
 
-import { IconLayoutDashboard, IconUsers, IconReport, IconAsset } from "@tabler/icons";
+import { IconLayoutDashboard, IconUsers, IconReport, IconAsset, IconTruckDelivery } from "@tabler/icons";
 import { Outlet } from "react-router-dom";
 
 
@@ -31,6 +31,12 @@ export default function BasePurchasing() {
             activeLabel: 'Purchase Order',
             icon: <IconReport stroke={2} size={20} />,
             url: '/home/purchasing/purchase-order',
+        },
+        {
+            label: 'Shipments and receipts',
+            activeLabel: 'Shipments and receipts',
+            icon: <IconTruckDelivery stroke={2} size={20} />,
+            url: '/home/purchasing/shipments-and-receipts',
         },
     ], [])
 

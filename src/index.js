@@ -8,7 +8,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { MarketingDashboard, DeliveryNote, DetailSalesOrder, MarketingDetailDeliveryNote, MarketingDetailProduct, NewSalesOrder, SalesOrder, Customer, Customers, BaseMarketing } from './components'
 
 
-import { BasePurchasing, PurchasingDashboard, PurchaseOrder, Suppliers, DetailSupplier, DetailPurchaseOrder, DetailMaterial as MaterialDetail, DetailPurchaseOrder, Material, Login, Error, ProtectedLayout } from './components';
+import { BasePurchasing, PurchasingDashboard, PurchaseOrder, Suppliers, DetailSupplier, DetailPurchaseOrder, DetailMaterial as MaterialDetail, Material, Login, Error, ProtectedLayout, DetailMaterialReceiptNote, ReceiptNote, DetailSubcontReceiptNote, PurchasingDetailDeliveryNoteSubcont } from './components';
 
 import { PpicDashboard, BasePpic, Delivery, Materials, Production, Products, Warehouse, DetailDeliveryNoteMaterial, DetailDeliveryNoteSubcont, DetailProduction, DetailSubcontReceipt, PpicDetailDeliveryNote, PpicDetailMaterial, PpicProductDetail, NewMaterial, NewProduct, NewProduction, NewProductionPriority } from './components'
 
@@ -87,7 +87,11 @@ root.render(
             <Route path='purchase-order/:purchaseOrderId' element={<DetailPurchaseOrder />} />
             <Route path='purchase-order' element={<PurchaseOrder />} />
             <Route path='material' element={<Material />} />
-            <Route path='material/:materialId' element={<MaterialDetail.default />} />
+            <Route path='material/:materialId' element={<MaterialDetail />} />
+            <Route path='shipments-and-receipts' element={<ReceiptNote />} />
+            <Route path='shipments-and-receipts/material/:materialReceiptId' element={<DetailMaterialReceiptNote />} />
+            <Route path='shipments-and-receipts/receipt-subcont/:receiptSubcontId' element={<DetailSubcontReceiptNote />} />
+            <Route path='shipments-and-receipts/shipment-subcont/:deliverySubcontId' element={<PurchasingDetailDeliveryNoteSubcont />} />
 
           </Route>
 

@@ -1,8 +1,10 @@
 import { useRef } from "react";
 import useScrollSpy from 'react-use-scrollspy'
-
+import { sectionStyle } from "../styles"
 
 export const useSection = () => {
+
+    const { classes } = sectionStyle()
 
     const sectionRefs = [
         useRef(null),
@@ -25,7 +27,8 @@ export const useSection = () => {
 
     return {
         sectionRefs,
-        activeSection
+        activeSection,
+        classes
     }
 
 }

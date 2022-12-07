@@ -6,17 +6,15 @@ import { useForm } from "@mantine/form";
 import { DatePicker } from "@mantine/dates";
 import { closeAllModals, openConfirmModal, openModal } from "@mantine/modals";
 
-import { BaseAside } from "../../layout";
+import { BaseAside, ExpandedMaterialOrderList, CustomSelectComponentMrp } from "../../layout";
 import BreadCrumb from "../../BreadCrumb";
 import { sectionStyle } from '../../../styles'
 import { useRequest } from "../../../hooks";
 import { IconCalendar, IconCodeAsterix, IconUserCheck, IconDownload, IconEdit, IconX, IconTrashX, IconCheck, IconChecks, IconCircleDotted, IconTrash, IconPlus, IconShoppingCart, IconAsset, IconClipboardList, IconClipboardCheck, IconFolderOff } from "@tabler/icons";
-import { FailedNotif, SuccessNotif } from "../../notifications";
-import ExpandedMaterialOrderList from "../../layout";
+import { FailedNotif, SuccessNotif } from "../../notifications"
 
-import { BaseTable, BaseTableExpanded } from "../../tables";
-import { CustomSelectComponentMrp } from "../../layout";
-import MaterialReceiptList from "./MaterialReceiptList";
+import { BaseTable, BaseTableExpanded } from "../../tables"
+import MaterialReceiptList from "./MaterialReceiptList"
 
 
 
