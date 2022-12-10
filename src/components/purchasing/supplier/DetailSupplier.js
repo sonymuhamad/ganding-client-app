@@ -212,7 +212,7 @@ const DetailSupplier = () => {
 
     const handleDeleteSupplier = useCallback(async (id) => {
         try {
-            await Delete(id, 'supplier')
+            await Delete(id, 'supplier-management')
             navigate('/home/purchasing/suppliers')
             SuccessNotif('Delete supplier success')
         } catch (e) {
@@ -237,7 +237,7 @@ const DetailSupplier = () => {
 
     const handleEditSupplier = useCallback(async (value) => {
         try {
-            await Put(value.id, value, 'supplier')
+            await Put(value.id, value, 'supplier-management')
             SuccessNotif('Edit supplier success')
             setDetailSupplier(value)
             form.setValues(value)

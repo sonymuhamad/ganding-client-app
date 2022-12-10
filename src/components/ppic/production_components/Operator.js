@@ -21,7 +21,7 @@ const ModalEditOperator = ({ data, action }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Put(data.id, value, 'operator')
+            await Put(data.id, value, 'operator-management')
             closeAllModals()
             action(prev => prev + 1)
             SuccessNotif('Edit operator name success')
@@ -71,7 +71,7 @@ const ModalAddOperator = ({ action }) => {
 
     const handleSubmit = async (value) => {
         try {
-            await Post(value, 'operator')
+            await Post(value, 'operator-management')
             closeAllModals()
             action(prev => prev + 1)
             SuccessNotif('Add new operator success')
@@ -155,7 +155,7 @@ const Operator = () => {
 
     const handleDeleteOperator = useCallback(async (id) => {
         try {
-            await Delete(id, 'operator')
+            await Delete(id, 'operator-management')
             SuccessNotif('delete data operator success')
             setAction(prev => prev + 1)
         } catch (e) {

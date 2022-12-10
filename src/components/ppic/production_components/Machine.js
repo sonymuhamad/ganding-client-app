@@ -21,7 +21,7 @@ const ModalEditMachine = ({ data, action }) => {
     const handleSubmit = useCallback(async (value) => {
 
         try {
-            await Put(data.id, value, 'machine')
+            await Put(data.id, value, 'machine-management')
             closeAllModals()
             action(prev => prev + 1)
             SuccessNotif('Edit machine name success')
@@ -72,7 +72,7 @@ const ModalAddMachine = ({ action }) => {
     const handleSubmit = async (value) => {
 
         try {
-            await Post(value, 'machine')
+            await Post(value, 'machine-management')
             closeAllModals()
             action(prev => prev + 1)
             SuccessNotif('Add new machine success')
@@ -152,7 +152,7 @@ const Machine = () => {
 
     const handleDeleteMachine = useCallback(async (id) => {
         try {
-            await Delete(id, 'machine')
+            await Delete(id, 'machine-management')
             SuccessNotif('delete data machine success')
             setAction(prev => prev + 1)
         } catch (e) {

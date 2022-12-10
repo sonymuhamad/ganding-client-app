@@ -53,7 +53,7 @@ const NewMaterial = () => {
 
     const handleSubmit = useCallback(async (val) => {
         try {
-            await Post(val, 'material', 'multipart/form-data')
+            await Post(val, 'material-management', 'multipart/form-data')
 
             SuccessNotif('New material added successfully')
             navigate('/home/ppic/material')

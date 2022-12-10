@@ -64,7 +64,7 @@ const Customers = () => {
     const handlesubmit = useCallback(async (data) => {
         // add new customer handle
         try {
-            await Post(data, 'customer')
+            await Post(data, 'customer-management')
             SuccessNotif('Add customer success')
             form.reset()
             setAction(prev => prev + 1)

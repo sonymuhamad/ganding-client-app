@@ -22,7 +22,7 @@ const AddProductType = ({ setaction }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Post(value, 'product-type')
+            await Post(value, 'product-type-management')
             setaction(prev => prev + 1)
             closeAllModals()
             SuccessNotif('Add product type success')
@@ -77,7 +77,7 @@ const EditProductType = ({ setaction, data }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Put(data.id, value, 'product-type')
+            await Put(data.id, value, 'product-type-management')
             closeAllModals()
             setaction(prev => prev + 1)
             SuccessNotif('Edit product type success')
@@ -159,7 +159,7 @@ const ProductType = () => {
 
     const handleDeleteProductType = useCallback(async (id) => {
         try {
-            await Delete(id, 'product-type')
+            await Delete(id, 'product-type-management')
             setActionProductType(prev => prev + 1)
             SuccessNotif('Delete product type success')
         } catch (e) {

@@ -60,6 +60,7 @@ const ModalEditStockProduct = ({ whProduct, setaction }) => {
                     label='Quantity'
                     hideControls
                     required
+                    min={0}
                     value={quantity}
                     onChange={(e) => {
 

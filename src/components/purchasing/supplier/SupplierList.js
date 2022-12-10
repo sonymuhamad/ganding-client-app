@@ -24,7 +24,7 @@ const ModalAddSupplier = ({ onAddSupplier }) => {
 
     const handleSubmit = async (value) => {
         try {
-            await Post(value, 'supplier')
+            await Post(value, 'supplier-management')
             onAddSupplier()
             closeAllModals()
             SuccessNotif('Add new supplier success')

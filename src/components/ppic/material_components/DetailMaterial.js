@@ -178,7 +178,7 @@ const DetailMaterial = () => {
 
     const handleDelete = useCallback(async (id) => {
         try {
-            await Delete(id, 'material')
+            await Delete(id, 'material-management')
             SuccessNotif('Delete material success')
             navigate('/home/ppic/material')
         } catch (e) {
@@ -198,7 +198,7 @@ const DetailMaterial = () => {
         }
 
         try {
-            await Put(params.materialId, validData, 'material', 'multipart/form-data')
+            await Put(params.materialId, validData, 'material-management', 'multipart/form-data')
             SuccessNotif('Edit data material success')
             setAction(prev => prev + 1)
             setEditAccess(prev => !prev)

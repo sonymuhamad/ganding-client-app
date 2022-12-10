@@ -74,7 +74,7 @@ const Customer = () => {
     const handleSubmit = useCallback(async (data) => {
         // handle edit customer
         try {
-            await Put(customerId, data, 'customer')
+            await Put(customerId, data, 'customer-management')
             SuccessNotif('Edit customer success')
             handleClickEditButton()
             setAction(prev => prev + 1)
@@ -86,7 +86,7 @@ const Customer = () => {
 
     const handleDeleteCustomer = useCallback(async () => {
         try {
-            await Delete(customerId, 'customer')
+            await Delete(customerId, 'customer-management')
             SuccessNotif('Delete customer success')
             navigate('/home/marketing/customers')
         } catch (e) {

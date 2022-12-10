@@ -23,7 +23,7 @@ const ModalAddVehicle = ({ setAction }) => {
 
     const handleSubmit = useCallback(async (data) => {
         try {
-            await Post(data, 'vehicle')
+            await Post(data, 'vehicle-management')
             SuccessNotif('Add vehicle success')
             closeAllModals()
             setAction(prev => prev + 1)
@@ -74,7 +74,7 @@ const ModalEditVehicle = ({ data, setAction }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Put(data.id, value, 'vehicle')
+            await Put(data.id, value, 'vehicle-management')
             SuccessNotif('Edit vehicle number success')
             closeAllModals()
             setAction(prev => prev + 1)
@@ -144,7 +144,7 @@ const Vehicle = () => {
 
     const handleDeleteVehicle = useCallback(async (id) => {
         try {
-            await Delete(id, 'vehicle')
+            await Delete(id, 'vehicle-management')
             SuccessNotif('Delete vehicle success')
             setAction(prev => prev + 1)
         } catch (e) {

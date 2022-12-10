@@ -17,7 +17,7 @@ const ExpandedProductList = ({ data }) => {
             <TextInput
                 label='Customer name'
                 readOnly
-                value={data.product.customer.name}
+                value={data.customer.name}
                 icon={<IconUserCheck />}
                 radius='md'
                 variant='filled'
@@ -28,7 +28,7 @@ const ExpandedProductList = ({ data }) => {
                 variant="filled"
                 readOnly
                 label='Product name'
-                value={data.product.name}
+                value={data.name}
                 icon={<IconBarcode />}
                 radius='md'
             />
@@ -38,7 +38,7 @@ const ExpandedProductList = ({ data }) => {
                 variant="filled"
                 readOnly
                 label='Product number'
-                value={data.product.code}
+                value={data.code}
                 icon={<IconCodeAsterix />}
                 radius='md'
             />
@@ -57,16 +57,16 @@ const ProductOrderList = () => {
 
     const columnProductOrderList = useMemo(() => [
         {
+            name: 'Customer',
+            selector: row => row.customer.name
+        },
+        {
             name: 'Product name',
             selector: row => row.name
         },
         {
             name: 'Product number',
             selector: row => row.code
-        },
-        {
-            name: 'Customer',
-            selector: row => row.customer.name
         },
         {
             name: 'Rest of the order',
@@ -94,7 +94,6 @@ const ProductOrderList = () => {
                 column={columnProductOrderList}
                 data={productOrder}
                 expandComponent={ExpandedProductList}
-                dense='true'
                 noData="No product order"
             />
         </>

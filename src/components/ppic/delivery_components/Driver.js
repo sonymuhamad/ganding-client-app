@@ -19,7 +19,7 @@ const ModalAddDriver = ({ setAction }) => {
 
     const handleSubmit = useCallback(async (data) => {
         try {
-            await Post(data, 'driver')
+            await Post(data, 'driver-management')
             SuccessNotif('Add driver success')
             closeAllModals()
             setAction(prev => prev + 1)
@@ -67,7 +67,7 @@ const ModalEditDriver = ({ data, setAction }) => {
 
     const handleSubmit = async (value) => {
         try {
-            await Put(data.id, value, 'driver')
+            await Put(data.id, value, 'driver-management')
             SuccessNotif('Edit driver success')
             setAction(prev => prev + 1)
             closeAllModals()
@@ -132,7 +132,7 @@ const Driver = () => {
 
     const handleDeleteDriver = useCallback(async (id) => {
         try {
-            await Delete(id, 'driver')
+            await Delete(id, 'driver-management')
             SuccessNotif('Delete driver success')
             setAction(prev => prev + 1)
         } catch (e) {

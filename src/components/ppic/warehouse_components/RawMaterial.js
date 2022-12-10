@@ -176,6 +176,10 @@ const ModalEditStockMaterial = ({ material }) => {
                     label='Quantity'
                     hideControls
                     required
+                    min={0}
+                    precision={2}
+                    step={0.5}
+                    decimalSeparator=','
                     value={quantity}
                     onChange={(e) => {
 

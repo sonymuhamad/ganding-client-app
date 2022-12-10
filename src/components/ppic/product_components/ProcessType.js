@@ -21,7 +21,7 @@ const AddProcessType = ({ setaction }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Post(value, 'process-type')
+            await Post(value, 'process-type-management')
             closeAllModals()
             setaction(prev => prev + 1)
             SuccessNotif('Add process type success')
@@ -73,7 +73,7 @@ const EditProcessType = ({ setaction, data }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Put(data.id, value, 'process-type')
+            await Put(data.id, value, 'process-type-management')
             closeAllModals()
             setaction(prev => prev + 1)
             SuccessNotif('Edit process type success')
@@ -157,7 +157,7 @@ const ProcessType = () => {
 
     const handleDeleteProcessType = useCallback(async (id) => {
         try {
-            await Delete(id, 'process-type')
+            await Delete(id, 'process-type-management')
             setActionProcessType(prev => prev + 1)
             SuccessNotif('Delete process type success')
         } catch (e) {
