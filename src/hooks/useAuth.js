@@ -5,7 +5,7 @@ import { showNotification } from "@mantine/notifications";
 import { IconCheck, IconHandRock, IconAccessPointOff } from "@tabler/icons";
 import { AuthException, Url } from "../services";
 import { useParams } from "react-router-dom";
-import { closeAllModals } from "@mantine/modals";
+import { closeAllModals } from "@mantine/modals"
 
 const sign_in_url = `${Url}/plant-manager/sign-in/`
 const sign_out_url = `${Url}/plant-manager/sign-out/`
@@ -28,6 +28,22 @@ export const useAuth = () => {
         return initialState
     })
 
+    const saveToLocalStorage = useCallback((data_user) => {
+        const json_data_user = JSON.stringify(data_user)
+        window.localStorage.setItem('loggedUser', json_data_user)
+    }, [])
+
+    const deleteFromLocalStorage = useCallback(() => {
+        window.localStorage.removeItem('loggedUser')
+    }, [])
+
+    const changeDivision = useCallback((name) => {
+        setUser(prev => {
+            const updatedUser = { ...prev, division: name }
+            saveToLocalStorage(updatedUser)
+            return updatedUser
+        })
+    }, [saveToLocalStorage])
 
     const signIn = useCallback(async (data) => {
         let redirect
@@ -36,11 +52,11 @@ export const useAuth = () => {
             const data_user = {
                 username: response.data.username,
                 division: response.data.groups[0].name,
-                token: response.data.oauth2_provider_accesstoken[0].token
+                token: response.data.oauth2_provider_accesstoken[0].token,
+                groups: response.data.groups
             }
             setUser(data_user)
-            const json_data_user = JSON.stringify(data_user)
-            window.localStorage.setItem('loggedUser', json_data_user)
+            saveToLocalStorage(data_user)
 
             showNotification({
                 title: 'Sign In success',
@@ -64,13 +80,13 @@ export const useAuth = () => {
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
-    }, [params, navigate])
+    }, [params, navigate, saveToLocalStorage])
 
     const signOut = useCallback(async (token) => {
         try {
             await axios.post(sign_out_url, { access_token: token })
             setUser(null)
-            window.localStorage.removeItem('loggedUser')
+            deleteFromLocalStorage()
             showNotification({
                 title: 'Sign out success',
                 disallowClose: true,
@@ -82,13 +98,13 @@ export const useAuth = () => {
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
-    }, [navigate])
+    }, [navigate, deleteFromLocalStorage])
 
     const resetToken = useCallback(async (token, redirect) => {
         try {
             await axios.post(sign_out_url, { access_token: token })
             setUser(null)
-            window.localStorage.removeItem('loggedUser')
+            deleteFromLocalStorage()
             showNotification({
                 title: 'Token expired',
                 message: 'Please login to continue',
@@ -103,13 +119,14 @@ export const useAuth = () => {
             throw new AuthException(err.response.data.error)
         }
 
-    }, [navigate])
+    }, [navigate, deleteFromLocalStorage])
 
     return {
         signIn,
         signOut,
         user,
-        resetToken
+        resetToken,
+        changeDivision
     }
 
 }

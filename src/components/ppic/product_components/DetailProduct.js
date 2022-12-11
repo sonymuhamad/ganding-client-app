@@ -12,7 +12,7 @@ import { openConfirmModal } from "@mantine/modals"
 
 import { BaseAside } from "../../layout"
 import BreadCrumb from "../../BreadCrumb"
-import { BaseTable, BaseTableExpanded } from "../../tables"
+import { BaseTable, BaseTableDisableExpanded } from "../../tables"
 import { useRequest } from '../../../hooks'
 import { SuccessNotif, FailedNotif } from '../../notifications'
 import { sectionStyle } from "../../../styles"

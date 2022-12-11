@@ -11,8 +11,8 @@ import { Chart, registerables } from 'chart.js';
 
 function App() {
   Chart.register(...registerables)
-  const { signIn, signOut, user, resetToken } = useAuth()
-  const value = useMemo(() => ({ user, signIn, signOut, resetToken }))
+  const props = useAuth()
+  const value = useMemo(() => ({ ...props }))
 
   return (
     <>

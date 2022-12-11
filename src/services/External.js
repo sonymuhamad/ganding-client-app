@@ -1,3 +1,5 @@
+import { IconBuildingFactory2, IconChartInfographic, IconReportAnalytics, IconBuildingStore } from "@tabler/icons"
+
 export const Url = `http://127.0.0.1:8000`
 
 export function AuthException(message) {
@@ -22,3 +24,14 @@ export const customTableStyle = {
 }
 
 export const Months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
+
+
+export const DivisionIcons = {
+    1: <IconReportAnalytics />,
+    2: <IconBuildingStore />,
+    3: <IconBuildingFactory2 />,
+    4: <IconChartInfographic />
+}
+
+
+

@@ -1,15 +1,32 @@
-import React, { useContext } from "react";
-import { AppShell, Navbar, Header, Footer, Group, Menu, Text, Button, Image, ScrollArea, NavLink } from "@mantine/core";
+import React, { useCallback, useContext } from "react";
+import { AppShell, Navbar, Header, Footer, Group, Menu, Text, Button, Image, ScrollArea, NavLink, Tooltip } from "@mantine/core";
 import { IconUserCircle, IconLogout } from "@tabler/icons";
 import { appshellStyle } from "../../styles";
 import Time from "./Time";
 import { AuthContext } from "../../context";
-
+import { DivisionIcons } from "../../services";
+import { openConfirmModal } from "@mantine/modals";
 
 const BaseLayout = ({ outlet, navlink }) => {
 
     const { classes } = appshellStyle()
     const auth = useContext(AuthContext)
+
+
+
+    const openConfirmChangeDivision = useCallback((name) => openConfirmModal({
+        title: `Switch division to ${name} `,
+        children: (
+            <Text size='sm' >
+                Are you sure?, this action will change access right to selected division
+            </Text>
+        ),
+        radius: 'md',
+        labels: { confirm: 'Yes, switch ', cancel: "No, don't switch it" },
+        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+        confirmProps: { radius: 'md' },
+        onConfirm: () => auth.changeDivision(name)
+    }), [])
 
     return (
         <>
@@ -38,11 +55,11 @@ const BaseLayout = ({ outlet, navlink }) => {
 
                                 <Group position="left" >
 
-                                    <Text className={classes.responsiveText} color='dimmed' align="left" >
+                                    <Text className={classes.responsiveTime} color='dimmed' align="left" >
                                         <Time />
                                     </Text>
 
-                                    <Menu openDelay={50} closeDelay={400} mb='xs'   >
+                                    <Menu openDelay={50} closeDelay={400} mb='xs' position="left-start" withArrow  >
 
                                         <Menu.Target height='xl' >
 
@@ -62,12 +79,37 @@ const BaseLayout = ({ outlet, navlink }) => {
 
                                             >
 
-                                                <Text className={classes.responsiveText} transform="capitalize" >
-                                                    {auth.user.username} || {auth.user.division} Division
+                                                <Text className={classes.responsiveTitleMenu} transform="capitalize" >
+                                                    {auth.user.username} || {auth.user.division}
                                                 </Text>
 
                                             </Button>
                                         </Menu.Target>
+
+                                        <Menu.Dropdown>
+                                            <Menu.Label>
+                                                Division
+                                            </Menu.Label>
+
+                                            {auth.user.groups.filter(group => group.name !== auth.user.division).map(group => (
+                                                <Menu.Item icon={DivisionIcons[group.id]}
+                                                    onClick={() => openConfirmChangeDivision(group.name)}
+                                                    key={group.id}
+                                                >
+                                                    <Tooltip
+                                                        label={`Change to ${group.name}`}
+                                                    >
+
+                                                        <Text transform="capitalize" >
+                                                            {group.name}
+                                                        </Text>
+
+                                                    </Tooltip>
+                                                </Menu.Item>
+                                            ))}
+
+                                        </Menu.Dropdown>
+
                                     </Menu>
                                 </Group>
                             </div>
@@ -105,7 +147,7 @@ const BaseLayout = ({ outlet, navlink }) => {
 
                     >
 
-                        <Navbar.Section className={classes.bodyNav} grow component={ScrollArea}  >
+                        <Navbar.Section className={classes.bodyNav} grow   >
 
                             {navlink}
 

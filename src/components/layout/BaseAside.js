@@ -28,8 +28,8 @@ export default function BaseAside({ links, activeSection }) {
     }, [links, classes, cx, activeSection])
 
     return (
-        <MediaQuery smallerThan="sm" styles={{ display: 'none' }}>
-            <Aside p="md" hiddenBreakpoint="sm" hidden width={{ sm: 200, lg: 300 }}>
+        <MediaQuery smallerThan="md" styles={{ display: 'none' }}>
+            <Aside p="md" hiddenBreakpoint="md" hidden width={{ md: 200, lg: 300 }}>
                 <ScrollArea.Autosize maxHeight={500} >
                     <Group mb="md">
                         <IconListSearch size={18} stroke={1.5} />

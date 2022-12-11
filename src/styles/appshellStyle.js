@@ -5,7 +5,17 @@ import { createStyles } from "@mantine/core";
 export const appshellStyle = createStyles((theme) => ({
 
     responsiveText: {
+        [theme.fn.smallerThan('sm')]: {
+            display: 'none'
+        },
+    },
+    responsiveTitleMenu: {
         [theme.fn.smallerThan('xs')]: {
+            display: 'none'
+        },
+    },
+    responsiveTime: {
+        [theme.fn.smallerThan('lg')]: {
             display: 'none'
         },
     },
@@ -17,6 +27,10 @@ export const appshellStyle = createStyles((theme) => ({
     innerHeaderRight: {
         display: 'flex',
         marginLeft: 'auto',
+        marginRight: '55px',
+        [theme.fn.smallerThan('md')]: {
+            marginRight: '10px'
+        },
     },
     innerHeaderLeft: {
         height: '100%',
@@ -26,7 +40,9 @@ export const appshellStyle = createStyles((theme) => ({
     image: {
         maxWidth: '10%',
         width: 90,
-
+        [theme.fn.smallerThan('sm')]: {
+            display: 'none'
+        },
     },
     header: {
         backgroundColor: theme.colors.lights,
