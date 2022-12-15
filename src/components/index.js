@@ -26,5 +26,5 @@ export {
 export { MarketingDashboard, DeliveryNote, DetailSalesOrder, MarketingDetailDeliveryNote, MarketingDetailProduct, NewSalesOrder, SalesOrder, Customer, Customers, BaseMarketing } from './marketing'
 
 
-export { BasePlantManager, ManagerDashboard, MaterialReceipt, Mrp, ReportSalesOrder, Users } from './plant-manager'
+export { BasePlantManager, ManagerDashboard, Users, PurchaseReport, SalesReport, ProductionReport, DetailUser } from './plant-manager'
 

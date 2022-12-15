@@ -6,6 +6,7 @@ import { loginpageStyle } from "../styles";
 import { AuthContext } from '../context'
 import { useForm } from "@mantine/form";
 import { useNavigate } from "react-router-dom";
+import { FailedNotif } from "./notifications";
 
 const Login = () => {
 
@@ -29,6 +30,9 @@ const Login = () => {
             await auth.signIn(data)
         } catch (e) {
             form.setErrors({ ...e.message })
+            if (e.message.groups) {
+                FailedNotif(e.message.groups)
+            }
         } finally {
             setVisible(false)
         }

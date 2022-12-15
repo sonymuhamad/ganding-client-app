@@ -12,7 +12,7 @@ import { BasePurchasing, PurchasingDashboard, PurchaseOrder, Suppliers, DetailSu
 
 import { PpicDashboard, BasePpic, Delivery, Materials, Production, Products, Warehouse, DetailDeliveryNoteMaterial, DetailDeliveryNoteSubcont, DetailProduction, DetailSubcontReceipt, PpicDetailDeliveryNote, PpicDetailMaterial, PpicProductDetail, NewMaterial, NewProduct, NewProduction, NewProductionPriority } from './components'
 
-import { BasePlantManager, ManagerDashboard, MaterialReceipt, Mrp, ReportSalesOrder, Users } from './components'
+import { BasePlantManager, ManagerDashboard, Users, PurchaseReport, ProductionReport, SalesReport, DetailUser } from './components'
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -32,9 +32,10 @@ root.render(
 
             <Route index element={<ManagerDashboard />} />
             <Route path='users' element={<Users />} />
-            <Route path='report-material-receipt' element={<MaterialReceipt />} />
-            <Route path='report-sales-order' element={<ReportSalesOrder />} />
-            <Route path='report-mrp' element={<Mrp />} />
+            <Route path='users/:userId' element={<DetailUser />} />
+            <Route path='production-report' element={<ProductionReport />} />
+            <Route path='sales-report' element={<SalesReport />} />
+            <Route path='purchase-report' element={<PurchaseReport />} />
 
           </Route>
 

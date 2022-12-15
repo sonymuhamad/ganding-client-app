@@ -14,7 +14,8 @@ export const AuthContext = createContext(
         signOut: () => { },
         loggedUser: null,
         resetToken: () => { },
-        changeDivision: () => { }
+        changeDivision: () => { },
+        restrictedAccessHandler: () => { }
     }
 )
 

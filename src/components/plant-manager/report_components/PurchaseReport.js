@@ -2,7 +2,7 @@ import React from "react";
 
 
 
-export default function MaterialReceipt() {
+export default function PurchaseReport() {
 
     return (
         <>

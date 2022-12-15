@@ -26,22 +26,31 @@ export const useRequest = () => {
 
     }, [navigate])
 
+    const RestrictedAccessHandler = useCallback(err => {
+
+        if (err.response.status === 403) {
+            auth.restrictedAccessHandler(location.pathname)
+        }
+
+    }, [location.pathname])
+
     const ExpiredHandler = useCallback((err) => {
         // handler for expired token
 
         if (err.response.status === 401) {
-            auth.resetToken(auth.user.token, location.pathname)
+            auth.resetToken(location.pathname)
             // expired token handle
         }
 
-    }, [auth, location.pathname])
+    }, [location.pathname])
 
     const ErrorHandler = useCallback((err) => {
 
         NotFoundHandler(err)
         ExpiredHandler(err)
+        RestrictedAccessHandler(err)
 
-    }, [NotFoundHandler, ExpiredHandler])
+    }, [NotFoundHandler, ExpiredHandler, RestrictedAccessHandler])
 
     const Post = useCallback(async (data, endpoint, content_type = 'application/json') => {
         const url = `${Url}/${auth.user.division}/${endpoint}/`

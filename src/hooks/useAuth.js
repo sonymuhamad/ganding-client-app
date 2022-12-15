@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { showNotification } from "@mantine/notifications";
-import { IconCheck, IconHandRock, IconAccessPointOff } from "@tabler/icons";
+import { IconCheck, IconHandRock, IconAccessPointOff, IconChecks } from "@tabler/icons";
 import { AuthException, Url } from "../services";
 import { useParams } from "react-router-dom";
 import { closeAllModals } from "@mantine/modals"
@@ -63,7 +63,7 @@ export const useAuth = () => {
                 message: 'Have a great day',
                 disallowClose: true,
                 autoClose: 3000,
-                icon: <IconCheck />
+                icon: <IconChecks />
             })
 
             if (Object.keys(params).length !== 0) {
@@ -82,29 +82,35 @@ export const useAuth = () => {
         }
     }, [params, navigate, saveToLocalStorage])
 
-    const signOut = useCallback(async (token) => {
+    const performSignOut = useCallback(async () => {
         try {
-            await axios.post(sign_out_url, { access_token: token })
+            await axios.post(sign_out_url, { access_token: user.token })
             setUser(null)
             deleteFromLocalStorage()
+            closeAllModals()
+        } catch (err) {
+            throw new AuthException(err.response.data.error)
+        }
+    }, [])
+
+    const signOut = useCallback(async () => {
+        try {
+            await performSignOut()
             showNotification({
                 title: 'Sign out success',
                 disallowClose: true,
                 autoClose: 3000,
-                icon: <IconHandRock />
+                icon: <IconCheck />
             })
-            closeAllModals()
             navigate(`/`)
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
-    }, [navigate, deleteFromLocalStorage])
+    }, [navigate])
 
-    const resetToken = useCallback(async (token, redirect) => {
+    const resetToken = useCallback(async (redirect) => {
         try {
-            await axios.post(sign_out_url, { access_token: token })
-            setUser(null)
-            deleteFromLocalStorage()
+            await performSignOut()
             showNotification({
                 title: 'Token expired',
                 message: 'Please login to continue',
@@ -113,20 +119,37 @@ export const useAuth = () => {
                 color: 'red',
                 icon: <IconAccessPointOff />
             })
-            closeAllModals()
             navigate(`/login/next=${redirect}`)
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
 
-    }, [navigate, deleteFromLocalStorage])
+    }, [navigate])
+
+    const restrictedAccessHandler = useCallback(async (redirect) => {
+        try {
+            await performSignOut()
+            showNotification({
+                title: 'Restricted access',
+                message: 'Please login to continue',
+                disallowClose: true,
+                autoClose: 5000,
+                color: 'red',
+                icon: <IconAccessPointOff />
+            })
+            navigate(`/login/next=${redirect}`)
+        } catch (err) {
+            throw new AuthException(err.response.data.error)
+        }
+    }, [navigate])
 
     return {
         signIn,
         signOut,
         user,
         resetToken,
-        changeDivision
+        changeDivision,
+        restrictedAccessHandler
     }
 
 }

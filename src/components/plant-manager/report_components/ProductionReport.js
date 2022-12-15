@@ -1,7 +1,7 @@
 import React from "react";
 
 
-export default function Mrp() {
+export default function ProductionReport() {
 
 
     return (

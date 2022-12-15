@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { NavLinks, BaseLayout } from '../layout'
 
-import { IconUserCheck, IconReportAnalytics, IconCalendarEvent, IconReportMoney, IconGitPullRequestDraft, IconLayoutDashboard } from "@tabler/icons";
+import { IconUserCheck, IconReportAnalytics, IconLayoutDashboard, IconClipboardList, IconClipboardCheck } from "@tabler/icons";
 import { Outlet } from "react-router-dom";
 
 
@@ -24,29 +24,22 @@ export default function BasePlantManager() {
             url: '/home/plant-manager/users',
         },
         {
-            label: 'Report',
+            label: 'Purchase report',
+            icon: <IconClipboardCheck stroke={2} size={20} />,
+            activeLabel: 'Purchase report',
+            url: '/home/plant-manager/purchase-report'
+        },
+        {
+            label: 'Sales report',
             icon: <IconReportAnalytics stroke={2} size={20} />,
-            nested: [
-                {
-                    label: 'Material Receipt',
-                    icon: <IconCalendarEvent stroke={2} size={20} />,
-                    activeLabel: 'Material Receipt',
-                    url: '/home/plant-manager/report-material-receipt'
-                },
-                {
-                    label: 'Sales Order',
-                    icon: <IconReportMoney stroke={2} size={20} />,
-                    activeLabel: 'Sales Order',
-                    url: '/home/plant-manager/report-sales-order',
-                },
-                {
-                    label: 'Mrp',
-                    icon: <IconGitPullRequestDraft stroke={2} size={20} />,
-                    activeLabel: 'Mrp',
-                    url: '/home/plant-manager/report-mrp'
-                }
-
-            ]
+            activeLabel: 'Sales report',
+            url: '/home/plant-manager/sales-report',
+        },
+        {
+            label: 'Production report',
+            icon: <IconClipboardList stroke={2} size={20} />,
+            activeLabel: 'Production report',
+            url: '/home/plant-manager/production-report'
         }
     ], [])
 
