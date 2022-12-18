@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { showNotification } from "@mantine/notifications";
-import { IconCheck, IconHandRock, IconAccessPointOff, IconChecks } from "@tabler/icons";
+import { IconCheck, IconAccessPointOff, IconChecks } from "@tabler/icons";
 import { AuthException, Url } from "../services";
 import { useParams } from "react-router-dom";
 import { closeAllModals } from "@mantine/modals"
@@ -45,8 +45,40 @@ export const useAuth = () => {
         })
     }, [saveToLocalStorage])
 
-    const signIn = useCallback(async (data) => {
+    const setDataUser = useCallback((data_user) => {
+        setUser(data_user)
+        saveToLocalStorage(data_user)
+    }, [saveToLocalStorage])
+
+    const checkPreviousDivision = useCallback((groups, name_prev_group) => {
+        return groups.some(group => group.name === name_prev_group)
+    }, [])
+
+    const performSaveAndRedirectAfterSignIn = useCallback((data_user) => {
         let redirect
+
+        if (Object.keys(params).length !== 0) {
+            // redirect for user expired token
+            redirect = params["*"].split('=')[1]
+
+            const name_prev_division = redirect.split('/')[2]
+            if (checkPreviousDivision(data_user.groups, name_prev_division)) {
+                data_user.division = name_prev_division
+            }
+
+
+        } else {
+            // redirect for user first time login
+
+            redirect = `/home/${data_user.division}`
+        }
+
+        setDataUser(data_user)
+        navigate(redirect, { replace: true })
+
+    }, [params, checkPreviousDivision, setDataUser, navigate])
+
+    const signIn = useCallback(async (data) => {
         try {
             const response = await axios.post(sign_in_url, data)
             const data_user = {
@@ -55,8 +87,6 @@ export const useAuth = () => {
                 token: response.data.oauth2_provider_accesstoken[0].token,
                 groups: response.data.groups
             }
-            setUser(data_user)
-            saveToLocalStorage(data_user)
 
             showNotification({
                 title: 'Sign In success',
@@ -66,21 +96,12 @@ export const useAuth = () => {
                 icon: <IconChecks />
             })
 
-            if (Object.keys(params).length !== 0) {
-                // redirect for user expired token
+            performSaveAndRedirectAfterSignIn(data_user)
 
-                redirect = params["*"].split('=')[1]
-            } else {
-                // redirect for user first time login
-
-                redirect = `/home/${data_user.division}`
-            }
-
-            navigate(redirect, { replace: true })
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
-    }, [params, navigate, saveToLocalStorage])
+    }, [performSaveAndRedirectAfterSignIn])
 
     const performSignOut = useCallback(async () => {
         try {
@@ -91,7 +112,7 @@ export const useAuth = () => {
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
-    }, [])
+    }, [deleteFromLocalStorage, user])
 
     const signOut = useCallback(async () => {
         try {
@@ -106,7 +127,7 @@ export const useAuth = () => {
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
-    }, [navigate])
+    }, [navigate, performSignOut])
 
     const resetToken = useCallback(async (redirect) => {
         try {
@@ -124,7 +145,7 @@ export const useAuth = () => {
             throw new AuthException(err.response.data.error)
         }
 
-    }, [navigate])
+    }, [navigate, performSignOut])
 
     const restrictedAccessHandler = useCallback(async (redirect) => {
         try {
@@ -141,7 +162,7 @@ export const useAuth = () => {
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
-    }, [navigate])
+    }, [navigate, performSignOut])
 
     return {
         signIn,

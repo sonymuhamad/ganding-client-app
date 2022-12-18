@@ -78,7 +78,7 @@ const DetailMaterialReceiptNote = () => {
         },
         {
             name: 'Receipt status',
-            selector: row => <Badge color={row.schedules ? detailReceiptNote.date > row.schedules.date ? 'red.6' : 'blue.6' : 'blue.6'} variant='filled' >{row.schedules ? detailReceiptNote.date > row.schedules.date ? 'Late' : 'On time' : 'Not on schedule'}</Badge>
+            selector: row => <Badge color={row.schedules ? detailReceiptNote.date > row.schedules.date ? 'red.6' : 'blue.6' : 'blue.6'} variant='filled' >{row.schedules ? detailReceiptNote.date > row.schedules.date ? 'Late' : 'On time' : 'Unscheduled receipt'}</Badge>
         }
     ], [])
 

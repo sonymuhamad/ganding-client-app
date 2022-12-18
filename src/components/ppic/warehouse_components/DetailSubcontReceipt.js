@@ -572,7 +572,9 @@ const DetailSubcontReceipt = () => {
             SuccessNotif('Delete receipt note subconstruction success')
             navigate('/home/ppic/warehouse')
         } catch (e) {
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [navigate])
 

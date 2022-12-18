@@ -301,8 +301,9 @@ const BaseConversionMaterial = () => {
             SuccessNotif('Delete conversion material success')
             setActionBaseConversionMaterial(prev => prev + 1)
         } catch (e) {
-            FailedNotif('Delete conversion material failed')
-            console.log(e)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [])
 

@@ -14,7 +14,7 @@ export default function BaseAside({ links, activeSection }) {
             return (
                 <Box
                     component={'a'}
-                    href={item.link}
+                    href={`#${item.link}`}
 
                     key={item.label}
                     className={cx(classes.link, { [classes.linkActive]: activeSection === i })}

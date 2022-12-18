@@ -216,7 +216,9 @@ const DetailSupplier = () => {
             navigate('/home/purchasing/suppliers')
             SuccessNotif('Delete supplier success')
         } catch (e) {
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [navigate])
 

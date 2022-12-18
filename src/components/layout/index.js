@@ -17,7 +17,8 @@ import ExpandedDn from "./ExpandedDn";
 import NavLinks from "./NavLinks";
 import ModalEditStockProduct from "./ModalEditStockProduct";
 import ExpandedWarehouseFg from "./ExpandedWarehouseFg";
+import BaseContent from "./BaseContent";
 
-export { Time, BaseAside, BaseLayout, CustomSelectComponent, CustomSelectComponentDetailMrp, CustomSelectComponentMrp, CustomSelectComponentProcess, CustomSelectComponentProduct, CustomSelectComponentReceiptSubcont, ExpandedDeliveryNote, ExpandedDn, ExpandedMaterialOrderList, ExpandedProcess, ExpandedProduct, ExpandedPurchaseOrder, ExpandedSo, ExpandedWarehouseFg, NavLinks, ModalEditStockProduct }
+export { Time, BaseAside, BaseLayout, CustomSelectComponent, CustomSelectComponentDetailMrp, CustomSelectComponentMrp, CustomSelectComponentProcess, CustomSelectComponentProduct, CustomSelectComponentReceiptSubcont, ExpandedDeliveryNote, ExpandedDn, ExpandedMaterialOrderList, ExpandedProcess, ExpandedProduct, ExpandedPurchaseOrder, ExpandedSo, ExpandedWarehouseFg, NavLinks, ModalEditStockProduct, BaseContent }
 
 

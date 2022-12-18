@@ -255,8 +255,9 @@ const DetailProduct = () => {
             SuccessNotif('Delete product success')
             navigate('/home/ppic/product')
         } catch (e) {
-            FailedNotif(e.message.data[0])
-            console.log(e)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [navigate])
 

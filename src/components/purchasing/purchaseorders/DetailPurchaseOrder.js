@@ -647,7 +647,9 @@ const DetailPurchaseOrder = () => {
             navigate('/home/purchasing/purchase-order')
             SuccessNotif('Delete purcase order material success')
         } catch (e) {
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }
 
@@ -722,7 +724,9 @@ const DetailPurchaseOrder = () => {
             SuccessNotif('Delete material order success')
             setMaterialOrderList(moList => moList.filter(mo => mo.id !== parseInt(id)))
         } catch (e) {
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }
 

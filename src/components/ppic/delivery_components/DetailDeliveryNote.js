@@ -395,7 +395,9 @@ const DetailDeliveryNote = () => {
             navigate('/home/ppic/delivery')
             SuccessNotif('Delete delivery note success')
         } catch (e) {
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [navigate])
 
@@ -405,7 +407,9 @@ const DetailDeliveryNote = () => {
             setAction(prev => prev + 1)
             SuccessNotif('Delete product shipped success')
         } catch (e) {
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [])
 

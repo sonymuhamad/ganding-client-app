@@ -362,9 +362,9 @@ const DetailDeliveryNoteMaterial = () => {
             SuccessNotif('Delete delivery note success')
             navigate('/home/ppic/warehouse')
         } catch (e) {
-            console.log(e)
-            FailedNotif('Delete delivery note failed')
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [navigate])
 

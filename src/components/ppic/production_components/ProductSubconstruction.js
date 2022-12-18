@@ -261,7 +261,9 @@ const ExpandedProductSubconstruction = ({ data }) => {
             data.setAction(prev => prev + 1)
             setAction(prev => prev + 1)
         } catch (e) {
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [data, Delete])
 

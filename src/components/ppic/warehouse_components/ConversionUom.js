@@ -219,7 +219,9 @@ const ConversionUom = () => {
             SuccessNotif('Delete success')
             setActionConversionUom(prev => prev + 1)
         } catch (e) {
-            FailedNotif('Delete failed')
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [])
 

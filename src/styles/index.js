@@ -9,6 +9,7 @@ import { salesorderStyle } from './salesorderStyle'
 import { navbarStyle } from './navbarStyle'
 import { loginpageStyle } from './loginpageStyle'
 import { marketingDashboardStyle } from './marketingDashboardStyle'
+import { cardStyle } from './cardStyle'
 
-export { appshellStyle, asideStyle, customStyle, customerPageStyle, salesorderStyle, useErrorPageStyle, sectionStyle, useStyle, navbarStyle, loginpageStyle, marketingDashboardStyle }
+export { appshellStyle, asideStyle, customStyle, customerPageStyle, salesorderStyle, useErrorPageStyle, sectionStyle, useStyle, navbarStyle, loginpageStyle, marketingDashboardStyle, cardStyle }
 

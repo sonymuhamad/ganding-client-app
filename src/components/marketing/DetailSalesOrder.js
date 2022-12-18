@@ -186,8 +186,8 @@ const DetailSalesOrder = () => {
             SuccessNotif('Sales order has been deleted')
             navigate('/home/marketing/sales-order')
         } catch (e) {
-            if (e.message.data) {
-                FailedNotif(e.message.data[0])
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
             }
         }
 

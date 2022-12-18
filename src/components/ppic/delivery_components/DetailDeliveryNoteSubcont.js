@@ -690,7 +690,9 @@ const DetailDeliveryNoteSubcont = () => {
             SuccessNotif('Delete delivery product subconstruction success')
             setAction(prev => prev + 1)
         } catch (e) {
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [])
 
@@ -700,7 +702,9 @@ const DetailDeliveryNoteSubcont = () => {
             navigate('/home/ppic/delivery')
             SuccessNotif('Delete delivery note success')
         } catch (e) {
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [navigate])
 

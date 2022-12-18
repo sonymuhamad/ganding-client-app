@@ -163,9 +163,9 @@ const ProductType = () => {
             setActionProductType(prev => prev + 1)
             SuccessNotif('Delete product type success')
         } catch (e) {
-            console.log(e)
-            FailedNotif('Delete product type failed')
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [])
 

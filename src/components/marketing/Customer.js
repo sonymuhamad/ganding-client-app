@@ -90,7 +90,9 @@ const Customer = () => {
             SuccessNotif('Delete customer success')
             navigate('/home/marketing/customers')
         } catch (e) {
-            FailedNotif(e.message.data[0])
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [Delete, customerId, navigate])
 

@@ -154,8 +154,9 @@ const UnitOfMaterial = () => {
             setUomAction(prev => prev + 1)
             SuccessNotif('Delete unit of material success')
         } catch (e) {
-            console.log(e)
-            FailedNotif('Delete unit of material failed')
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [])
 

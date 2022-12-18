@@ -159,8 +159,10 @@ const Operator = () => {
             SuccessNotif('delete data operator success')
             setAction(prev => prev + 1)
         } catch (e) {
-            console.log(e)
-            FailedNotif(e.message.data)
+
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [])
 

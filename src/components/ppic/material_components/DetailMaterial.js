@@ -182,7 +182,9 @@ const DetailMaterial = () => {
             SuccessNotif('Delete material success')
             navigate('/home/ppic/material')
         } catch (e) {
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [navigate])
 

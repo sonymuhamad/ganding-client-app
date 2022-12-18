@@ -128,8 +128,9 @@ const DetailProduction = () => {
             SuccessNotif('Delete production report success')
             navigate('/home/ppic/production')
         } catch (e) {
-            console.log(e)
-            FailedNotif(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
         }
     }, [navigate, Delete, params.productionId])
 
