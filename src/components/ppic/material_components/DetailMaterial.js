@@ -4,7 +4,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { Title, TextInput, Group, Button, Paper, NumberInput, NativeSelect, Text, Image, FileButton } from "@mantine/core";
 import useScrollSpy from 'react-use-scrollspy'
 
-import { IconTrashX, IconDownload, IconEdit, IconX, IconUpload, IconTrash, IconDotsCircleHorizontal, IconUserCheck, IconAsset, IconPerspective, IconAtom2, IconBuildingWarehouse, IconRuler2, IconDimensions, IconRulerMeasure, IconScale } from "@tabler/icons";
+import { IconTrashX, IconDownload, IconEdit, IconX, IconUpload, IconTrash, IconDotsCircleHorizontal, IconUserCheck, IconAsset, IconPerspective, IconAtom2, IconBuildingWarehouse, IconRuler2, IconDimensions, IconRulerMeasure, IconScale, IconReceipt2 } from "@tabler/icons";
 
 import { openConfirmModal } from "@mantine/modals";
 
@@ -37,6 +37,7 @@ const DetailMaterial = () => {
             length: '',
             supplier: '',
             name: '',
+            price: 0,
             spec: '',
             uom: '',
             weight: '',
@@ -51,6 +52,7 @@ const DetailMaterial = () => {
         length: '',
         name: '',
         spec: '',
+        price: 0,
         supplier: {
             name: ''
         },
@@ -206,9 +208,14 @@ const DetailMaterial = () => {
             setEditAccess(prev => !prev)
             form.resetDirty()
         } catch (e) {
-            FailedNotif('Edit material failed')
             handleClickEditButton()
             console.log(e)
+            form.setErrors(e.message.data)
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+                return
+            }
+            FailedNotif('Edit material failed')
         }
 
     }, [handleClickEditButton])
@@ -297,6 +304,7 @@ const DetailMaterial = () => {
                         icon={<IconUserCheck />}
                         label='Supplier'
                         radius='md'
+                        variant='filled'
                         readOnly
                         defaultValue={detailMaterial.supplier.name}
                     />
@@ -330,8 +338,27 @@ const DetailMaterial = () => {
                             placeholder="select an unit of material"
                             data={uom.map(unit => ({ value: unit.id, label: unit.name }))}
                             {...form.getInputProps('uom')}
-
                         />
+
+
+                        <NumberInput
+                            label='Harga / unit'
+                            placeholder="Input harga per unit"
+                            {...form.getInputProps('price')}
+                            radius='md'
+                            readOnly={!editAccess}
+                            hideControls
+                            min={0}
+                            parser={(value) => value.replace(/\Rp\s?|(,*)/g, '')}
+                            formatter={(value) =>
+                                !Number.isNaN(parseFloat(value))
+                                    ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                                    : 'Rp '
+                            }
+                            icon={<IconReceipt2 />}
+                        />
+
+
 
                         <TextInput
                             icon={<IconBuildingWarehouse />}
@@ -339,8 +366,8 @@ const DetailMaterial = () => {
                             radius='md'
                             value={detailMaterial.warehousematerial.quantity}
                             readOnly
+                            variant='filled'
                         />
-
 
                     </Group>
 
@@ -401,6 +428,7 @@ const DetailMaterial = () => {
                             radius='md'
                         />
                     </Group>
+
                 </form>
 
                 <Group my='lg' >

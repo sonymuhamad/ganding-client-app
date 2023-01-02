@@ -3,77 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRequest } from "../../../hooks";
 
 import { BaseTableExpanded } from "../../tables";
-import { TextInput, Group, Text } from "@mantine/core";
-import { IconBarcode, IconCodeAsterix, IconSortAscending } from "@tabler/icons";
-
-
-
-const ExpandedCustomerList = ({ data }) => {
-    const { most_ordered_product } = data
-    return (
-        <>
-            {most_ordered_product ?
-                <>
-
-                    <Text
-                        align="center"
-                        color='dimmed'
-                        size='sm'
-                        my='xs'
-                    >
-                        Most ordered product
-                    </Text>
-
-                    <Group m='xs' p='xs' grow >
-
-                        <TextInput
-                            label='Product name'
-                            readOnly
-                            radius='md'
-                            icon={<IconBarcode />}
-                            variant='filled'
-                            value={most_ordered_product.name}
-                        />
-
-                        <TextInput
-                            label='Product number'
-                            readOnly
-                            radius='md'
-                            variant='filled'
-                            value={most_ordered_product.code}
-                            icon={<IconCodeAsterix />}
-                        />
-
-                        <TextInput
-                            label="Total ordered"
-                            readOnly
-                            radius='md'
-                            variant='filled'
-                            value={most_ordered_product.total_order}
-                            icon={<IconSortAscending />}
-                            rightSection={<Text color='dimmed' size='xs' >
-                                Unit
-                            </Text>}
-                        />
-
-                    </Group>
-                </>
-
-                :
-
-                <Text
-                    align="center"
-                    m='md'
-                    size='sm'
-                    color='dimmed'
-                >
-                    There are no products ordered by this customer yet
-                </Text>
-            }
-
-        </>
-    )
-}
+import { ExpandedCustomerList } from "../../layout";
 
 
 const CustomerList = () => {

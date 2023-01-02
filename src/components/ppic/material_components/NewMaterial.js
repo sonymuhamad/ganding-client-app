@@ -2,10 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 
 import { useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
-import { TextInput, Group, NumberInput, NativeSelect, Title, Button, Center, Text } from "@mantine/core";
+import { TextInput, Group, NumberInput, NativeSelect, Title, Button, Center, Text, FileButton } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 
-import { IconAsset, IconAtom2, IconDimensions, IconDownload, IconPerspective, IconRuler2, IconRulerMeasure, IconScale, IconUserCheck } from "@tabler/icons";
+import { IconAsset, IconAtom2, IconDimensions, IconDownload, IconPerspective, IconRuler2, IconRulerMeasure, IconScale, IconUserCheck, IconReceipt2, IconUpload, IconTrash } from "@tabler/icons";
 import { SuccessNotif, FailedNotif } from '../../notifications'
 import { useRequest } from "../../../hooks";
 import BreadCrumb from "../../BreadCrumb";
@@ -32,7 +32,8 @@ const NewMaterial = () => {
             uom: '',
             weight: '',
             width: '',
-            thickness: ''
+            thickness: '',
+            price: 0
         }
     })
 
@@ -52,8 +53,19 @@ const NewMaterial = () => {
     ]
 
     const handleSubmit = useCallback(async (val) => {
+
+        const data = val
+        let validData
+
+        if (data.image === null) {
+            const { image, ...restData } = data
+            validData = restData
+        } else {
+            validData = data
+        }
+
         try {
-            await Post(val, 'material-management', 'multipart/form-data')
+            await Post(validData, 'material-management', 'multipart/form-data')
 
             SuccessNotif('New material added successfully')
             navigate('/home/ppic/material')
@@ -157,6 +169,9 @@ const NewMaterial = () => {
                         icon={<IconRuler2 />}
                         hideControls
                         min={0}
+                        rightSection={<Text size='sm' color='dimmed'  >
+                            mm
+                        </Text>}
                         decimalSeparator=','
                         precision={2}
                         step={0.5}
@@ -171,6 +186,9 @@ const NewMaterial = () => {
                         icon={<IconDimensions />}
                         hideControls
                         min={0}
+                        rightSection={<Text size='sm' color='dimmed'  >
+                            mm
+                        </Text>}
                         decimalSeparator=','
                         precision={2}
                         step={0.5}
@@ -180,6 +198,13 @@ const NewMaterial = () => {
                         radius='md'
                         required
                     />
+                </Group>
+
+                <Group
+                    grow
+                    m='xs'
+                >
+
 
                     <NumberInput
                         icon={<IconRulerMeasure />}
@@ -188,6 +213,9 @@ const NewMaterial = () => {
                         decimalSeparator=','
                         precision={2}
                         step={0.5}
+                        rightSection={<Text size='sm' color='dimmed'  >
+                            mm
+                        </Text>}
                         label='Thickness'
                         {...form.getInputProps('thickness')}
                         placeholder="thickness of material"
@@ -197,19 +225,72 @@ const NewMaterial = () => {
                     <NumberInput
                         icon={<IconScale />}
                         hideControls
+                        rightSection={<Text size='sm' color='dimmed'  >
+                            mm
+                        </Text>}
                         min={0}
                         decimalSeparator=','
                         precision={2}
                         step={0.5}
-                        label='Kg/pcs'
+                        label='Berat jenis'
                         {...form.getInputProps('weight')}
-                        placeholder="weight of material"
+                        placeholder="Input berat jenis"
                         radius='md'
                         required
                     />
+
+
+                    <NumberInput
+                        label='Harga / unit'
+                        placeholder="Input harga per unit"
+                        radius='md'
+                        {...form.getInputProps('price')}
+                        hideControls
+                        required
+                        min={0}
+                        parser={(value) => value.replace(/\Rp\s?|(,*)/g, '')}
+                        formatter={(value) =>
+                            !Number.isNaN(parseFloat(value))
+                                ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                                : 'Rp '
+                        }
+                        icon={<IconReceipt2 />}
+                    />
+
                 </Group>
+
             </form>
 
+
+            <Group my='md' >
+
+                <FileButton
+                    radius='md'
+                    leftIcon={<IconUpload />}
+                    style={{ display: form.values.image === null ? '' : 'none' }}
+                    {...form.getInputProps('image')}
+                    accept="image/png,image/jpeg" >
+                    {(props) => <Button   {...props}>Upload image</Button>}
+                </FileButton>
+
+
+                <Button
+                    radius='md'
+                    leftIcon={<IconTrash />}
+                    color='red.7'
+                    onClick={() => {
+                        form.setFieldValue('image', null)
+                    }}
+                    style={{ display: form.values.image !== null ? '' : 'none' }} >
+                    Delete image
+                </Button>
+
+                {form.values.image && (
+                    <Text size="sm" color='dimmed' align="center" mt="sm">
+                        {form.values.image.name}
+                    </Text>
+                )}
+            </Group>
 
 
             <Center my='md' >

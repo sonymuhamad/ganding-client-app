@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 
 import { useRequest } from "../../../hooks";
-import { BaseTable } from "../../tables";
+import { BaseTableExpanded } from "../../tables";
 import { Badge } from "@mantine/core";
+import { ExpandedDescriptionDelivery } from "../../layout";
 
 
 const ProductDeliveryList = () => {
@@ -44,9 +45,10 @@ const ProductDeliveryList = () => {
     }, [])
 
     return (
-        <BaseTable
+        <BaseTableExpanded
             column={columnProductDelivery}
             data={productDeliveryList}
+            expandComponent={ExpandedDescriptionDelivery}
             noData="There is no product delivery data"
         />
     )

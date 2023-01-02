@@ -1,48 +1,10 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useMemo } from "react";
 
-import { SegmentedControl, Button, Collapse, Group, TextInput } from "@mantine/core";
-import { IconDotsCircleHorizontal, IconPlus, IconSearch } from "@tabler/icons";
+import { BaseContent } from "../layout";
 
-import { Link } from "react-router-dom";
-
-import { BaseTableExpanded } from "../tables";
-import BreadCrumb from "../BreadCrumb";
-import { useRequest } from "../../hooks";
-import { ExpandedSo } from "../layout";
-
+import { SalesOrderList } from "./sales_order_components";
 
 export default function SalesOrder() {
-
-    const { Loading, GetAndExpiredTokenHandler } = useRequest()
-    const [activeSegment, setActiveSegment] = useState('on_progress')
-    const [salesOrderProgress, setSalesOrderProgress] = useState([])
-    const [salesOrderPending, setSalesOrderPending] = useState([])
-    const [salesOrderDone, setSalesOrderDone] = useState([])
-    const [searchVal, setSearchVal] = useState('')
-
-    const filteredSalesOrderDone = useMemo(() => {
-
-        const valFiltered = searchVal.toLowerCase()
-
-        return salesOrderDone.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
-
-    }, [searchVal, salesOrderDone])
-
-    const filteredSalesOrderProgress = useMemo(() => {
-
-        const valFiltered = searchVal.toLowerCase()
-
-        return salesOrderProgress.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
-
-    }, [searchVal, salesOrderProgress])
-
-    const filteredSalesOrderPending = useMemo(() => {
-        const valFiltered = searchVal.toLowerCase()
-
-        return salesOrderPending.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
-
-    }, [searchVal, salesOrderPending])
-
 
     const breadcrumb = useMemo(() => [
         {
@@ -55,159 +17,29 @@ export default function SalesOrder() {
         }
     ], [])
 
-    const columnSo = useMemo(() => [
-        // columns for sales order tables
-        {
-            name: 'Customer',
-            selector: row => row.customer.name,
-            sortable: true,
-        },
-        {
-            name: 'Code',
-            selector: row => row.code,
-        },
-        {
-            name: 'Date',
-            selector: row => row.date,
-            sortable: true
-        },
-        {
-            name: 'Amount of product',
-            selector: row => row.amountOfProduct,
 
-        },
+    const links = useMemo(() => [
         {
-            name: '',
-            selector: row => row.detailSalesOrderButton,
-            style: {
-                padding: 0,
-            }
-        }
-
+            "label": "Sales order",
+            "link": "sales-order",
+            "order": 1
+        },
     ], [])
 
-    useEffect(() => {
-        const fetch = async () => {
-            try {
-                const salesorders = await GetAndExpiredTokenHandler('sales-order-list')
-                let on_progress = []
-                let pending = []
-                let done = []
-
-                for (const so of salesorders) {
-                    so['detailSalesOrderButton'] = <Button
-
-                        leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                        color='teal.8'
-                        variant='subtle'
-                        radius='md'
-                        component={Link}
-                        to={`/home/marketing/sales-order/${so.id}`}
-                    >
-                        Detail
-                    </Button>
-                    so['amountOfProduct'] = so.productorder_set.length
-                    if (so.done === true) {
-                        done = [...done, so]
-                    } else {
-                        if (so.fixed === true) {
-                            on_progress = [...on_progress, so]
-                        } else {
-                            pending = [...pending, so]
-                        }
-                    }
-                }
-
-
-                setSalesOrderDone(done)
-                setSalesOrderPending(pending)
-                setSalesOrderProgress(on_progress)
-
-            } catch (e) {
-                console.log(e)
-            }
+    const contents = useMemo(() => [
+        {
+            description: '',
+            component: <SalesOrderList />
         }
-
-        fetch()
-    }, [])
+    ], [])
 
 
     return (
-        <>
-            <BreadCrumb links={breadcrumb} />
-            <Loading />
-            <Group position="apart" >
-
-                <SegmentedControl
-                    value={activeSegment}
-                    onChange={setActiveSegment}
-                    data={[
-                        { label: 'On Progress', value: 'on_progress' },
-                        { label: 'Pending', value: 'pending' },
-                        { label: 'Done', value: 'done' },
-                    ]}
-                    size='md'
-                    color='blue'
-                    radius='md'
-
-                />
-                <Group>
-
-                    <TextInput
-                        icon={<IconSearch />}
-                        placeholder='Search'
-                        value={searchVal}
-                        onChange={e => setSearchVal(e.target.value)}
-                        radius='md'
-                    />
-                    <Button
-                        radius='md'
-                        leftIcon={<IconPlus />}
-                        component={Link}
-                        variant='outline'
-                        to='/home/marketing/sales-order/new'
-                    >
-                        New Sales Order
-                    </Button>
-                </Group>
-            </Group>
-
-
-
-
-
-            <Collapse
-                in={activeSegment === 'on_progress'}
-            >
-                <BaseTableExpanded
-                    column={columnSo}
-                    data={filteredSalesOrderProgress}
-                    expandComponent={ExpandedSo}
-                />
-
-            </Collapse>
-            <Collapse
-                in={activeSegment === 'pending'}
-            >
-                <BaseTableExpanded
-                    column={columnSo}
-                    data={filteredSalesOrderPending}
-                    expandComponent={ExpandedSo}
-                />
-
-            </Collapse>
-            <Collapse
-                in={activeSegment === 'done'}
-            >
-                <BaseTableExpanded
-                    column={columnSo}
-                    data={filteredSalesOrderDone}
-                    expandComponent={ExpandedSo}
-                />
-
-            </Collapse>
-
-        </>
+        <BaseContent
+            links={links}
+            breadcrumb={breadcrumb}
+            contents={contents}
+        />
     )
 
 }

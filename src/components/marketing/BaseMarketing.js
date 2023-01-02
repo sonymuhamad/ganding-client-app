@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 
-import { IconLayoutDashboard, IconClipboardText, IconReportMoney, IconUsers, } from "@tabler/icons";
+import { IconLayoutDashboard, IconReportMoney, IconUsers, IconTruckDelivery, IconClipboardList, } from "@tabler/icons";
 import { Outlet } from "react-router-dom";
 
 import { NavLinks, BaseLayout } from '../layout'
@@ -26,14 +26,20 @@ const BaseMarketing = () => {
             {
                 label: 'Sales Order',
                 activeLabel: 'Sales Order',
-                icon: <IconReportMoney stroke={2} size={20} />,
+                icon: <IconClipboardList stroke={2} size={20} />,
                 url: '/home/marketing/sales-order'
             },
             {
                 label: 'Delivery Note',
                 activeLabel: 'Delivery Note',
-                icon: <IconClipboardText stroke={2} size={20} />,
+                icon: <IconTruckDelivery stroke={2} size={20} />,
                 url: '/home/marketing/delivery-note'
+            },
+            {
+                label: 'Invoice',
+                activeLabel: 'Invoice',
+                icon: <IconReportMoney stroke={2} size={20} />,
+                url: '/home/marketing/invoice'
             },
         ]
     }, [])

@@ -4,7 +4,7 @@ import { useForm } from "@mantine/form";
 import { TextInput, NumberInput, ActionIcon, NativeSelect, Group, Title, Button, FileButton, Text, Divider, UnstyledButton, Paper, Center } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 
-import { IconWriting, IconFileTypography, IconCodeAsterix, IconScale, IconTrashX, IconDownload, IconUser, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload } from "@tabler/icons";
+import { IconWriting, IconFileTypography, IconCodeAsterix, IconScale, IconTrashX, IconDownload, IconUser, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload, IconReceipt2 } from "@tabler/icons";
 
 import BreadCrumb from "../../BreadCrumb";
 import { useRequest } from "../../../hooks";
@@ -32,6 +32,7 @@ const NewProduct = () => {
             customer: '',
             weight: '',
             type: '',
+            price: 0,
             ppic_process_related: [],
         }
     })
@@ -398,13 +399,38 @@ const NewProduct = () => {
                         {...form.getInputProps('type')}
                         data={productType.map(type => ({ value: type.id, label: type.name }))}
                     />
-                    <TextInput
+                    <NumberInput
                         required
                         radius='md'
                         {...form.getInputProps('weight')}
                         icon={<IconScale />}
-                        label='Kg/pcs'
+                        label='Weight / unit'
+                        min={0}
+                        rightSection={<Text size='sm' color='dimmed'  >
+                            Kg
+                        </Text>}
+                        decimalSeparator=','
+                        precision={2}
+                        step={0.5}
                     />
+
+                    <NumberInput
+                        label='Harga / unit'
+                        placeholder="Input harga per unit"
+                        {...form.getInputProps('price')}
+                        radius='md'
+                        hideControls
+                        required
+                        min={0}
+                        parser={(value) => value.replace(/\Rp\s?|(,*)/g, '')}
+                        formatter={(value) =>
+                            !Number.isNaN(parseFloat(value))
+                                ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                                : 'Rp '
+                        }
+                        icon={<IconReceipt2 />}
+                    />
+
                 </Group>
 
 

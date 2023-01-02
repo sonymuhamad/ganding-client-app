@@ -311,7 +311,7 @@ const DetailUser = () => {
                 radius='md'
                 onClick={() => openConfirmDeleteGroup(newGroup.id)}
             >
-                Delete
+                Remove
             </Button>
         }])
 
@@ -326,7 +326,7 @@ const DetailUser = () => {
                 radius='md'
                 onClick={() => openConfirmDeletePermission(newPermission.id)}
             >
-                Delete
+                Remove
             </Button>
         }])
     }, [])
@@ -359,7 +359,7 @@ const DetailUser = () => {
                     radius='md'
                     onClick={() => openConfirmDeleteGroup(group.id)}
                 >
-                    Delete
+                    Remove
                 </Button>
             })))
             setPermissionList(user_permissions.map(permission => ({
@@ -370,7 +370,7 @@ const DetailUser = () => {
                     radius='md'
                     onClick={() => openConfirmDeletePermission(permission.id)}
                 >
-                    Delete
+                    Remove
                 </Button>
             })))
             form.setValues(rest)

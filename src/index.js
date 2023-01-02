@@ -5,7 +5,7 @@ import App from './App';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 
-import { MarketingDashboard, DeliveryNote, DetailSalesOrder, MarketingDetailDeliveryNote, MarketingDetailProduct, NewSalesOrder, SalesOrder, Customer, Customers, BaseMarketing } from './components'
+import { MarketingDashboard, DeliveryNote, DetailSalesOrder, MarketingDetailDeliveryNote, SalesOrder, DetailCustomer, Customers, BaseMarketing, Invoice, DetailInvoice } from './components'
 
 
 import { BasePurchasing, PurchasingDashboard, PurchaseOrder, Suppliers, DetailSupplier, DetailPurchaseOrder, DetailMaterial as MaterialDetail, Material, Login, Error, ProtectedLayout, DetailMaterialReceiptNote, ReceiptNote, DetailSubcontReceiptNote, PurchasingDetailDeliveryNoteSubcont } from './components';
@@ -46,14 +46,15 @@ root.render(
             <Route path='customers' element={<Customers />} />
 
 
-            <Route path='customers/:customerId' element={<Customer />} />
-            <Route path='customers/:customerId/:productId' element={<MarketingDetailProduct />} />
+            <Route path='customers/:customerId' element={<DetailCustomer />} />
             <Route path='delivery-note' element={<DeliveryNote />} />
-            <Route path='delivery-note/:deliverynoteId' element={<MarketingDetailDeliveryNote />} />
+            <Route path='delivery-note/:deliveryNoteId' element={<MarketingDetailDeliveryNote />} />
 
             <Route path='sales-order' element={<SalesOrder />} />
             <Route path='sales-order/:salesOrderId' element={<DetailSalesOrder />} />
-            <Route path='sales-order/new' element={<NewSalesOrder />} />
+
+            <Route path='invoice' element={<Invoice />} />
+            <Route path='invoice/:invoiceId' element={<DetailInvoice />} />
 
           </Route>
 

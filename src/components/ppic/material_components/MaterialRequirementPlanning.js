@@ -6,7 +6,7 @@ import { CustomSelectComponentDetailMrp } from "../../layout"
 import { BaseTableExpanded, BaseTable } from "../../tables"
 import { SuccessNotif, FailedNotif } from "../../notifications"
 
-import { Paper, TextInput, Group, NumberInput, Divider, Text, Button, ActionIcon, Select, NativeSelect } from "@mantine/core"
+import { Paper, TextInput, Group, NumberInput, Divider, Text, Button, ActionIcon, Select, NativeSelect, Badge } from "@mantine/core"
 
 import { IconPlus, IconZoomCheck, IconAsset, IconBuildingWarehouse, IconAssembly, IconBarcode, IconTrash, IconChecklist, IconEdit, IconClipboardList, IconDownload } from "@tabler/icons"
 
@@ -478,6 +478,16 @@ const MaterialRequirementPlanning = () => {
         {
             name: 'Quantity needed',
             selector: row => `${row.quantity} ${row.material.uom.name}`
+        },
+        {
+            name: 'Request type',
+            selector: row => row.id ? <Badge
+                variant='filled'
+                color='teal.6'
+            >Additional</Badge> : <Badge
+                color='blue.6'
+                variant='filled'
+            >Production</Badge>
         },
         {
             name: '',

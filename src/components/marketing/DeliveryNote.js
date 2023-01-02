@@ -1,24 +1,10 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { BaseTableExpanded } from "../tables";
-import { ExpandedDn } from "../layout";
-import { useRequest } from "../../hooks";
-import { IconSearch, IconDotsCircleHorizontal } from "@tabler/icons";
-import { TextInput, Button, Group } from "@mantine/core";
-import BreadCrumb from "../BreadCrumb";
-import { Link } from "react-router-dom";
+import React, { useMemo } from "react";
+
+import { BaseContent } from "../layout";
+import { DeliveryNoteList } from './deliver_note_components'
 
 export default function DeliveryNote() {
 
-    const [deliveryNotes, setDeliveryNotes] = useState([])
-    const { GetAndExpiredTokenHandler } = useRequest()
-    const [searchVal, setSearchVal] = useState('')
-
-    const filteredDeliveryNotes = useMemo(() => {
-
-        const valFiltered = searchVal.toLowerCase()
-        return deliveryNotes.filter((dn) => dn.customer.name.toLowerCase().includes(valFiltered) || dn.created.includes(valFiltered) || dn.code.includes(valFiltered))
-
-    }, [deliveryNotes, searchVal])
 
     const breadcrumb = [
         {
@@ -31,91 +17,33 @@ export default function DeliveryNote() {
         }
     ]
 
-    useEffect(() => {
-        const fetch = async () => {
-            try {
-                const deliveryNotes = await GetAndExpiredTokenHandler('delivery-notes')
 
-                const dn = deliveryNotes.map(dn => {
-                    dn['detailDeliveryNoteButton'] = <Button
-                        component={Link}
-                        to={`/home/marketing/delivery-note/${dn.id}`}
-                        leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                        color='teal.8'
-                        variant='subtle'
-                        radius='md'
-                    >
-                        Detail
-                    </Button>
-                    return dn
-                })
+    const links = useMemo(() => [
+        {
+            "label": "Delivery notes",
+            "link": "delivery-notes",
+            "order": 1
+        },
+    ], [])
 
-                setDeliveryNotes(dn)
-
-
-            } catch (e) {
-                console.log(e)
-            }
+    const contents = useMemo(() => [
+        {
+            description: '',
+            component: <DeliveryNoteList />
         }
-        fetch()
-    }, [])
-
-
-
-    const columnDeliveryNote = useMemo(() => [
-        // columns for delivery notes
-        {
-            name: 'Customer',
-            selector: row => row.customer.name
-        },
-        {
-            name: 'Code',
-            selector: row => row.code,
-        },
-        {
-            name: 'Created at',
-            selector: row => new Date(row.created).toLocaleString(),
-            sortable: true
-        },
-        {
-            name: '',
-            selector: row => row.detailDeliveryNoteButton,
-            style: {
-                padding: 0,
-            }
-        }
-
     ], [])
 
 
 
+
+
+
     return (
-        <>
-
-            <BreadCrumb links={breadcrumb} />
-            <Group position='right' >
-
-                <TextInput
-                    icon={<IconSearch />}
-                    placeholder='Search'
-                    value={searchVal}
-                    onChange={e => setSearchVal(e.target.value)}
-                    radius='md'
-                />
-            </Group>
-
-
-
-            <BaseTableExpanded
-                column={columnDeliveryNote}
-                data={filteredDeliveryNotes}
-                expandComponent={ExpandedDn}
-            />
-
-
-        </>
-
-
+        <BaseContent
+            links={links}
+            breadcrumb={breadcrumb}
+            contents={contents}
+        />
     )
 
 }

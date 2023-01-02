@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 
 import useScrollSpy from 'react-use-scrollspy'
 
-import { IconFileTypography, IconList, IconCodeAsterix, IconBarbell, IconTrashX, IconDownload, IconEdit, IconX, IconUser, IconBuildingWarehouse, IconDialpad, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload, IconSum, IconArrowsSort } from "@tabler/icons"
+import { IconFileTypography, IconList, IconCodeAsterix, IconBarbell, IconTrashX, IconDownload, IconEdit, IconX, IconUser, IconBuildingWarehouse, IconDialpad, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload, IconSum, IconArrowsSort, IconReceipt2 } from "@tabler/icons"
 
 import { Title, TextInput, Group, Paper, Image, Button, FileButton, Text, Badge, ActionIcon, Divider, NumberInput, Center, UnstyledButton, Select } from "@mantine/core"
 import { useForm } from "@mantine/form"
@@ -100,6 +100,7 @@ const DetailProduct = () => {
             customer: '',
             process: '',
             weight: '',
+            price: 0,
             productordered: 0,
             productdelivered: 0,
             type: '',
@@ -769,7 +770,7 @@ const DetailProduct = () => {
                             form='formEditProduct'
                             size='xs'
                             color='blue.6'
-                            disabled={!editAccess ? true : form.isDirty() ? false : true}
+                            disabled={!editAccess && form.isDirty() ? false : true}
                             leftIcon={<IconDownload />} >
                             Save Changes</Button>
                         <Button
@@ -810,6 +811,7 @@ const DetailProduct = () => {
                         label='Product number'
                         {...form.getInputProps('code')}
                     />
+
                     <Group mt='md' grow >
 
                         <Select
@@ -823,13 +825,39 @@ const DetailProduct = () => {
                         />
 
 
-                        <TextInput
+                        <NumberInput
                             readOnly={!editAccess ? true : false}
                             radius='md'
                             required
                             icon={<IconBarbell />}
-                            label='Weight per piece'
+                            label='Weight / unit'
                             {...form.getInputProps('weight')}
+                            min={0}
+                            rightSection={<Text size='sm' color='dimmed'  >
+                                Kg
+                            </Text>}
+                            decimalSeparator=','
+                            precision={2}
+                            step={0.5}
+                        />
+
+
+                        <NumberInput
+                            label='Harga / unit'
+                            placeholder="Input harga per unit"
+                            {...form.getInputProps('price')}
+                            radius='md'
+                            readOnly={!editAccess ? true : false}
+                            hideControls
+                            required
+                            min={0}
+                            parser={(value) => value.replace(/\Rp\s?|(,*)/g, '')}
+                            formatter={(value) =>
+                                !Number.isNaN(parseFloat(value))
+                                    ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                                    : 'Rp '
+                            }
+                            icon={<IconReceipt2 />}
                         />
 
                     </Group>
@@ -838,12 +866,14 @@ const DetailProduct = () => {
                         <TextInput
                             radius='md'
                             readOnly
+                            variant='filled'
                             icon={<IconList />}
                             label='Number of process'
                             {...form.getInputProps('process')}
                         />
 
                         <TextInput
+                            variant='filled'
                             label='Total stock'
                             icon={<IconSum />}
                             radius='md'

@@ -26,7 +26,7 @@ function App() {
           primaryColor: 'blue',
           defaultRadius: 0,
           headings: {
-            fontFamily: 'Monospace',
+            fontFamily: 'Arial, Helvetica, sans-serif',
             fontWeight: 1000
           },
           components: {

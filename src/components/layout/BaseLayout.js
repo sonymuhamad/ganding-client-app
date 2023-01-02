@@ -1,8 +1,7 @@
 import React, { useCallback, useContext } from "react";
-import { AppShell, Navbar, Header, Footer, Group, Menu, Text, Button, Image, ScrollArea, NavLink, Tooltip } from "@mantine/core";
+import { AppShell, Navbar, Header, Footer, Group, Menu, Text, Button, Image, NavLink, Tooltip } from "@mantine/core";
 import { IconUserCircle, IconLogout } from "@tabler/icons";
-import { appshellStyle } from "../../styles";
-import Time from "./Time";
+import { appshellStyle } from "../../styles"
 import { AuthContext } from "../../context";
 import { DivisionIcons } from "../../services";
 import { openConfirmModal } from "@mantine/modals";
@@ -41,7 +40,7 @@ const BaseLayout = ({ outlet, navlink }) => {
                             <div className={classes.innerHeaderLeft}  >
                                 <Group position="left" >
 
-                                    <Image src="/logoganding.png" radius='xl' className={classes.image} />
+                                    <Image src="/logo.png" radius='xl' className={classes.image} />
 
                                     <Text variant="gradient"
                                         gradient={{ from: 'indigo', to: 'cyan', deg: 90 }}
@@ -53,18 +52,14 @@ const BaseLayout = ({ outlet, navlink }) => {
 
                             <div className={classes.innerHeaderRight} >
 
-                                <Group position="left" >
-
-                                    <Text className={classes.responsiveTime} color='dimmed' align="left" >
-                                        <Time />
-                                    </Text>
+                                <Group position="left"  >
 
                                     <Menu openDelay={50} closeDelay={400} mb='xs' position="left-start" withArrow  >
 
                                         <Menu.Target height='xl' >
 
                                             <Button
-                                                size='lg'
+                                                size='xl'
                                                 radius='xl'
                                                 color='dark.4'
                                                 variant="subtle"
@@ -75,7 +70,7 @@ const BaseLayout = ({ outlet, navlink }) => {
                                                     },
                                                 })}
 
-                                                leftIcon={<IconUserCircle width={45} height={45} color='#101113' />}
+                                                leftIcon={<IconUserCircle width={40} height={40} color='#101113' />}
 
                                             >
 

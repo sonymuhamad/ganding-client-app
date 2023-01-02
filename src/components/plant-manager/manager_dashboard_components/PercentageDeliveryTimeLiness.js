@@ -12,11 +12,11 @@ const PercentageDeliveryTimeLiness = () => {
     const [totalScheduleOnTime, setTotalScheduleOnTime] = useState(0)
     const [unscheduledDelivery, setUnscheduledDelivery] = useState(0)
 
-    const { Get } = useRequest()
+    const { GetAndExpiredTokenHandler, Loading } = useRequest()
 
     useEffect(() => {
 
-        Get('report-timeliness-delivery').then(data => {
+        GetAndExpiredTokenHandler('report-timeliness-delivery').then(data => {
             const { percentage, total_schedule, total_schedule_on_time, unscheduled } = data
 
             setPercentage(percentage)
@@ -30,6 +30,8 @@ const PercentageDeliveryTimeLiness = () => {
 
     return (
         <>
+            <Loading />
+
             <Card withBorder p="xl" radius="md" className={classes.card}>
                 <div className={classes.inner}>
                     <div>

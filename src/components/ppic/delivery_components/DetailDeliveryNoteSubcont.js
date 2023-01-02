@@ -11,7 +11,7 @@ import { SuccessNotif, FailedNotif } from "../../notifications"
 import { TextInput, Text, Group, Select, NumberInput, Paper, Divider, Title, Button, Textarea, UnstyledButton, ThemeIcon } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { DatePicker } from "@mantine/dates";
-import { IconUserCheck, IconTrashX, IconEdit, IconCodeAsterix, IconBarcode, IconClipboardCheck, IconDownload, IconCalendarEvent, IconTruckDelivery, IconUser, IconX, IconPlus, IconSortAscending2, IconTrash, IconRegex, IconPackgeExport, IconTimeline, IconAsset, IconXboxX, IconCircleCheck, IconCircleDotted, IconPackgeImport } from "@tabler/icons";
+import { IconUserCheck, IconTrashX, IconEdit, IconCodeAsterix, IconBarcode, IconClipboardCheck, IconDownload, IconCalendarEvent, IconTruckDelivery, IconUser, IconX, IconPlus, IconSortAscending2, IconTrash, IconRegex, IconPackgeExport, IconTimeline, IconAsset, IconXboxX, IconCircleCheck, IconCircleDotted, IconPackgeImport, IconClipboard } from "@tabler/icons";
 import { openConfirmModal, closeAllModals, openModal } from "@mantine/modals";
 
 import { BaseTableExpanded, BaseTable } from "../../tables"
@@ -164,6 +164,7 @@ const ModalAddProductSubcont = ({ setAction, deliveryNoteSubcontId }) => {
     const [selectedProduct, setSelectedProduct] = useState(null)
     const [selectedProcess, setSelectedProcess] = useState(null)
     const [quantity, setQuantity] = useState('')
+    const [description, setDescription] = useState('')
 
     const [errorProduct, setErrorProduct] = useState(false)
     const [errorProcess, setErrorProcess] = useState(false)
@@ -191,7 +192,8 @@ const ModalAddProductSubcont = ({ setAction, deliveryNoteSubcontId }) => {
             deliver_note_subcont: deliveryNoteSubcontId,
             product: selectedProduct,
             process: selectedProcess,
-            quantity: quantity
+            quantity: quantity,
+            description: description
         }
 
         try {
@@ -306,6 +308,16 @@ const ModalAddProductSubcont = ({ setAction, deliveryNoteSubcontId }) => {
                 />
             </Group>
 
+            <Textarea
+                label='Keterangan'
+                placeholder="Input keterangan"
+                radius='md'
+                m='xs'
+                icon={<IconClipboard />}
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+            />
+
 
             {selectedProcess !== null &&
                 <Paper m='xl'  >
@@ -326,6 +338,7 @@ const ModalAddProductSubcont = ({ setAction, deliveryNoteSubcontId }) => {
 
                                 <TextInput
                                     radius='md'
+                                    variant="filled"
                                     label='Material name'
                                     readOnly
                                     value={reqMat.material.name}
@@ -333,6 +346,7 @@ const ModalAddProductSubcont = ({ setAction, deliveryNoteSubcontId }) => {
 
                                 <TextInput
                                     radius='md'
+                                    variant="filled"
                                     label='Stock'
                                     readOnly
                                     value={reqMat.material.warehousematerial}
@@ -340,6 +354,7 @@ const ModalAddProductSubcont = ({ setAction, deliveryNoteSubcontId }) => {
 
                                 <TextInput
                                     radius='md'
+                                    variant="filled"
                                     label='Number of needs'
                                     readOnly
                                     value={quantity === '' || quantity === 0 || quantity === undefined ? 0 :
@@ -471,6 +486,9 @@ const ModalEditProductSubcont = ({ setAction, data }) => {
     const [quantity, setQuantity] = useState(() => {
         return data.quantity
     })
+    const [description, setDescription] = useState(() => {
+        return data.description
+    })
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -478,7 +496,8 @@ const ModalEditProductSubcont = ({ setAction, data }) => {
             deliver_note_subcont: data.deliver_note_subcont.id,
             product: data.product.id,
             process: data.process.id,
-            quantity: quantity
+            quantity: quantity,
+            description: description
         }
         try {
             await Put(data.id, validated_data, 'product-delivery-subcont-management')
@@ -506,7 +525,7 @@ const ModalEditProductSubcont = ({ setAction, data }) => {
                 readOnly
                 value={data.product.name}
                 icon={<IconBarcode />}
-                variant='unstyled'
+                variant='filled'
                 radius='md'
                 m='xs'
             />
@@ -516,7 +535,7 @@ const ModalEditProductSubcont = ({ setAction, data }) => {
                 readOnly
                 value={data.product.code}
                 icon={<IconRegex />}
-                variant='unstyled'
+                variant='filled'
                 radius='md'
                 m='xs'
             />
@@ -525,12 +544,23 @@ const ModalEditProductSubcont = ({ setAction, data }) => {
                 value={quantity}
                 label='Quantity of product shipped'
                 m='xs'
+                placeholder="Input quantity"
                 radius='md'
                 hideControls
                 min={0}
                 onChange={value => {
                     setQuantity(value)
                 }}
+            />
+
+            <Textarea
+                value={description}
+                label='Keterangan'
+                placeholder="Input keterangan"
+                m='xs'
+                radius='md'
+                icon={<IconClipboard />}
+                onChange={e => setDescription(e.target.value)}
             />
 
             <Button

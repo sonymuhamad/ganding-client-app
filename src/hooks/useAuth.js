@@ -43,6 +43,16 @@ export const useAuth = () => {
             saveToLocalStorage(updatedUser)
             return updatedUser
         })
+
+        showNotification({
+            title: 'Change division success',
+            message: `Currently used division is changed to ${name.toUpperCase()}`,
+            disallowClose: true,
+            radius: 'md',
+            autoClose: 3000,
+            icon: <IconChecks />
+        })
+
     }, [saveToLocalStorage])
 
     const setDataUser = useCallback((data_user) => {
@@ -64,6 +74,8 @@ export const useAuth = () => {
             const name_prev_division = redirect.split('/')[2]
             if (checkPreviousDivision(data_user.groups, name_prev_division)) {
                 data_user.division = name_prev_division
+            } else {
+                redirect = `/home/${data_user.division}`
             }
 
 

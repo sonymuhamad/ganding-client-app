@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { BaseContent } from "../layout";
 
-import { SupplierList, PercentageMaterialReceiptSchedule, PurchaseOrderChart, MaterialOrderList, MaterialReceiptList } from './purchase_report_components'
+import { SupplierList, PurchaseOrderChart, MaterialOrderList, MaterialReceiptList } from './purchase_report_components'
 
 
 export default function PurchaseReport() {
@@ -38,11 +38,6 @@ export default function PurchaseReport() {
             "link": "supplier-report",
             "order": 1
         },
-        {
-            "label": "Percentage of timely receipt of material",
-            "link": "timely-receipt-percentage",
-            "order": 1
-        },
     ], [])
 
     const contents = useMemo(() => [
@@ -61,10 +56,6 @@ export default function PurchaseReport() {
         {
             description: '',
             component: <SupplierList />
-        },
-        {
-            description: '',
-            component: <PercentageMaterialReceiptSchedule />
         }
     ], [])
 

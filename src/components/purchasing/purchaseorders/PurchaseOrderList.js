@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button, Group, TextInput, Select } from "@mantine/core";
-import { IconPlus, IconSearch, IconDotsCircleHorizontal, IconUserCheck, IconCodeAsterix, IconCalendar, IconDownload } from "@tabler/icons";
+import { Button, Group, TextInput, Select, Textarea, NumberInput, Text } from "@mantine/core";
+import { IconPlus, IconSearch, IconDotsCircleHorizontal, IconUserCheck, IconCodeAsterix, IconCalendar, IconDownload, IconReceiptTax, IconDiscount2, IconClipboard } from "@tabler/icons";
 import { useForm } from "@mantine/form";
 import { openModal, closeAllModals } from "@mantine/modals";
 import { DatePicker } from "@mantine/dates";
@@ -23,7 +23,10 @@ const ModalAddPurchaseOrder = () => {
         initialValues: {
             code: '',
             supplier: null,
-            date: null
+            date: null,
+            description: '',
+            tax: 10,
+            discount: 0,
         }
     })
 
@@ -35,6 +38,7 @@ const ModalAddPurchaseOrder = () => {
         } else {
             validate_data = value
         }
+
 
         try {
             const newPo = await Post(validate_data, 'purchase-order-management')
@@ -81,14 +85,57 @@ const ModalAddPurchaseOrder = () => {
                 {...form.getInputProps('code')}
             />
 
-            <DatePicker
-                label='Date'
-                placeholder="Pick order date"
-                radius='md'
+            <Group m='xs' grow >
+
+
+                <DatePicker
+                    label='Date'
+                    placeholder="Pick order date"
+                    radius='md'
+                    icon={<IconCalendar />}
+                    {...form.getInputProps('date')}
+                />
+
+
+                <NumberInput
+                    label='Ppn'
+                    placeholder="Input ppn dalam persen"
+                    radius='md'
+                    required
+                    min={0}
+                    hideControls
+                    rightSection={<Text size='sm' color='dimmed' >
+                        %
+                    </Text>}
+                    icon={<IconReceiptTax />}
+                    {...form.getInputProps('tax')}
+                />
+
+                <NumberInput
+                    label='Discount'
+                    placeholder="Input discount dalam persen"
+                    radius='md'
+                    min={0}
+                    required
+                    hideControls
+                    rightSection={<Text size='sm' color='dimmed' >
+                        %
+                    </Text>}
+                    icon={<IconDiscount2 />}
+                    {...form.getInputProps('discount')}
+                />
+            </Group>
+
+
+            <Textarea
+                label='Keterangan'
+                placeholder="Input keterangan"
                 m='xs'
-                icon={<IconCalendar />}
-                {...form.getInputProps('date')}
+                radius='md'
+                icon={<IconClipboard />}
+                {...form.getInputProps('description')}
             />
+
 
             <Button
                 fullWidth
@@ -147,7 +194,7 @@ const PurchaseOrderList = () => {
     const openModalAddPurchaseOrder = useCallback(() => openModal({
         title: "Add purchase order material",
         radius: 'md',
-        size: 'lg',
+        size: 'xl',
         children: <ModalAddPurchaseOrder />
     }), [])
 

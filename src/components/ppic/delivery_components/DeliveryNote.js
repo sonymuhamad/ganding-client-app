@@ -23,6 +23,7 @@ const ExpandedDeliveryNote = ({ data }) => {
                 radius='md'
                 value={data.note}
                 m='xs'
+                variant="filled"
                 icon={<IconClipboardCheck />}
             />
 
@@ -33,6 +34,7 @@ const ExpandedDeliveryNote = ({ data }) => {
                     readOnly
                     label='Driver'
                     radius='md'
+                    variant='filled'
                     value={data.driver.name}
                 />
 
@@ -41,6 +43,7 @@ const ExpandedDeliveryNote = ({ data }) => {
                     readOnly
                     label='Vehicle number'
                     radius='md'
+                    variant="filled"
                     value={data.vehicle.license_part_number}
                 />
             </Group>
@@ -52,6 +55,7 @@ const ExpandedDeliveryNote = ({ data }) => {
                         icon={<IconBarcode />}
                         readOnly
                         radius='md'
+                        variant='filled'
                         label='Product name'
                         value={delivered.product_order.product.name}
                     />
@@ -60,6 +64,7 @@ const ExpandedDeliveryNote = ({ data }) => {
                         icon={<IconCodeAsterix />}
                         readOnly
                         radius='md'
+                        variant='filled'
                         label='Product number'
                         value={delivered.product_order.product.code}
                     />
@@ -68,6 +73,7 @@ const ExpandedDeliveryNote = ({ data }) => {
                         icon={<IconPackgeExport />}
                         readOnly
                         radius='md'
+                        variant='filled'
                         label='Quantity shipped'
                         value={delivered.quantity}
                     />

@@ -12,13 +12,17 @@ import { Button, Group, TextInput, Text, Select, Textarea, Title, Divider, Paper
 import { useForm } from "@mantine/form";
 import { DatePicker } from "@mantine/dates";
 import { closeAllModals, openConfirmModal, openModal } from "@mantine/modals";
-import { IconClipboardCheck, IconUser, IconCodeAsterix, IconPlus, IconCalendarEvent, IconDownload, IconTruckDelivery, IconUserCheck, IconTrashX, IconEdit, IconX, IconBarcode, IconRegex, IconPackgeExport, IconChecklist, IconCalendar } from "@tabler/icons";
+import { IconClipboardCheck, IconUser, IconCodeAsterix, IconPlus, IconCalendarEvent, IconDownload, IconTruckDelivery, IconUserCheck, IconTrashX, IconEdit, IconX, IconBarcode, IconRegex, IconPackgeExport, IconChecklist, IconCalendar, IconClipboard, IconPrinter } from "@tabler/icons";
+
+import { DeliveryNoteReport } from "../../outputs";
+
 
 
 const ModalAddProductShipped = ({ idDeliveryNote, setAction }) => {
 
     const { Post, Get, Loading } = useRequest()
     const [quantity, setQuantity] = useState('')
+    const [description, setDescription] = useState('')
     const [selectedProductOrder, setSelectedProductOrder] = useState(null)
     const [selectedSchedule, setSelectedSchedule] = useState(null)
     const [errorProductOrder, setErrorProductOrder] = useState(false)
@@ -44,6 +48,8 @@ const ModalAddProductShipped = ({ idDeliveryNote, setAction }) => {
 
 
 
+
+
     const handleAddProductShipped = useCallback(async (e) => {
         e.preventDefault()
         let data
@@ -53,13 +59,15 @@ const ModalAddProductShipped = ({ idDeliveryNote, setAction }) => {
                 quantity: quantity,
                 product_order: selectedProductOrder,
                 delivery_note_customer: idDeliveryNote,
+                description: description
             }
         } else {
             data = {
                 quantity: quantity,
                 product_order: selectedProductOrder,
                 delivery_note_customer: idDeliveryNote,
-                schedules: selectedSchedule
+                schedules: selectedSchedule,
+                description: description
             }
         }
 
@@ -84,7 +92,7 @@ const ModalAddProductShipped = ({ idDeliveryNote, setAction }) => {
                 setErrorProductOrder(e.message.data.product_order)
             }
         }
-    }, [Post, quantity, selectedProductOrder, selectedSchedule, idDeliveryNote, setAction])
+    }, [Post, quantity, selectedProductOrder, selectedSchedule, idDeliveryNote, setAction, description])
 
     const handleChangeSelectSchedule = useCallback((value) => {
         const selectedSchedule = scheduleList.find(schedule => schedule.id === parseInt(value))
@@ -162,6 +170,7 @@ const ModalAddProductShipped = ({ idDeliveryNote, setAction }) => {
                         icon={<IconCodeAsterix />}
                         readOnly
                         radius='md'
+                        variant="filled"
                         value={selectedProductOrder !== null ? productOrderList.find(productOrder => productOrder.id === parseInt(selectedProductOrder)).sales_order.code : ''}
                         label='Sales order number'
                     />
@@ -170,21 +179,33 @@ const ModalAddProductShipped = ({ idDeliveryNote, setAction }) => {
                         icon={<IconCalendar />}
                         readOnly
                         radius='md'
+                        variant='filled'
                         value={selectedProductOrder !== null ? new Date(productOrderList.find(productOrder => productOrder.id === parseInt(selectedProductOrder)).sales_order.date).toDateString() : ''}
                         label='Sales order date'
                     />
+
+                    <NumberInput
+                        required
+                        icon={<IconPackgeExport />}
+                        placeholder="Input quantity product to send"
+                        label='Quantity product shipped'
+                        radius='md'
+                        value={quantity}
+                        onChange={val => setQuantity(val)}
+                    />
+
                 </Group>
 
-                <NumberInput
-                    required
-                    icon={<IconPackgeExport />}
+                <Textarea
                     m='xs'
-                    placeholder="Input quantity product to send"
-                    label='Quantity product shipped'
+                    placeholder="Input keterangan"
+                    label='Keterangan'
                     radius='md'
-                    value={quantity}
-                    onChange={val => setQuantity(val)}
+                    icon={<IconClipboard />}
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
                 />
+
 
                 <Button
                     type='submit'
@@ -207,11 +228,13 @@ const ModalEditProductShipped = ({ data, setAction, idDeliveryNote }) => {
 
     const { Put, Loading } = useRequest()
     const [quantity, setQuantity] = useState('')
+    const [description, setDescription] = useState('')
     const [errorQuantity, setErrorQuantity] = useState(false)
 
     useEffect(() => {
         setQuantity(data.quantity)
-    }, [data.quantity])
+        setDescription(data.description)
+    }, [data.quantity, data.description])
 
     const handleSubmitEditProductShipped = useCallback(async (e) => {
 
@@ -221,6 +244,7 @@ const ModalEditProductShipped = ({ data, setAction, idDeliveryNote }) => {
             delivery_note_customer: idDeliveryNote,
             quantity: quantity,
             product_order: data.product_order.id,
+            description: description
         }
 
         try {
@@ -241,7 +265,7 @@ const ModalEditProductShipped = ({ data, setAction, idDeliveryNote }) => {
             }
         }
 
-    }, [Put, quantity, idDeliveryNote, data, setAction])
+    }, [Put, quantity, idDeliveryNote, data, setAction, description])
 
     return (
         <>
@@ -253,6 +277,7 @@ const ModalEditProductShipped = ({ data, setAction, idDeliveryNote }) => {
                 <TextInput
                     label='Product name'
                     m='xs'
+                    variant='filled'
                     readOnly
                     radius='md'
                     value={data.product_order.product.name}
@@ -264,6 +289,7 @@ const ModalEditProductShipped = ({ data, setAction, idDeliveryNote }) => {
                     readOnly
                     radius='md'
                     m='xs'
+                    variant='filled'
                     value={data.product_order.product.code}
                     label='Product number'
                 />
@@ -274,6 +300,7 @@ const ModalEditProductShipped = ({ data, setAction, idDeliveryNote }) => {
                         icon={<IconCodeAsterix />}
                         readOnly
                         radius='md'
+                        variant='filled'
                         value={data.product_order.sales_order.code}
                         label='Sales order number'
                     />
@@ -281,23 +308,35 @@ const ModalEditProductShipped = ({ data, setAction, idDeliveryNote }) => {
                     <TextInput
                         icon={<IconCalendar />}
                         readOnly
+                        variant='filled'
                         radius='md'
                         value={new Date(data.product_order.sales_order.date).toDateString()}
                         label='Sales order date'
                     />
+
+
+                    <NumberInput
+                        required
+                        icon={<IconPackgeExport />}
+                        min={0}
+                        error={errorQuantity}
+                        placeholder='Input quantity product to send'
+                        label='Quantity product shipped'
+                        radius='md'
+                        value={quantity}
+                        onChange={val => setQuantity(val)}
+                    />
+
                 </Group>
 
-                <NumberInput
-                    required
-                    icon={<IconPackgeExport />}
+                <Textarea
                     m='xs'
-                    min={0}
-                    error={errorQuantity}
-                    placeholder='Input quantity product to send'
-                    label='Quantity product shipped'
                     radius='md'
-                    value={quantity}
-                    onChange={val => setQuantity(val)}
+                    placeholder="Input keterangan"
+                    label='Keterangan'
+                    icon={<IconClipboard />}
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
                 />
 
                 <Button
@@ -307,7 +346,6 @@ const ModalEditProductShipped = ({ data, setAction, idDeliveryNote }) => {
                     my='lg'
                     mx='xs'
                     leftIcon={<IconDownload />}
-                    disabled={quantity === data.quantity}
                 >
                     Save
                 </Button>
@@ -388,6 +426,40 @@ const DetailDeliveryNote = () => {
         sectionElementRefs: sectionRefs,
         offsetPx: -80
     })
+
+    const [selectedVehicle, selectedDriver] = useMemo(() => {
+
+        const { vehicle, driver } = data
+        let vehicleNumber = ''
+        let driverName = ''
+
+        if (vehicle) {
+            const selectedVehicle = vehicleList.find(eachVehicle => eachVehicle.id === parseInt(vehicle))
+            if (selectedVehicle) {
+                const { license_part_number } = selectedVehicle
+                vehicleNumber = license_part_number
+            }
+        }
+
+        if (driver) {
+            const selectedDriver = driverList.find(eachDriver => eachDriver.id === parseInt(driver))
+            if (selectedDriver) {
+                const { name } = selectedDriver
+                driverName = name
+            }
+        }
+        return [vehicleNumber, driverName]
+    }, [data, vehicleList, driverList])
+
+    const openModalPrintDeliveryNote = useCallback(() => openModal({
+        size: 'auto',
+        radius: 'md',
+        children: <DeliveryNoteReport
+            data={data}
+            vehicleNumber={selectedVehicle}
+            driverName={selectedDriver}
+        />
+    }), [data, selectedDriver, selectedVehicle])
 
     const handleDeleteDeliveryNote = useCallback(async () => {
         try {
@@ -473,7 +545,7 @@ const DetailDeliveryNote = () => {
         onConfirm: () => handleDeleteDeliveryNote()
     }), [handleDeleteDeliveryNote])
 
-    const openConfirmDeleteProductOrdered = useCallback((id) => openConfirmModal({
+    const openConfirmDeleteProductShipped = useCallback((id) => openConfirmModal({
         title: `Delete product shipped`,
         children: (
             <Text size="sm">
@@ -578,7 +650,7 @@ const DetailDeliveryNote = () => {
                             size="xs"
                             radius='md'
                             color='red.6'
-                            onClick={() => openConfirmDeleteProductOrdered(delivered.id)}
+                            onClick={() => openConfirmDeleteProductShipped(delivered.id)}
                             disabled={parseInt(delivered.quantity) > 0}
                         >
                             Delete
@@ -592,26 +664,42 @@ const DetailDeliveryNote = () => {
                     radius='md'
                     readOnly
                     value={delivered.product_order.product.name}
+                    variant='filled'
                     label='Product name'
 
                 />
 
-                <TextInput
-                    m='xs'
-                    icon={<IconRegex />}
-                    radius='md'
-                    readOnly
-                    value={delivered.product_order.product.code}
-                    label='Product number'
-                />
+                <Group grow m='xs'>
 
-                <TextInput
+
+                    <TextInput
+                        icon={<IconRegex />}
+                        radius='md'
+                        readOnly
+                        value={delivered.product_order.product.code}
+                        variant='filled'
+                        label='Product number'
+                    />
+
+                    <TextInput
+                        icon={<IconCodeAsterix />}
+                        radius='md'
+                        readOnly
+                        value={delivered.product_order.sales_order.code}
+                        variant='filled'
+                        label='Sales order number'
+                    />
+
+                </Group>
+
+                <Textarea
                     m='xs'
-                    icon={<IconCodeAsterix />}
                     radius='md'
+                    icon={<IconClipboard />}
+                    label='Keterangan'
+                    variant='filled'
                     readOnly
-                    value={delivered.product_order.sales_order.code}
-                    label='Sales order number'
+                    value={delivered.description}
                 />
 
                 <Group grow m='xs' >
@@ -662,7 +750,7 @@ const DetailDeliveryNote = () => {
 
             </Paper>
         ))
-    }, [openConfirmDeleteProductOrdered, openModalEditProductShipped, data])
+    }, [openConfirmDeleteProductShipped, openModalEditProductShipped, data])
 
 
 
@@ -794,6 +882,18 @@ const DetailDeliveryNote = () => {
                     />
                 </form>
 
+
+                <Button
+                    radius='md'
+                    fullWidth
+                    leftIcon={<IconPrinter />}
+                    my='lg'
+                    onClick={openModalPrintDeliveryNote}
+                >
+                    Print
+                </Button>
+
+
             </section>
 
             <section id='product-shipped' className={classes.section} ref={sectionRefs[1]} >
@@ -805,19 +905,23 @@ const DetailDeliveryNote = () => {
 
                 <Divider my='md'></Divider>
 
-                {productDelivered.length === 0 ? <Text color='dimmed' align="center" size='sm' >
-                    This delivery note doesn't have product shipped
-                </Text> : productDelivered}
-
-                <Center m='md'>
+                <Group
+                    m='xs'
+                    position="right"
+                >
                     <Button
                         radius='md'
                         leftIcon={<IconPlus />}
+                        variant='outline'
                         onClick={openModalAddProductShipped}
                     >
                         Add product shipped
                     </Button>
-                </Center>
+                </Group>
+
+                {productDelivered.length === 0 ? <Text color='dimmed' align="center" size='sm' >
+                    This delivery note doesn't have product shipped
+                </Text> : productDelivered}
 
             </section>
 

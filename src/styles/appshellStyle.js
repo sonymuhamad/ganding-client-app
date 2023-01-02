@@ -27,7 +27,6 @@ export const appshellStyle = createStyles((theme) => ({
     innerHeaderRight: {
         display: 'flex',
         marginLeft: 'auto',
-        marginRight: '55px',
         [theme.fn.smallerThan('md')]: {
             marginRight: '10px'
         },
@@ -38,7 +37,7 @@ export const appshellStyle = createStyles((theme) => ({
         marginRight: 'auto',
     },
     image: {
-        maxWidth: '10%',
+        maxWidth: '4%',
         width: 90,
         [theme.fn.smallerThan('sm')]: {
             display: 'none'

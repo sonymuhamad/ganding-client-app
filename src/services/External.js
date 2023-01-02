@@ -24,6 +24,7 @@ export const customTableStyle = {
 }
 
 export const Months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
+export const FullNameMonths = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "October", "November", "Desember"]
 
 
 export const DivisionIcons = {

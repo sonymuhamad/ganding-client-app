@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import useScrollSpy from 'react-use-scrollspy'
-import { Title, Divider, TextInput, Button, Group, Badge, Text, SegmentedControl, Center, Box, HoverCard, NumberInput, Select, Tooltip } from "@mantine/core";
+import { Title, Divider, TextInput, Button, Group, Badge, Text, SegmentedControl, Center, Box, HoverCard, NumberInput, Select, Tooltip, Textarea } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { DatePicker } from "@mantine/dates";
 import { closeAllModals, openConfirmModal, openModal } from "@mantine/modals";
@@ -10,17 +10,21 @@ import { BaseAside, ExpandedMaterialOrderList, CustomSelectComponentMrp } from "
 import BreadCrumb from "../../BreadCrumb";
 import { sectionStyle } from '../../../styles'
 import { useRequest } from "../../../hooks";
-import { IconCalendar, IconCodeAsterix, IconUserCheck, IconDownload, IconEdit, IconX, IconTrashX, IconCheck, IconChecks, IconCircleDotted, IconTrash, IconPlus, IconShoppingCart, IconAsset, IconClipboardList, IconClipboardCheck, IconFolderOff } from "@tabler/icons";
+import { IconCalendar, IconCodeAsterix, IconUserCheck, IconDownload, IconEdit, IconX, IconTrashX, IconCheck, IconChecks, IconCircleDotted, IconTrash, IconPlus, IconShoppingCart, IconAsset, IconClipboardList, IconClipboardCheck, IconFolderOff, IconReceipt2, IconClipboard, IconReceiptTax, IconDiscount2, IconShieldLock, IconPrinter, IconBarcode, IconCornerDownRightDouble, IconMessages } from "@tabler/icons";
 import { FailedNotif, SuccessNotif } from "../../notifications"
 
 import { BaseTable, BaseTableExpanded } from "../../tables"
 import MaterialReceiptList from "./MaterialReceiptList"
 
+import { CustomSelectComponentProduct } from "../../layout";
+import { PurchaseOrderReport } from "../../outputs";
+
+
 
 
 const ModalEditMaterialOrder = ({ data, setMaterialOrderList }) => {
 
-    const { material, purchase_order_material, ...rest } = data
+    const { material, purchase_order_material, to_product, ...rest } = data
     const { Put, Loading } = useRequest()
     const form = useForm({
         initialValues: {
@@ -38,7 +42,7 @@ const ModalEditMaterialOrder = ({ data, setMaterialOrderList }) => {
             setMaterialOrderList(prev => {
                 return prev.map(mo => {
                     if (mo.id === data.id) {
-                        return { ...mo, ordered: value.ordered }
+                        return { ...mo, ordered: value.ordered, price: value.price }
                     }
                     return mo
                 })
@@ -66,6 +70,32 @@ const ModalEditMaterialOrder = ({ data, setMaterialOrderList }) => {
                 value={material.name}
             />
 
+            <Group
+                grow
+                m='xs'
+            >
+
+                <TextInput
+                    label='Pesanan untuk produksi'
+                    variant='filled'
+                    readOnly
+                    radius='md'
+                    icon={<IconBarcode />}
+                    value={to_product ? to_product.name : ''}
+                />
+
+
+                <TextInput
+                    label='Product number'
+                    variant='filled'
+                    readOnly
+                    radius='md'
+                    icon={<IconCodeAsterix />}
+                    value={to_product ? to_product.code : ''}
+                />
+
+            </Group>
+
             <Group grow m='xs' >
 
                 <NumberInput
@@ -86,6 +116,23 @@ const ModalEditMaterialOrder = ({ data, setMaterialOrderList }) => {
                     value={form.values.arrived}
                 />
 
+                <NumberInput
+                    label='Harga / unit'
+                    placeholder="Input harga per unit"
+                    {...form.getInputProps('price')}
+                    radius='md'
+                    hideControls
+                    required
+                    min={0}
+                    parser={(value) => value.replace(/Rp\s?|(,*)/g, '')}
+                    formatter={(value) =>
+                        !Number.isNaN(parseFloat(value))
+                            ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                            : 'Rp '
+                    }
+                    icon={<IconReceipt2 />}
+                />
+
             </Group>
 
             <Button
@@ -93,7 +140,7 @@ const ModalEditMaterialOrder = ({ data, setMaterialOrderList }) => {
                 radius='md'
                 fullWidth
                 type='submit'
-                disabled={form.values.ordered === data.ordered}
+                disabled={form.values.ordered === data.ordered && form.values.price === data.price}
             >
                 Save
             </Button>
@@ -104,18 +151,21 @@ const ModalEditMaterialOrder = ({ data, setMaterialOrderList }) => {
 
 const ModalAddMaterialOrder = ({ setAction, idSupplier, idPurchaseOrder }) => {
 
-    const { Retrieve, Loading, Post, Get } = useRequest()
+    const { Retrieve, Loading, Post, RetrieveWithoutExpiredTokenHandler } = useRequest()
     const [materialList, setMaterialList] = useState([])
     const [selectedMaterial, setSelectedMaterial] = useState(null)
     const [ordered, setOrdered] = useState('')
+    const [price, setPrice] = useState(0)
     const [mrpList, setMrpList] = useState([])
     const [selectedMrp, setSelectedMrp] = useState(null)
+    const [dataToProductList, setDataToProductList] = useState([])
+    const [selectedToProduct, setSelectedToProduct] = useState(null)
 
     useEffect(() => {
         Retrieve(idSupplier, 'supplier-material-list').then(data => {
             setMaterialList(data)
         })
-        Get('mrp').then(data => {
+        RetrieveWithoutExpiredTokenHandler(idSupplier, 'mrp').then(data => {
             setMrpList(data)
         })
     }, [])
@@ -125,7 +175,9 @@ const ModalAddMaterialOrder = ({ setAction, idSupplier, idPurchaseOrder }) => {
         const validate_data = {
             material: selectedMaterial,
             purchase_order_material: idPurchaseOrder,
-            ordered: ordered
+            ordered: ordered,
+            price: price,
+            to_product: selectedToProduct
         }
         try {
             await Post(validate_data, 'material-order-management')
@@ -142,6 +194,45 @@ const ModalAddMaterialOrder = ({ setAction, idSupplier, idPurchaseOrder }) => {
         }
     }
 
+    const getRequirementMaterial = useCallback((id_material) => {
+        const selectedMaterial = materialList.find(material => material.id === parseInt(id_material))
+
+        if (selectedMaterial) {
+            const { ppic_requirementmaterial_related, ppic_requirementmaterialsubcont_related } = selectedMaterial
+            return [...ppic_requirementmaterial_related, ...ppic_requirementmaterialsubcont_related]
+        }
+        return []
+
+    }, [materialList])
+
+    const setChangeDataToProduct = useCallback((value) => {
+        const requirementMaterial = getRequirementMaterial(value)
+        setDataToProductList(requirementMaterial)
+        setSelectedToProduct(null)
+    }, [getRequirementMaterial])
+
+    const onChangeMaterial = (value) => {
+        setSelectedMaterial(value)
+        setChangeDataToProduct(value)
+        if (selectedMrp) {
+            setSelectedMrp(null)
+            setOrdered(undefined)
+        }
+
+    }
+
+    const setOnchangeSelectedMrp = (value) => {
+        setSelectedMrp(value)
+        setSelectedMaterial(value)
+        setChangeDataToProduct(value)
+        if (value) {
+            const mrp = mrpList.find(mr => mr.material.id === parseInt(value))
+            setOrdered(mrp.quantity)
+        } else {
+            setOrdered(undefined)
+        }
+    }
+
     return (
         <form onSubmit={handleSubmit} >
             <Loading />
@@ -155,16 +246,7 @@ const ModalAddMaterialOrder = ({ setAction, idSupplier, idPurchaseOrder }) => {
                 value={selectedMrp}
                 data={mrpList.map(mrp => ({ value: mrp.material.id, label: mrp.material.name, quantity: mrp.quantity, spec: mrp.material.spec, unit: mrp.material.uom }))}
                 itemComponent={CustomSelectComponentMrp}
-                onChange={value => {
-                    setSelectedMrp(value)
-                    setSelectedMaterial(value)
-                    if (value) {
-                        const mrp = mrpList.find(mr => mr.material.id === parseInt(value))
-                        setOrdered(mrp.quantity)
-                    } else {
-                        setOrdered(undefined)
-                    }
-                }}
+                onChange={setOnchangeSelectedMrp}
                 clearable
                 searchable
             />
@@ -182,32 +264,76 @@ const ModalAddMaterialOrder = ({ setAction, idSupplier, idPurchaseOrder }) => {
                 icon={<IconAsset />}
                 data={materialList.map(material => ({ value: material.id, label: material.name }))}
                 value={selectedMaterial}
-                onChange={(value) => {
-                    setSelectedMaterial(value)
-                    if (selectedMrp) {
-                        setSelectedMrp(null)
-                        setOrdered(undefined)
-                    }
-                }}
+                onChange={onChangeMaterial}
             />
 
-
-            <NumberInput
-                required
-                label='Quantity order'
-                placeholder="Input quantity order"
+            <Select
+                label='Untuk produksi product'
+                placeholder="Pilih product untuk pengalokasian material"
+                value={selectedToProduct}
+                clearable
+                searchable
+                onChange={value => setSelectedToProduct(value)}
+                data={dataToProductList.map(data => {
+                    const { process, product_subcont } = data
+                    if (process) {
+                        const { product } = process
+                        const { id, name, code } = product
+                        return { value: id, label: name, code: code }
+                    }
+                    const { product } = product_subcont
+                    const { id, name, code } = product
+                    return { value: id, label: name, code: code }
+                })}
+                itemComponent={CustomSelectComponentProduct}
+                icon={<IconBarcode />}
                 radius='md'
                 m='xs'
-                icon={<IconClipboardList />}
-                hideControls
-                value={ordered}
-                onChange={(value) => {
-                    setOrdered(value)
-                }}
-                rightSection={<Text size='xs' color='dimmed' >
-                    {selectedMaterial ? materialList.find(material => material.id === parseInt(selectedMaterial)).uom.name : ''}
-                </Text>}
             />
+
+            <Group
+                grow
+                m='xs'
+            >
+
+
+                <NumberInput
+                    required
+                    label='Quantity order'
+                    placeholder="Input quantity order"
+                    radius='md'
+                    icon={<IconClipboardList />}
+                    hideControls
+                    value={ordered}
+                    onChange={(value) => {
+                        setOrdered(value)
+                    }}
+                    rightSection={<Text size='xs' color='dimmed' >
+                        {selectedMaterial ? materialList.find(material => material.id === parseInt(selectedMaterial)).uom.name : ''}
+                    </Text>}
+                />
+
+                <NumberInput
+                    label='Harga / unit'
+                    placeholder="Input harga per unit"
+                    value={price}
+                    onChange={val => {
+                        setPrice(val)
+                    }}
+                    radius='md'
+                    hideControls
+                    required
+                    min={0}
+                    parser={(value) => value.replace(/Rp\s?|(,*)/g, '')}
+                    formatter={(value) =>
+                        !Number.isNaN(parseFloat(value))
+                            ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+                            : 'Rp '
+                    }
+                    icon={<IconReceipt2 />}
+                />
+
+            </Group>
 
 
             <Button
@@ -313,7 +439,6 @@ const ModalEditScheduleReceipt = ({ data, setUpdateSchedule }) => {
                 radius='md'
                 fullWidth
                 type='submit'
-                disabled={form.values.quantity === data.quantity}
             >
                 Save
             </Button>
@@ -322,7 +447,7 @@ const ModalEditScheduleReceipt = ({ data, setUpdateSchedule }) => {
     )
 }
 
-const ModalAddScheduleReceipt = ({ materialOrderList, setNewSchedule }) => {
+const ModalAddScheduleReceipt = ({ materialOrderList, changeAction }) => {
 
     const { Post, Loading } = useRequest()
     const form = useForm({
@@ -343,8 +468,8 @@ const ModalAddScheduleReceipt = ({ materialOrderList, setNewSchedule }) => {
         }
 
         try {
-            const newSchedule = await Post(validate_data, 'material-receipt-schedule-management')
-            setNewSchedule(newSchedule)
+            await Post(validate_data, 'material-receipt-schedule-management')
+            changeAction()
             SuccessNotif('Add schedule success')
             closeAllModals()
         } catch (e) {
@@ -408,6 +533,56 @@ const ModalAddScheduleReceipt = ({ materialOrderList, setNewSchedule }) => {
 }
 
 
+const ModalInputAdditionalInformationBeforePrint = ({
+    data, materialOrderList, dataSupplier
+}) => {
+
+    const [name, setName] = useState('')
+
+    const modalPrintPurchaseOrder = () => openModal({
+        size: 'auto',
+        radius: 'md',
+        children: <PurchaseOrderReport
+            data={data}
+            materialOrderList={materialOrderList}
+            dataSupplier={dataSupplier}
+            personInChargeName={name}
+
+        />
+    })
+
+    const handleSubmit = () => {
+        modalPrintPurchaseOrder()
+    }
+
+    return (
+        <form onSubmit={e => {
+            e.preventDefault()
+            handleSubmit()
+        }} >
+            <TextInput
+                radius='md'
+                value={name}
+                onChange={e => setName(e.target.value)}
+                m='xs'
+                icon={<IconUserCheck />}
+                label='Nama penanggung jawab dari supplier'
+            />
+
+            <Button
+                radius='md'
+                fullWidth
+                my='lg'
+                type='submit'
+                leftIcon={<IconCornerDownRightDouble />}
+            >
+                Submit
+            </Button>
+
+        </form>
+    )
+}
+
 
 
 const DetailPurchaseOrder = () => {
@@ -419,7 +594,7 @@ const DetailPurchaseOrder = () => {
     const navigate = useNavigate()
     const [materialOrderList, setMaterialOrderList] = useState([])
     const [scheduleList, setScheduleList] = useState([])
-    const { Retrieve, Loading, Put, Delete } = useRequest()
+    const { Retrieve, Loading, Put, Delete, RetrieveWithoutExpiredTokenHandler } = useRequest()
     const [action, setAction] = useState(0)
     const [detailSupplier, setDetailSupplier] = useState({
         id: '',
@@ -438,29 +613,33 @@ const DetailPurchaseOrder = () => {
             supplier: '',
             date: '',
             created: '',
-            done: ''
+            done: '',
+            discount: '',
+            tax: '',
+            description: '',
+            closed: ''
         }
     })
 
     const links = useMemo(() => [
         {
             "label": 'Detail purchase order',
-            "link": '#detail-purchase-order',
+            "link": 'detail-purchase-order',
             'order': 1
         },
         {
             "label": 'List of ordered material',
-            "link": '#list-material',
+            "link": 'list-material',
             'order': 1
         },
         {
             "label": 'Material receipt schedule',
-            "link": '#receipt-schedule',
+            "link": 'receipt-schedule',
             'order': 1
         },
         {
             "label": 'List of related receipt',
-            "link": '#related-receipt',
+            "link": 'related-receipt',
             'order': 1
         },
     ], [])
@@ -551,6 +730,15 @@ const DetailPurchaseOrder = () => {
         }
     ], [])
 
+    const openModalPrintPurchaseOrder = () => openModal({
+        size: 'lg',
+        radius: 'md',
+        children: <ModalInputAdditionalInformationBeforePrint
+            data={dataForm}
+            materialOrderList={materialOrderList}
+            dataSupplier={detailSupplier} />
+    })
+
     const setDataPo = useCallback((data) => {
         let dataPurchaseOrder
 
@@ -564,12 +752,12 @@ const DetailPurchaseOrder = () => {
             dataPurchaseOrder = data
         }
 
-        const { supplier, date, done, ...restProps } = dataPurchaseOrder
+        const { supplier, date, done, closed, ...restProps } = dataPurchaseOrder
 
         setDetailSupplier(supplier)
         const dataForForm = { ...restProps, supplier: supplier.id, date: new Date(date) }
 
-        setStatus(done)
+        setStatus(done, closed)
 
         form.setValues(dataForForm)
         setDataForm(dataForForm)
@@ -582,9 +770,13 @@ const DetailPurchaseOrder = () => {
     }, [])
 
 
-    const setStatus = (status) => {
+    const setStatus = (statusDone = false, statusClosed = false) => {
         setCompleteStatus(() => {
-            if (status) {
+            if (statusClosed) {
+                return 'closed'
+            }
+
+            if (statusDone) {
                 return 'complete'
             }
             return 'incomplete'
@@ -595,14 +787,10 @@ const DetailPurchaseOrder = () => {
         return setAction(prev => prev + 1)
     }, [])
 
-    const setNewSchedule = useCallback((newData) => {
-        return setScheduleList(prev => [...prev, newData])
-    }, [])
-
     const setUpdateSchedule = useCallback((updatedSchedule) => {
         return setScheduleList(schedule => schedule.map(sch => {
             if (sch.id === updatedSchedule.id) {
-                return updatedSchedule
+                return { ...sch, quantity: updatedSchedule.quantity, date: updatedSchedule.date }
             }
             return sch
         }))
@@ -667,41 +855,65 @@ const DetailPurchaseOrder = () => {
         onConfirm: () => handleDeletePo()
     })
 
-    const handleChangeStatusPo = async (value) => {
-        // change status purchase order
-
-        let status
-        if (value === 'complete') {
-            status = true
-        } else {
-            status = false
-        }
-
+    const handleClosedPo = async (data) => {
         try {
-            await Put(purchaseOrderId, { done: status }, 'status-purchase-order-management')
-            SuccessNotif('Status purchase order material is changed ')
-            setStatus(status)
+            await Put(purchaseOrderId, data, 'close-purchase-order-management')
+            SuccessNotif('Status purchase order is closed ')
+            setStatus(true, true)
         } catch (e) {
             console.log(e)
             FailedNotif(e.message.data)
         }
     }
 
-    const openConfirmChangeStatusPo = (e) => openConfirmModal({
+    const handleChangeDonePo = async (data) => {
+        const { done } = data
+        try {
+            await Put(purchaseOrderId, data, 'status-purchase-order-management')
+            SuccessNotif('Status purchase order material is changed ')
+            setStatus(done, false)
+        } catch (e) {
+            console.log(e)
+            FailedNotif(e.message.data)
+        }
+    }
+
+    const handleChangeStatusPo = (value) => {
+        // change status purchase order
+
+        if (value === 'closed') {
+            handleClosedPo({ closed: true })
+            return
+        }
+
+        if (value === 'complete') {
+            handleChangeDonePo({ done: true })
+            return
+        }
+
+        handleChangeDonePo({ done: false })
+        return
+    }
+
+    const openConfirmChangeStatusPo = (value) => openConfirmModal({
         title: 'Change status purchase order material',
         children: (
             <Text size='sm' >
-                {completeStatus ? `This action will change status purchase order material to on progress, 
-                    Are you sure? data changes will be saved.
-                `: `This action will change status purchase order material to Complete,
-                Are you sure? data changes will be saved`}
+
+                {value === 'incomplete' ? `Ubah status purchase order menjadi on progress, 
+                    Apakah anda yakin?, perubahan data akan disimpan.
+                `: value === 'complete' ? `Ubah status purchase order manjadi complete,
+                Apakah anda yakin?, perubahan data akan disimpan`
+                    : `Ubah status purchase order menjadi closed ,
+                Apakah anda yakin?, perubahan data akan disimpan dan purchase order TIDAK akan bisa diubah lagi `}
+
             </Text>
         ),
         radius: 'md',
         labels: { confirm: 'Yes, save', cancel: "No, don't save it" },
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
-        onConfirm: () => handleChangeStatusPo(e)
+        onConfirm: () => handleChangeStatusPo(value)
     })
 
     const openEditMaterialOrder = (data) => openModal({
@@ -765,8 +977,8 @@ const DetailPurchaseOrder = () => {
         title: 'Add schedule',
         radius: 'md',
         size: 'xl',
-        children: <ModalAddScheduleReceipt setNewSchedule={setNewSchedule} materialOrderList={materialOrderList} />
-    }), [materialOrderList, setNewSchedule])
+        children: <ModalAddScheduleReceipt changeAction={changeAction} materialOrderList={materialOrderList} />
+    }), [materialOrderList])
 
     const openConfirmDeleteSchedule = useCallback((id) => openConfirmModal({
         title: 'Delete material order',
@@ -848,11 +1060,11 @@ const DetailPurchaseOrder = () => {
 
     useEffect(() => {
 
-        Retrieve(purchaseOrderId, 'material-receipt-schedule').then(data => {
+        RetrieveWithoutExpiredTokenHandler(purchaseOrderId, 'material-receipt-schedule').then(data => {
             setDataSchedule(data)
         })
 
-    }, [])
+    }, [action])
 
     return (
         <>
@@ -890,7 +1102,8 @@ const DetailPurchaseOrder = () => {
                                                     <IconCircleDotted />
                                                     <Box ml={10} >In progress</Box>
                                                 </Center>
-                                            )
+                                            ),
+                                            disabled: completeStatus === 'closed'
                                         },
                                         {
                                             value: 'complete', label: (
@@ -899,8 +1112,17 @@ const DetailPurchaseOrder = () => {
                                                     <Box ml={10} >Completed</Box>
                                                 </Center>
                                             ),
-                                            disabled: statusOfPurchaseOrder
+                                            disabled: statusOfPurchaseOrder || completeStatus === 'closed'
                                         },
+                                        {
+                                            value: 'closed', label: (
+                                                <Center>
+                                                    <IconShieldLock />
+                                                    <Box ml={10} >Closed</Box>
+                                                </Center>
+                                            ),
+                                            disabled: completeStatus === 'incomplete'
+                                        }
                                     ]}
                                     color='blue'
                                     size='md'
@@ -909,8 +1131,7 @@ const DetailPurchaseOrder = () => {
                             </HoverCard.Target>
                             <HoverCard.Dropdown>
                                 <Text size="sm">
-                                    {completeStatus === 'complete' ? `Currently the order status is closed, click in progress to change status purchase order to in progress, 
-                                    it means, open all actions related to this purchase order ` : `Currently the order status is in progress, click completed to change status order to Completed, it means all actions related to this purchase order are CLOSED. including action to material orders `}
+                                    {completeStatus === 'complete' ? `Status purchase order is Complete, yang berarti semua perubahan data dilarang ` : completeStatus === 'incomplete' ? `Status purchase order is in progress, yang berarti perubahan data pada purchase order diperbolehkan ` : 'Status purchase order is closed'}
                                 </Text>
                             </HoverCard.Dropdown>
                         </HoverCard>
@@ -962,34 +1183,80 @@ const DetailPurchaseOrder = () => {
                         value={detailSupplier.name}
                     />
 
-                    <TextInput
-                        label='Purchase order number'
-                        placeholder="Input purchase order number"
-                        radius='md'
-                        m='xs'
+                    <Group grow m='xs' >
+
+                        <TextInput
+                            required
+                            label='Purchase order number'
+                            placeholder="Input purchase order number"
+                            radius='md'
+                            readOnly={!editAccess}
+                            icon={<IconCodeAsterix />}
+                            {...form.getInputProps('code')}
+                        />
+
+                        <DatePicker
+                            label='Order date'
+                            placeholder="Pick order date"
+                            radius='md'
+                            disabled={!editAccess}
+                            icon={<IconCalendar />}
+                            {...form.getInputProps('date')}
+                        />
+
+                    </Group>
+
+                    <Group grow m='xs' >
+
+                        <NumberInput
+                            label='Ppn'
+                            placeholder="Input ppn dalam persen"
+                            radius='md'
+                            min={0}
+                            hideControls
+                            disabled={!editAccess}
+                            rightSection={<Text size='sm' color='dimmed' >
+                                %
+                            </Text>}
+                            icon={<IconReceiptTax />}
+                            {...form.getInputProps('tax')}
+                        />
+
+                        <NumberInput
+                            label='Discount'
+                            placeholder="Input discount dalam persen"
+                            radius='md'
+                            disabled={!editAccess}
+                            min={0}
+                            hideControls
+                            rightSection={<Text size='sm' color='dimmed' >
+                                %
+                            </Text>}
+                            icon={<IconDiscount2 />}
+                            {...form.getInputProps('discount')}
+                        />
+
+
+                        <TextInput
+                            label='Number of material ordered'
+                            readOnly
+                            icon={<IconShoppingCart />}
+                            radius='md'
+                            m='xs'
+                            variant='filled'
+                            value={materialOrderList.length}
+                        />
+
+                    </Group>
+
+                    <Textarea
+                        label='Keterangan'
+                        placeholder="Input keterangan"
                         readOnly={!editAccess}
-                        icon={<IconCodeAsterix />}
-                        {...form.getInputProps('code')}
-                    />
-
-                    <DatePicker
-                        label='Order date'
-                        placeholder="Pick order date"
-                        radius='md'
                         m='xs'
-                        disabled={!editAccess}
-                        icon={<IconCalendar />}
-                        {...form.getInputProps('date')}
-                    />
-
-                    <TextInput
-                        label='Number of material ordered'
-                        readOnly
-                        icon={<IconShoppingCart />}
                         radius='md'
-                        m='xs'
-                        variant='filled'
-                        value={materialOrderList.length}
+                        icon={<IconClipboard />}
+                        {...form.getInputProps('description')}
                     />
 
                     <Group m='sm' >
@@ -1006,7 +1273,7 @@ const DetailPurchaseOrder = () => {
                             color={completeStatus === 'complete' ?
                                 'gray' : materialOrderList.length === 0 ? 'gray' :
                                     statusOfPurchaseOrder ?
-                                        'yellow.6' :
+                                        'cyan.6' :
                                         'blue.6'}
                         >
                             {completeStatus === 'complete' ?
@@ -1019,6 +1286,16 @@ const DetailPurchaseOrder = () => {
                     </Group>
 
                 </form>
+
+                <Button
+                    leftIcon={<IconPrinter />}
+                    onClick={openModalPrintPurchaseOrder}
+                    radius='md'
+                    fullWidth
+                    my='lg'
+                >
+                    Print
+                </Button>
 
             </section>
 

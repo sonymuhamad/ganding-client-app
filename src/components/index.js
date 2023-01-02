@@ -23,7 +23,7 @@ export {
     PurchasingDetailDeliveryNoteSubcont
 } from './purchasing'
 
-export { MarketingDashboard, DeliveryNote, DetailSalesOrder, MarketingDetailDeliveryNote, MarketingDetailProduct, NewSalesOrder, SalesOrder, Customer, Customers, BaseMarketing } from './marketing'
+export { MarketingDashboard, DeliveryNote, DetailSalesOrder, MarketingDetailDeliveryNote, SalesOrder, DetailCustomer, Customers, BaseMarketing, Invoice, DetailInvoice } from './marketing'
 
 
 export { BasePlantManager, ManagerDashboard, Users, PurchaseReport, SalesReport, ProductionReport, DetailUser } from './plant-manager'

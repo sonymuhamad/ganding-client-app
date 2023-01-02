@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { BaseContent } from "../layout";
 
-import { CustomerList, PercentageDeliveryTimeLiness, ProductDeliveryList, ProductOrderList, SalesOrderChart } from './sales_report_components'
+import { CustomerList, ProductDeliveryList, ProductOrderList, SalesOrderChart } from './sales_report_components'
 
 
 export default function SalesReport() {
@@ -26,11 +26,6 @@ export default function SalesReport() {
         {
             "label": "Customer report",
             "link": "customer-report",
-            "order": 1
-        },
-        {
-            "label": "Percentage of on time delivery rate",
-            "link": "percentage-on-delivery",
             "order": 1
         },
     ], [])
@@ -62,10 +57,6 @@ export default function SalesReport() {
         {
             description: '',
             component: <CustomerList />,
-        },
-        {
-            description: '',
-            component: <PercentageDeliveryTimeLiness />
         }
     ], [])
 
