@@ -2,12 +2,10 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 
 import { useRequest } from "../../../hooks";
 import { BaseTableExpanded, BaseTable } from "../../tables";
-import { Paper, Button, Text } from "@mantine/core";
-import { IconDotsCircleHorizontal, IconTrash } from "@tabler/icons";
-
-import { Link } from "react-router-dom";
+import { Paper, Text } from "@mantine/core"
 import { openConfirmModal } from "@mantine/modals";
 import { FailedNotif, SuccessNotif } from "../../notifications";
+import { NavigationDetailButton, ButtonDelete } from '../../custom_components'
 
 
 const ExpandedGroup = ({ data }) => {
@@ -26,7 +24,7 @@ const ExpandedGroup = ({ data }) => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => handleRemove(val)
-    }), [])
+    }), [handleRemove])
 
     const handleRemove = useCallback(async (val) => {
         const validated_data = {
@@ -42,30 +40,11 @@ const ExpandedGroup = ({ data }) => {
             console.log(e)
             FailedNotif('Remove user from division failed')
         }
-    }, [])
+    }, [data])
 
 
     const dataUser = useMemo(() => {
-        return data.user_set.map(user => ({
-            ...user, detailButton: <Button
-                leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                color='teal.8'
-                variant='subtle'
-                radius='md'
-                component={Link}
-                to={`/home/plant-manager/users/${user.id}`}
-            >
-                Detail
-            </Button>, removeButton: <Button
-                leftIcon={<IconTrash stroke={2} size={16} />}
-                color='red.6'
-                variant='subtle'
-                radius='md'
-                onClick={() => openConfirmRemoveDivision({ group_id: data.id, user_id: user.id, group_name: data.name, username: user.username })}
-            >
-                Remove
-            </Button>
-        }))
+        return data.user_set
     }, [data.user_set])
 
     const columnUsers = useMemo(() => [
@@ -80,13 +59,20 @@ const ExpandedGroup = ({ data }) => {
         },
         {
             name: '',
-            selector: row => row.detailButton
+            selector: row => <NavigationDetailButton
+                url={`/home/plant-manager/users/${row.id}`}
+            />
         },
         {
             name: '',
-            selector: row => row.removeButton
+            selector: row => {
+                const { username, id } = row
+                return (<ButtonDelete
+                    onClick={() => openConfirmRemoveDivision({ group_id: data.id, user_id: id, group_name: data.name, username: username })}
+                />)
+            }
         }
-    ], [])
+    ], [data, openConfirmRemoveDivision])
 
     return (
         <Paper p='xs' m='xs' >

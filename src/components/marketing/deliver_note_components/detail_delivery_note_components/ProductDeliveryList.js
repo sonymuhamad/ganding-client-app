@@ -1,35 +1,11 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 
 import { BaseTableExpanded } from "../../../tables";
 import { ExpandedDescriptionDelivery } from "../../../layout";
 import { Badge } from "@mantine/core";
+import { getScheduleState } from "../../../../services";
 
 const ProductDeliveryList = ({ data }) => {
-
-    const getBadgeLabel = useCallback((schedule, deliveryDate) => {
-
-        if (schedule) {
-            const { date } = schedule
-            if (date > deliveryDate) {
-                return 'On time'
-            }
-            return 'Late'
-        }
-        return 'Unscheduled'
-
-    }, [])
-
-    const getBadgeColor = useCallback((schedule, deliveryDate) => {
-        if (schedule) {
-            const { date } = schedule
-            if (date > deliveryDate) {
-                return 'blue.6'
-            }
-            return 'red.6'
-        }
-        return 'blue.6'
-
-    }, [])
 
     const columnProductDelivery = useMemo(() => [
         {
@@ -71,11 +47,9 @@ const ProductDeliveryList = ({ data }) => {
 
                 const { schedules, delivery_note_customer } = row
                 const { date } = delivery_note_customer
-                const badgeLabel = getBadgeLabel(schedules, date)
-                const badgeColor = getBadgeColor(schedules, date)
-
-                return (<Badge size='sm' color={badgeColor} variant='filled' >
-                    {badgeLabel}
+                const { color, label } = getScheduleState(schedules, date)
+                return (<Badge size='sm' color={color} variant='filled' >
+                    {label}
                 </Badge>)
 
             },
@@ -88,7 +62,7 @@ const ProductDeliveryList = ({ data }) => {
 
         }
 
-    ], [getBadgeColor, getBadgeLabel])
+    ], [])
 
 
     return (

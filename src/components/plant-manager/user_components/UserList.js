@@ -1,18 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { BaseTable } from "../../tables";
-import { useRequest } from "../../../hooks";
-import { Link } from "react-router-dom";
+import { BaseTable } from "../../tables"
+import { useRequest } from "../../../hooks"
 
-import { Button, Group, TextInput, Paper, Select, ActionIcon } from "@mantine/core";
-import { IconAt, IconDeviceDesktopAnalytics, IconDotsCircleHorizontal, IconDownload, IconPlus, IconTrash, IconUserCircle } from "@tabler/icons";
+import { TextInput } from "@mantine/core";
+import { IconAt, IconUserCircle } from "@tabler/icons";
 import { closeAllModals, openModal } from "@mantine/modals";
 import { useForm } from "@mantine/form";
 import { FailedNotif, SuccessNotif } from "../../notifications";
-
+import { ModalForm, ButtonAdd, NavigationDetailButton, HeadSection } from '../../custom_components'
 
 const ModalAddUser = ({ setAddUser }) => {
 
-    const { Post, Loading } = useRequest()
+    const { Post } = useRequest()
     const form = useForm({
         initialValues: {
             username: '',
@@ -38,9 +37,9 @@ const ModalAddUser = ({ setAddUser }) => {
     }
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)}  >
-
-            <Loading />
+        <ModalForm
+            formId='formAddUser'
+            onSubmit={form.onSubmit(handleSubmit)}  >
 
             <TextInput
                 label='Username'
@@ -62,16 +61,7 @@ const ModalAddUser = ({ setAddUser }) => {
                 {...form.getInputProps('email')}
             />
 
-            <Button
-                radius='md'
-                fullWidth
-                leftIcon={<IconDownload />}
-                type='submit'
-            >
-                Save
-            </Button>
-
-        </form>
+        </ModalForm>
     )
 }
 
@@ -79,8 +69,19 @@ const ModalAddUser = ({ setAddUser }) => {
 
 const UserList = () => {
 
-    const { GetAndExpiredTokenHandler, Loading } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
     const [dataUser, setDataUser] = useState([])
+
+    const getMainDivision = useCallback((groups) => {
+        if (groups) {
+            if (groups.length > 0) {
+                const firstGroup = groups[0]
+                const { name } = firstGroup
+                return name
+            }
+        }
+        return 'None'
+    }, [])
 
     const columnUser = useMemo(() => [
         {
@@ -94,31 +95,24 @@ const UserList = () => {
         },
         {
             name: 'Main division',
-            selector: row => row.groups.length > 0 ? row.groups[0].name : 'None'
+            selector: row => {
+                const { groups } = row
+                const mainDivision = getMainDivision(groups)
+                return mainDivision
+            }
         },
         {
             name: '',
-            selector: row => row.detailButton
+            selector: row => <NavigationDetailButton
+                url={`/home/plant-manager/users/${row.id}`}
+            />
         },
-    ], [])
+    ], [getMainDivision])
 
     useEffect(() => {
 
         GetAndExpiredTokenHandler('user').then(data => {
-
-            setDataUser(data.map(dt => ({
-                ...dt, detailButton: <Button
-                    leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                    color='teal.8'
-                    variant='subtle'
-                    radius='md'
-                    component={Link}
-                    to={`${dt.id}`}
-                >
-                    Detail
-                </Button>
-            })))
-
+            setDataUser(data)
         })
 
     }, [])
@@ -126,18 +120,7 @@ const UserList = () => {
     const setAddUserHandler = useCallback((newUser) => {
 
         setDataUser(prev => {
-            return [...prev, {
-                ...newUser, detailButton: <Button
-                    leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                    color='teal.8'
-                    variant='subtle'
-                    radius='md'
-                    component={Link}
-                    to={`${newUser.id}`}
-                >
-                    Detail
-                </Button>
-            }]
+            return [...prev, newUser]
         })
 
     }, [])
@@ -147,28 +130,17 @@ const UserList = () => {
         radius: 'md',
         size: 'xl',
         children: <ModalAddUser setAddUser={setAddUserHandler} />
-    }), [])
+    }), [setAddUserHandler])
 
     return (
         <>
-
-            <Loading />
-
-            <Group
-                m='xs'
-                position="right"
-            >
-
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+            <HeadSection>
+                <ButtonAdd
                     onClick={openModalAddUser}
                 >
                     User
-                </Button>
-
-            </Group>
+                </ButtonAdd>
+            </HeadSection>
 
             <BaseTable
                 column={columnUser}

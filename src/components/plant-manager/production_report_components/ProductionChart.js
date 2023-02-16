@@ -6,7 +6,7 @@ import { LineChart } from '../../charts'
 
 const ProductionChart = () => {
 
-    const { Loading, GetAndExpiredTokenHandler } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
     const [labels, setLabels] = useState([])
     const [dataGoodProduction, setDataGoodProduction] = useState([])
     const [dataNotGoodProduction, setDataNotGoodProduction] = useState([])
@@ -44,10 +44,7 @@ const ProductionChart = () => {
     }, [generateData])
 
 
-    return (<>
-
-        <Loading />
-
+    return (
         <LineChart
             label={labels}
             dataset={[
@@ -66,7 +63,6 @@ const ProductionChart = () => {
             title='Monthly quantity production report'
 
         />
-    </>
     )
 }
 

@@ -6,12 +6,12 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRequest } from "../../../hooks";
 import { BaseTable, BaseTableExpanded } from "../../tables";
 import { Badge } from "@mantine/core";
+import { getScheduleState } from "../../../services";
 
 
 const ExpandedReceiptNote = ({ data }) => {
 
     const { note, materialreceipt_set } = data
-
     const columnMaterialReceipt = useMemo(() => [
         {
             name: 'Material',
@@ -26,9 +26,11 @@ const ExpandedReceiptNote = ({ data }) => {
             selector: row => {
                 const { delivery_note_material, schedules } = row
                 const { date } = delivery_note_material
-
+                const { color, label } = getScheduleState(schedules, date)
                 return (
-                    <Badge color={schedules ? date > schedules.date ? 'red.6' : 'blue.6' : 'blue.6'} variant='filled' >{schedules ? date > schedules.date ? 'Late' : 'On time' : 'Unscheduled receipt'}</Badge>
+                    <Badge color={color} variant='filled' >
+                        {label}
+                    </Badge>
                 )
             }
         }

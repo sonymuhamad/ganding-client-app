@@ -4,6 +4,7 @@ import { useRequest } from "../../../hooks";
 import { BaseTableExpanded } from "../../tables";
 import { Badge } from "@mantine/core";
 import { ExpandedDescriptionDelivery } from "../../layout";
+import { getScheduleState } from "../../../services";
 
 
 const ProductDeliveryList = () => {
@@ -31,8 +32,16 @@ const ProductDeliveryList = () => {
         },
         {
             name: '',
-            selector: row => <Badge color={row.schedules ? row.delivery_note_customer.date > row.schedules.date ? 'red.6' : 'blue.6' : 'blue.6'} variant='filled' >{row.schedules ? row.delivery_note_customer.date > row.schedules.date ? 'Late' : 'On time' : 'Unscheduled'}</Badge>
-
+            selector: row => {
+                const { schedules, delivery_note_customer } = row
+                const { date } = delivery_note_customer
+                const { color, label } = getScheduleState(schedules, date)
+                return (
+                    <Badge color={color} variant='filled' >
+                        {label}
+                    </Badge>
+                )
+            }
         }
     ], [])
 

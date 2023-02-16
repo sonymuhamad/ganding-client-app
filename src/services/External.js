@@ -58,5 +58,36 @@ export function generateDataWithDate(date, data) {
     return data
 }
 
+function getLabelState(schedule, actualDate) {
+    if (schedule) {
+        const { date } = schedule
+        if (actualDate > date) {
+            return 'Late'
+        }
+        return 'On time'
+    }
+    return 'Unscheduled'
+}
+
+function getColorState(schedule, actualDate) {
+
+    if (schedule) {
+        const { date } = schedule
+        if (actualDate > date) {
+            return 'red.6'
+        }
+        return 'blue.6'
+    }
+    return 'blue.6'
+}
+
+export function getScheduleState(schedule, actualDate) {
+    // return state of deliveries or receipts, is it late, on time or unscheduled
+    const color = getColorState(schedule, actualDate)
+    const label = getLabelState(schedule, actualDate)
+
+    return { color, label }
+}
+
 
 

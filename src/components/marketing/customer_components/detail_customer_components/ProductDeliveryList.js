@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 
 import { useRequest } from "../../../../hooks";
 import { useParams } from "react-router-dom";
@@ -8,7 +8,7 @@ import { ExpandedDescriptionDelivery } from "../../../layout";
 import { Badge, } from "@mantine/core";
 import { SearchTextInput, HeadSection } from "../../../custom_components";
 import { useSearch } from "../../../../hooks";
-
+import { getScheduleState } from "../../../../services";
 
 
 const ProductDeliverList = () => {
@@ -31,31 +31,6 @@ const ProductDeliverList = () => {
         })
 
     }, [lowerCaseQuery, productDeliverList])
-
-    const getBadgeColor = useCallback((schedule, deliveryDate) => {
-
-        if (schedule) {
-            const { date } = schedule
-            if (deliveryDate > date) {
-                return 'red.6'
-            }
-            return 'blue.6'
-        }
-        return 'blue.6'
-    }, [])
-
-    const getBadgeLabel = useCallback((schedule, deliveryDate) => {
-
-        if (schedule) {
-            const { date } = schedule
-            if (deliveryDate > date) {
-                return 'Late'
-            }
-            return 'On time'
-        }
-        return 'Unscheduled'
-
-    }, [])
 
     const columnProductDelivery = useMemo(() => [
         {
@@ -96,12 +71,11 @@ const ProductDeliverList = () => {
             selector: row => {
                 const { schedules, delivery_note_customer } = row
                 const { date } = delivery_note_customer
-                const badgeColor = getBadgeColor(schedules, date)
-                const badgeLabel = getBadgeLabel(schedules, date)
+                const { label, color } = getScheduleState(schedules, date)
 
                 return (
-                    <Badge size='sm' color={badgeColor} variant='filled' >
-                        {badgeLabel}
+                    <Badge size='sm' color={color} variant='filled' >
+                        {label}
                     </Badge>
                 )
             },
@@ -113,7 +87,7 @@ const ProductDeliverList = () => {
             }
 
         }
-    ], [getBadgeColor, getBadgeLabel])
+    ], [])
 
     useEffect(() => {
 

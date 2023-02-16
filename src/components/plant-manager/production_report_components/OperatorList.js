@@ -5,6 +5,15 @@ import { useRequest } from "../../../hooks";
 
 import { Badge } from "@mantine/core";
 
+export function getPercentage(goods_percentage) {
+    if (goods_percentage >= 90) {
+        return 'blue'
+    }
+    if (goods_percentage < 75) {
+        return 'red'
+    }
+    return 'yellow'
+}
 
 
 const OperatorList = () => {
@@ -33,7 +42,7 @@ const OperatorList = () => {
             name: 'Production success rate',
             selector: row => {
                 const { good_percentage } = row
-                const color = good_percentage >= 90 ? 'blue' : good_percentage < 75 ? 'red' : 'yellow'
+                const color = getPercentage(good_percentage)
                 return (
                     <Badge
                         variant='filled'

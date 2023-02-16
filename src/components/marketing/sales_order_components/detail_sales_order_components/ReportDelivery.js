@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 
 import { BaseTableExpanded } from "../../../tables";
 import { ExpandedDescriptionDelivery } from "../../../layout";
@@ -9,7 +9,7 @@ import { DeliveryReport } from "../../../outputs";
 import { openModal } from "@mantine/modals";
 import { useSearch } from "../../../../hooks";
 import { HeadSection, SearchTextInput } from "../../../custom_components";
-
+import { getScheduleState } from "../../../../services";
 
 const ReportDelivery = ({ data, productOrderList, noSalesOrder, salesOrderDate, customerName }) => {
 
@@ -25,33 +25,6 @@ const ReportDelivery = ({ data, productOrderList, noSalesOrder, salesOrderDate, 
             customerName={customerName}
         />
     })
-
-    const getBadgeColor = useCallback((schedule, deliveryDate) => {
-
-        if (schedule) {
-            const { date } = schedule
-            if (date > deliveryDate) {
-                return 'blue.6'
-            }
-            return 'red.6'
-        }
-        return 'blue.6'
-
-    }, [])
-
-    const getBadgeLabel = useCallback((schedule, deliveryDate) => {
-
-        if (schedule) {
-            const { date } = schedule
-            if (date > deliveryDate) {
-                return 'On time'
-            }
-            return 'Late'
-        }
-        return 'Unscheduled'
-
-    }, [])
-
 
     const columnProductDelivery = useMemo(() => [
         {
@@ -92,12 +65,10 @@ const ReportDelivery = ({ data, productOrderList, noSalesOrder, salesOrderDate, 
             selector: row => {
                 const { schedules, delivery_note_customer } = row
                 const { date } = delivery_note_customer
-                const badgeColor = getBadgeColor(schedules, date)
-                const badgeLabel = getBadgeLabel(schedules, date)
-
+                const { color, label } = getScheduleState(schedules, date)
                 return (
-                    <Badge color={badgeColor} variant='filled' >
-                        {badgeLabel}</Badge>
+                    <Badge color={color} variant='filled' >
+                        {label}</Badge>
                 )
             },
             style: {
@@ -109,7 +80,7 @@ const ReportDelivery = ({ data, productOrderList, noSalesOrder, salesOrderDate, 
 
         }
 
-    ], [getBadgeColor, getBadgeLabel])
+    ], [])
 
 
     const filteredProductDelivery = useMemo(() => {

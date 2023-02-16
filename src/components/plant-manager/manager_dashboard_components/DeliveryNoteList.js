@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRequest } from "../../../hooks";
 
 import { BaseTable, BaseTableExpanded } from "../../tables";
-import { Badge, Textarea } from "@mantine/core";
+import { Textarea } from "@mantine/core";
 import { IconClipboard } from "@tabler/icons";
 
 

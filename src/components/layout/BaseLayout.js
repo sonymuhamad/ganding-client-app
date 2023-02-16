@@ -1,7 +1,7 @@
 import React, { useCallback, useContext } from "react";
 import { AppShell, Navbar, Header, Footer, Group, Menu, Text, Button, Image, NavLink, Tooltip } from "@mantine/core";
 import { IconUserCircle, IconLogout } from "@tabler/icons";
-import { appshellStyle } from "../../styles"
+import { appshellStyle } from "../../services/styles"
 import { AuthContext } from "../../context";
 import { DivisionIcons } from "../../services";
 import { openConfirmModal } from "@mantine/modals";

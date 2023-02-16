@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRequest } from "../../../hooks";
 import { BaseTable } from "../../tables";
 import { Badge } from "@mantine/core";
-
+import { getScheduleState } from "../../../services";
 
 const MaterialReceiptList = () => {
 
@@ -30,7 +30,17 @@ const MaterialReceiptList = () => {
         },
         {
             name: '',
-            selector: row => <Badge color={row.schedules ? row.delivery_note_material.date > row.schedules.date ? 'red.6' : 'blue.6' : 'blue.6'} variant='filled' >{row.schedules ? row.delivery_note_material.date > row.schedules.date ? 'Late' : 'On time' : 'Unscheduled'}</Badge>
+            selector: row => {
+                const { schedules, delivery_note_material } = row
+                const { date } = delivery_note_material
+                const { color, label } = getScheduleState(schedules, date)
+
+                return (
+                    <Badge color={color} variant='filled' >
+                        {label}
+                    </Badge>
+                )
+            }
         }
     ], [])
 

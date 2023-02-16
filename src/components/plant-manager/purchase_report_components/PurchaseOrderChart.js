@@ -7,7 +7,7 @@ import { Months } from "../../../services";
 
 const PurchaseOrderChart = () => {
 
-    const { Loading, GetAndExpiredTokenHandler } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
     const [labels, setLabels] = useState([])
     const [data, setData] = useState([])
 
@@ -39,26 +39,22 @@ const PurchaseOrderChart = () => {
 
 
     return (
-        <>
 
-            <Loading />
+        <LineChart
+            label={labels}
 
-            <LineChart
-                label={labels}
+            dataset={[
+                {
+                    id: 1,
+                    label: 'Total material ordered',
+                    data: data
+                }
+            ]}
 
-                dataset={[
-                    {
-                        id: 1,
-                        label: 'Total material ordered',
-                        data: data
-                    }
-                ]}
+            title='Total of material ordered each month'
 
-                title='Total of material ordered each month'
+        />
 
-            />
-
-        </>
     )
 }
 
