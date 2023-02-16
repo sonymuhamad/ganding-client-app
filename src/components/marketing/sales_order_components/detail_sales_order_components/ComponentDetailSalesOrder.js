@@ -1,27 +1,15 @@
-import { Group, SegmentedControl, Textarea, Progress, Box, Center, Text, Button, TextInput } from "@mantine/core";
+import { Group, SegmentedControl, Textarea, Progress, Box, Center, Text, TextInput } from "@mantine/core";
 
-import { IconCircleCheck, IconCircleDotted, IconChecks, IconShieldLock, IconEdit, IconTrashX, IconX, IconCodeAsterix, IconCalendar, IconUser, IconClipboard, IconDownload, IconPrinter } from "@tabler/icons";
+import { IconCircleCheck, IconCircleDotted, IconChecks, IconShieldLock, IconCodeAsterix, IconCalendar, IconUser, IconClipboard, } from "@tabler/icons";
 import React, { } from "react";
 
 import { DatePicker } from "@mantine/dates";
-import { DeliveryReport } from "../../../outputs";
-import { openModal } from "@mantine/modals";
+import { ActionButtons } from "../../../custom_components";
 
 
 
-const ComponentDetailSalesOrder = ({ form, handleChangeStatus, handleEditSo, handleDeleteSo, customer, percentage, status, editAccess, handleClickEditButton, productOrderList, noSalesOrder, salesOrderDate }) => {
-
-    const { name } = customer
-    const openModalPrintDeliveryReport = () => openModal({
-        size: 'auto',
-        radius: 'md',
-        children: <DeliveryReport
-            productOrderList={productOrderList}
-            noSalesOrder={noSalesOrder}
-            salesOrderDate={salesOrderDate}
-            customerName={name}
-        />
-    })
+const ComponentDetailSalesOrder = ({ form, handleChangeStatus, handleEditSo, handleClickDeleteButton,
+    customerName, percentage, status, editAccess, handleClickEditButton }) => {
 
     return (
         <>
@@ -75,38 +63,13 @@ const ComponentDetailSalesOrder = ({ form, handleChangeStatus, handleEditSo, han
                 />
 
 
-
-                <Group position="right" >
-                    <Button.Group>
-
-                        <Button
-                            size='xs'
-                            radius='md'
-                            color={!editAccess ? 'blue.6' : 'red.6'}
-                            onClick={() => handleClickEditButton()}
-                            leftIcon={!editAccess ? <IconEdit /> : <IconX />}
-                        >
-                            {!editAccess ? 'Edit' : 'Cancel'}
-                        </Button>
-
-                        <Button
-                            form='formEditSo'
-                            size='xs'
-                            color='blue.6'
-                            type='submit'
-                            disabled={!form.isDirty()}
-                            leftIcon={<IconDownload />} >
-                            Save Changes</Button>
-                        <Button
-                            size='xs'
-                            color='red.6'
-                            disabled={editAccess}
-                            radius='md'
-                            onClick={handleDeleteSo}
-                            leftIcon={<IconTrashX />} >
-                            Delete</Button>
-                    </Button.Group>
-                </Group>
+                <ActionButtons
+                    editAccess={editAccess}
+                    handleClickEditButton={handleClickEditButton}
+                    handleClickDeleteButton={handleClickDeleteButton}
+                    formId='formEditSo'
+                    formState={form.isDirty()}
+                />
 
             </Group>
 
@@ -119,7 +82,7 @@ const ComponentDetailSalesOrder = ({ form, handleChangeStatus, handleEditSo, han
                     radius='md'
                     m='xs'
                     variant='filled'
-                    value={customer.name}
+                    value={customerName}
                 />
 
                 <TextInput
@@ -164,17 +127,6 @@ const ComponentDetailSalesOrder = ({ form, handleChangeStatus, handleEditSo, han
                 label={`${percentage} %`}
 
                 size="xl" radius="xl" />
-
-
-            <Button
-                my='lg'
-                leftIcon={<IconPrinter />}
-                onClick={openModalPrintDeliveryReport}
-                radius='md'
-                fullWidth
-            >
-                Print
-            </Button>
 
         </>
     )

@@ -15,7 +15,7 @@ export const AuthContext = createContext(
         loggedUser: null,
         resetToken: () => { },
         changeDivision: () => { },
-        restrictedAccessHandler: () => { }
+        restrictedAccessHandler: () => { },
     }
 )
 

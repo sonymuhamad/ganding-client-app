@@ -4,9 +4,11 @@ import { useRequest } from '../../../../hooks'
 import { BaseTable } from '../../../tables'
 import { useParams } from "react-router-dom";
 import { Button, Group, TextInput, Image, NumberInput, Paper, Text } from "@mantine/core";
-import { IconDotsCircleHorizontal, IconSearch, IconBarcode, IconCodeAsterix, IconReceipt2, IconBarbell, IconList, IconSum, IconFileTypography } from "@tabler/icons";
+import { IconDotsCircleHorizontal, IconBarcode, IconCodeAsterix, IconBarbell, IconList, IconSum, IconFileTypography } from "@tabler/icons";
 import { openModal } from "@mantine/modals";
 
+import { PriceTextInput, HeadSection, SearchTextInput } from "../../../custom_components";
+import { useSearch } from "../../../../hooks";
 
 
 
@@ -52,25 +54,11 @@ const ModalDetailProduct = ({ data }) => {
                     value={type.name}
                 />
 
-
-
-
-                <NumberInput
+                <PriceTextInput
                     label='Harga / unit'
-                    placeholder="Input harga per unit"
                     value={price}
-                    radius='md'
-                    readOnly
-                    hideControls
                     variant='filled'
-                    min={0}
-                    parser={(value) => value.replace(/\Rp\s?|(,*)/g, '')}
-                    formatter={(value) =>
-                        !Number.isNaN(parseFloat(value))
-                            ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                            : 'Rp '
-                    }
-                    icon={<IconReceipt2 />}
+                    readOnly
                 />
 
             </Group>
@@ -134,16 +122,19 @@ const ModalDetailProduct = ({ data }) => {
 
 const ProductList = () => {
 
-    const [query, setQuery] = useState('')
     const [productList, setProductList] = useState([])
     const { RetrieveWithoutExpiredTokenHandler } = useRequest()
     const { customerId } = useParams()
+    const { lowerCaseQuery, setValueQuery, query } = useSearch()
 
     const filteredProduct = useMemo(() => {
 
-        return productList.filter(product => product.name.toLowerCase().includes(query.toLowerCase()) || product.code.toLowerCase().includes(query.toLowerCase()))
+        return productList.filter(product => {
+            const { name, code } = product
+            return name.toLowerCase().includes(lowerCaseQuery) || code.toLowerCase().includes(lowerCaseQuery)
+        })
 
-    }, [query, productList])
+    }, [lowerCaseQuery, productList])
 
     const openDetailModalProduct = useCallback((data) => openModal({
         title: 'Detail product',
@@ -182,7 +173,7 @@ const ProductList = () => {
                 Detail
             </Button>
         }
-    ], [])
+    ], [openDetailModalProduct])
 
     useEffect(() => {
 
@@ -194,19 +185,12 @@ const ProductList = () => {
 
     return (
         <>
-            <Group
-                m='xs'
-                position="right"
-            >
-
-                <TextInput
-                    icon={<IconSearch />}
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    placeholder="Search product"
-                    radius='md'
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
-            </Group>
+            </HeadSection>
 
             <BaseTable
                 noData="No data product"

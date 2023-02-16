@@ -1,24 +1,25 @@
 import React, { useMemo, useCallback } from "react";
 
+import { closeAllModals, openModal } from "@mantine/modals";
 import { DatePicker } from "@mantine/dates";
-import { useRequest } from "../../../../hooks";
+import { Group, NumberInput, Select, TextInput } from "@mantine/core";
+import { IconBarcode, IconCalendar, IconCodeAsterix, IconTruckDelivery } from "@tabler/icons";
+import { useForm } from "@mantine/form";
+
 
 import { BaseTable } from "../../../tables";
-import { closeAllModals, openModal, openConfirmModal } from "@mantine/modals";
+import { useRequest, useConfirmDelete } from "../../../../hooks";
 
-import { Button, Group, NumberInput, Select, TextInput, Text } from "@mantine/core";
-
-import { IconBarcode, IconCalendar, IconCodeAsterix, IconDownload, IconPlus, IconTruckDelivery, IconTrash, IconEdit } from "@tabler/icons";
 import { CustomSelectComponentProduct } from "../../../layout";
-import { useForm } from "@mantine/form";
-import { FailedNotif, SuccessNotif } from "../../../notifications";
+import { FailedNotif, SuccessNotif } from "../../../notifications"
 
-
+import { HeadSection, ButtonAdd, ButtonDelete, ButtonEdit, ModalForm } from "../../../custom_components";
+import { generateDataWithDate } from "../../../../services";
 
 
 const ModalAddDeliverySchedule = ({ handleAddDeliverySchedule, productOrderList }) => {
 
-    const { Post, Loading } = useRequest()
+    const { Post } = useRequest()
 
     const form = useForm({
         initialValues: {
@@ -33,17 +34,10 @@ const ModalAddDeliverySchedule = ({ handleAddDeliverySchedule, productOrderList 
     }, [productOrderList])
 
 
-    const generateDate = useCallback((date, data) => {
-        if (date) {
-            return { ...data, date: date.toLocaleDateString('en-CA') }
-        }
-        return data
-    }, [])
-
     const handleSubmit = async (value) => {
 
         const { date, ...rest } = value
-        const validate_data = generateDate(date, rest)
+        const validate_data = generateDataWithDate(date, rest)
         const { product_order } = validate_data
         const selectedProductOrder = getSelectedProductOrder(product_order)
 
@@ -63,9 +57,9 @@ const ModalAddDeliverySchedule = ({ handleAddDeliverySchedule, productOrderList 
     }
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)} >
-
-            <Loading />
+        <ModalForm
+            id='formAddDeliverySchedule'
+            onSubmit={form.onSubmit(handleSubmit)} >
 
             <Select
                 label='Product'
@@ -101,16 +95,7 @@ const ModalAddDeliverySchedule = ({ handleAddDeliverySchedule, productOrderList 
                 icon={<IconCalendar />}
             />
 
-            <Button
-                radius='md'
-                fullWidth
-                type='submit'
-                leftIcon={<IconDownload />}
-            >
-                Save
-            </Button>
-
-        </form>
+        </ModalForm>
     )
 }
 
@@ -119,7 +104,7 @@ const ModalEditDeliverySchedule = ({ handleChangeDeliverySchedule, data }) => {
     const { product_order, date, ...rest } = data
     const { id, product } = product_order
     const { name, code } = product
-    const { Put, Loading } = useRequest()
+    const { Put } = useRequest()
 
     const form = useForm({
         initialValues: {
@@ -129,16 +114,9 @@ const ModalEditDeliverySchedule = ({ handleChangeDeliverySchedule, data }) => {
         }
     })
 
-    const generateDate = useCallback((date, data) => {
-        if (date) {
-            return { ...data, date: date.toLocaleDateString('en-CA') }
-        }
-        return data
-    }, [])
-
     const handleSubmit = async (value) => {
         const { date, id, ...rest } = value
-        const validate_data = generateDate(date, rest)
+        const validate_data = generateDataWithDate(date, rest)
 
         try {
             const updatedSchedule = await Put(id, validate_data, 'delivery-schedule-management')
@@ -160,8 +138,9 @@ const ModalEditDeliverySchedule = ({ handleChangeDeliverySchedule, data }) => {
     }
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)} >
-            <Loading />
+        <ModalForm
+            id='formEditDeliverySchedule'
+            onSubmit={form.onSubmit(handleSubmit)} >
 
             <TextInput
                 value={name}
@@ -207,17 +186,7 @@ const ModalEditDeliverySchedule = ({ handleChangeDeliverySchedule, data }) => {
 
             </Group>
 
-            <Button
-                type='submit'
-                fullWidth
-                leftIcon={<IconDownload />}
-                radius='md'
-            >
-                Save
-            </Button>
-
-
-        </form>
+        </ModalForm>
     )
 }
 
@@ -225,6 +194,7 @@ const ModalEditDeliverySchedule = ({ handleChangeDeliverySchedule, data }) => {
 const DeliveryScheduleList = ({ data, productOrderList, handleChangeDeliverySchedule, handleAddDeliverySchedule, handleDeleteDeliverySchedule }) => {
 
     const { Delete } = useRequest()
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Delivery schedule' })
 
     const openModalEditDeliverySchedule = useCallback((data) => openModal({
         title: 'Edit schedule',
@@ -257,19 +227,8 @@ const DeliveryScheduleList = ({ data, productOrderList, handleChangeDeliverySche
     }, [handleDeleteDeliverySchedule])
 
 
-    const openModalDeleteSchedule = useCallback((id) => openConfirmModal({
-        title: `Delete Product Order`,
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteSchedule(id),
-    }), [handleDeleteSchedule])
+    const openModalDeleteSchedule = useCallback((id) => openConfirmDeleteData(() => handleDeleteSchedule(id)),
+        [handleDeleteSchedule, openConfirmDeleteData])
 
     const columnDeliverySchedule = useMemo(() => [
         {
@@ -307,17 +266,9 @@ const DeliveryScheduleList = ({ data, productOrderList, handleChangeDeliverySche
         },
         {
             name: '',
-            selector: row =>
-                <Button
-                    leftIcon={<IconEdit stroke={2} size={16} />}
-                    color='blue.6'
-                    variant='subtle'
-                    radius='md'
-                    mx='xs'
-                    onClick={() => openModalEditDeliverySchedule(row)}
-                >
-                    Edit
-                </Button>,
+            selector: row => <ButtonEdit
+                onClick={() => openModalEditDeliverySchedule(row)}
+            />,
             style: {
                 paddingLeft: 0,
                 marginLeft: -30,
@@ -326,15 +277,9 @@ const DeliveryScheduleList = ({ data, productOrderList, handleChangeDeliverySche
         },
         {
             name: '',
-            selector: row => <Button
-                leftIcon={<IconTrash stroke={2} size={16} />}
-                color='red.6'
-                variant='subtle'
-                radius='md'
+            selector: row => <ButtonDelete
                 onClick={() => openModalDeleteSchedule(row.id)}
-            >
-                Delete
-            </Button>,
+            />,
             style: {
                 paddingLeft: 0,
                 marginLeft: -30,
@@ -346,20 +291,13 @@ const DeliveryScheduleList = ({ data, productOrderList, handleChangeDeliverySche
     return (
         <>
 
-            <Group
-                m='xs'
-                position="right"
-            >
-                <Button
-                    radius='md'
-                    leftIcon={<IconPlus />}
-                    variant='outline'
+            <HeadSection>
+                <ButtonAdd
                     onClick={openModalAddDeliverySchedule}
                 >
                     Delivery schedule
-                </Button>
-
-            </Group>
+                </ButtonAdd>
+            </HeadSection>
 
             <BaseTable
                 column={columnDeliverySchedule}

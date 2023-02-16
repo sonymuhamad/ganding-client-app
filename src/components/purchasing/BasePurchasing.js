@@ -42,7 +42,9 @@ export default function BasePurchasing() {
 
     return (
         <>
-            <BaseLayout outlet={<Outlet />} navlink={<NavLinks links={links} />} />
+            <BaseLayout navlink={<NavLinks links={links} />}>
+                <Outlet />
+            </BaseLayout>
         </>
     )
 

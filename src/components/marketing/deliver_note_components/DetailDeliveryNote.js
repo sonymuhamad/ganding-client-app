@@ -7,7 +7,7 @@ import { BaseContent } from '../../layout'
 
 const DetailDeliveryNote = () => {
 
-    const { Retrieve, Loading } = useRequest()
+    const { Retrieve } = useRequest()
     const { deliveryNoteId } = useParams()
     const [productDeliver, setProductDeliver] = useState([])
 
@@ -94,12 +94,7 @@ const DetailDeliveryNote = () => {
     ], [detailDeliveryNote, productDeliver])
 
     return (
-        <>
-            <Loading />
-
-            <BaseContent links={links} breadcrumb={breadcrumb} contents={contents} />
-
-        </>
+        <BaseContent links={links} breadcrumb={breadcrumb} contents={contents} />
     )
 }
 

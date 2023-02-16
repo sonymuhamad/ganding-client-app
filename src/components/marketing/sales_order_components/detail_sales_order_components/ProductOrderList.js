@@ -1,23 +1,26 @@
 
 //// List of product order from detail sales order 
 
-import { Button, Group, NumberInput, Select, TextInput, Text } from "@mantine/core";
+import { Group, NumberInput, Select, TextInput } from "@mantine/core";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useRequest } from "../../../../hooks";
+import { useRequest, useConfirmDelete } from "../../../../hooks";
 import { FailedNotif, SuccessNotif } from "../../../notifications";
 import { BaseTable } from "../../../tables";
 
-import { closeAllModals, openModal, openConfirmModal } from "@mantine/modals";
-import { IconBarcode, IconClipboardCheck, IconCodeAsterix, IconDownload, IconPlus, IconTruckDelivery, IconEdit, IconTrash, IconReceipt2 } from "@tabler/icons";
+import { closeAllModals, openModal } from "@mantine/modals";
+import { IconBarcode, IconClipboardCheck, IconCodeAsterix, IconTruckDelivery } from "@tabler/icons";
 import { useForm } from "@mantine/form";
 import { CustomSelectComponentProduct } from "../../../layout";
+
+import { HeadSection, ButtonAdd, ButtonDelete, ButtonEdit, ButtonSubmit, PriceTextInput } from "../../../custom_components";
+
 
 
 const ModalEditProductOrder = ({ salesOrderId, data, handleChangeProductOrder }) => {
 
     const { product, delivered, ...rest } = data
     const { name, code, id } = product
-    const { Put, Loading } = useRequest()
+    const { Put } = useRequest()
 
     const form = useForm({
         initialValues: {
@@ -49,9 +52,7 @@ const ModalEditProductOrder = ({ salesOrderId, data, handleChangeProductOrder })
 
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)} >
-
-            <Loading />
+        <form onSubmit={form.onSubmit(handleSubmit)} id='formEditProductOrder' >
 
             <TextInput
                 label='Product'
@@ -96,34 +97,17 @@ const ModalEditProductOrder = ({ salesOrderId, data, handleChangeProductOrder })
 
             </Group>
 
-
-            <NumberInput
+            <PriceTextInput
                 label='Harga / unit'
                 placeholder="Input harga per unit"
                 {...form.getInputProps('price')}
-                radius='md'
-                hideControls
                 m='xs'
                 required
-                min={0}
-                parser={(value) => value.replace(/Rp\s?|(,*)/g, '')}
-                formatter={(value) =>
-                    !Number.isNaN(parseFloat(value))
-                        ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                        : 'Rp '
-                }
-                icon={<IconReceipt2 />}
             />
 
-            <Button
-                my='md'
-                type='submit'
-                leftIcon={<IconDownload />}
-                radius='md'
-                fullWidth
-            >
-                Save
-            </Button>
+            <ButtonSubmit
+                formId='formEditProductOrder'
+            />
 
         </form>
     )
@@ -132,7 +116,7 @@ const ModalEditProductOrder = ({ salesOrderId, data, handleChangeProductOrder })
 const ModalAddProductOrder = ({ handleAddProductOrder, salesOrderId, customerId }) => {
 
     const [productList, setProductList] = useState([])
-    const { Retrieve, Loading, Post } = useRequest()
+    const { Retrieve, Post } = useRequest()
     const form = useForm({
         initialValues: {
             ordered: '',
@@ -182,9 +166,10 @@ const ModalAddProductOrder = ({ handleAddProductOrder, salesOrderId, customerId 
     }
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)}  >
-
-            <Loading />
+        <form
+            id="formAddProductOrder"
+            onSubmit={form.onSubmit(handleSubmit)}
+        >
 
             <Select
                 label='Product'
@@ -209,34 +194,16 @@ const ModalAddProductOrder = ({ handleAddProductOrder, salesOrderId, customerId 
                 {...form.getInputProps('ordered')}
             />
 
-
-            <NumberInput
+            <PriceTextInput
                 label='Harga / unit'
                 placeholder="Input harga per unit"
                 {...form.getInputProps('price')}
-                radius='md'
                 m='xs'
-                hideControls
-                min={0}
-                rightSection={<IconReceipt2 />}
-                parser={(value) => value.replace(/Rp\s?|(,*)/g, '')}
-                formatter={(value) =>
-                    !Number.isNaN(parseFloat(value))
-                        ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                        : 'Rp '
-                }
-                icon={<IconReceipt2 />}
             />
 
-            <Button
-                my='md'
-                radius='md'
-                fullWidth
-                leftIcon={<IconDownload />}
-                type='submit'
-            >
-                Save
-            </Button>
+            <ButtonSubmit
+                formId='formAddProductOrder'
+            />
 
         </form>
     )
@@ -246,6 +213,7 @@ const ModalAddProductOrder = ({ handleAddProductOrder, salesOrderId, customerId 
 const ProductOrderList = ({ productOrderList, salesOrderId, handleAddProductOrder, handleChangeProductOrder, handleDeleteProductOrder, customerId }) => {
 
     const { Delete } = useRequest()
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Product order' })
 
     const handleDeletePo = useCallback(async (id) => {
 
@@ -263,19 +231,8 @@ const ProductOrderList = ({ productOrderList, salesOrderId, handleAddProductOrde
     }, [handleDeleteProductOrder])
 
 
-    const openModalDeletePo = useCallback((id) => openConfirmModal({
-        title: `Delete Product Order`,
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeletePo(id),
-    }), [handleDeletePo])
+    const openModalDeletePo = useCallback((id) => openConfirmDeleteData(() => handleDeletePo(id)),
+        [handleDeletePo, openConfirmDeleteData])
 
     const openModalEditPo = useCallback((data) => openModal({
         title: 'Edit product order',
@@ -283,7 +240,7 @@ const ProductOrderList = ({ productOrderList, salesOrderId, handleAddProductOrde
         size: 'xl',
         children: <ModalEditProductOrder salesOrderId={salesOrderId} handleChangeProductOrder={handleChangeProductOrder} data={data} />
 
-    }), [handleChangeProductOrder, , salesOrderId])
+    }), [handleChangeProductOrder, salesOrderId])
 
     const openModalAddPo = useCallback(() => openModal({
         title: 'Add product order',
@@ -330,16 +287,9 @@ const ProductOrderList = ({ productOrderList, salesOrderId, handleAddProductOrde
         {
             name: '',
             selector: row =>
-                <Button
-                    leftIcon={<IconEdit stroke={2} size={16} />}
-                    color='blue.6'
-                    variant='subtle'
-                    radius='md'
-                    mx='xs'
+                <ButtonEdit
                     onClick={() => openModalEditPo(row)}
-                >
-                    Edit
-                </Button>,
+                />,
             style: {
                 paddingLeft: 0,
                 marginLeft: -30,
@@ -348,15 +298,9 @@ const ProductOrderList = ({ productOrderList, salesOrderId, handleAddProductOrde
         },
         {
             name: '',
-            selector: row => <Button
-                leftIcon={<IconTrash stroke={2} size={16} />}
-                color='red.6'
-                variant='subtle'
-                radius='md'
+            selector: row => <ButtonDelete
                 onClick={() => openModalDeletePo(row.id)}
-            >
-                Delete
-            </Button>,
+            />,
             style: {
                 paddingLeft: 0,
                 marginLeft: -30,
@@ -368,20 +312,14 @@ const ProductOrderList = ({ productOrderList, salesOrderId, handleAddProductOrde
     return (
         <>
 
-            <Group
-                m='xs'
-                position="right"
-            >
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+            <HeadSection>
+                <ButtonAdd
                     onClick={openModalAddPo}
                 >
                     Product order
-                </Button>
+                </ButtonAdd>
+            </HeadSection>
 
-            </Group>
 
             <BaseTable
                 column={columnProductOrder}

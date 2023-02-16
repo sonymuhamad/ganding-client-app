@@ -1,22 +1,23 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-import { useRequest } from "../../../../hooks";
-import { Group, Button, TextInput, NumberInput, Text, Textarea } from "@mantine/core";
+import { useRequest, useConfirmDelete } from "../../../../hooks";
+import { TextInput, NumberInput, Textarea } from "@mantine/core";
 
-import { IconX, IconDownload, IconAt, IconMapPin, IconDeviceMobile, IconUserPlus, IconTrashX, IconEdit } from "@tabler/icons";
+import { IconAt, IconMapPin, IconDeviceMobile, IconUserPlus } from "@tabler/icons";
 
 import { useForm } from "@mantine/form";
 import { FailedNotif, SuccessNotif } from "../../../notifications";
-import { openConfirmModal } from "@mantine/modals";
+import { ActionButtons } from "../../../custom_components";
 
 
 const ComponentDetailCustomer = () => {
 
     const [editAccess, setEditAccess] = useState(false)
     const navigate = useNavigate()
-    const { Retrieve, Loading, Put, Delete } = useRequest()
+    const { Retrieve, Put, Delete } = useRequest()
     const { customerId } = useParams()
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Customer' })
     const [detailCustomer, setDetailCustomer] = useState({
         id: '',
         name: '',
@@ -25,13 +26,7 @@ const ComponentDetailCustomer = () => {
         email: '',
     })
     const form = useForm({
-        initialValues: {
-            id: '',
-            name: '',
-            address: '',
-            phone: '',
-            email: ''
-        }
+        initialValues: detailCustomer
     })
 
     const handleClickEditButton = useCallback((updatedCustomer = null) => {
@@ -77,22 +72,9 @@ const ComponentDetailCustomer = () => {
             }
             FailedNotif('Delete customer failed')
         }
-    }, [])
+    }, [navigate, customerId])
 
-    const openConfirmDeleteCustomer = useCallback(() => openConfirmModal({
-        title: `Delete customer`,
-        children: (
-            <Text size="sm">
-                Are you sure?, deleted data cannot be recovered.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteCustomer(),
-    }), [handleDeleteCustomer])
-
+    const handleClickDeleteButton = () => openConfirmDeleteData(handleDeleteCustomer)
 
     useEffect(() => {
 
@@ -102,45 +84,18 @@ const ComponentDetailCustomer = () => {
             form.resetDirty()
         })
 
-    }, [])
+    }, [customerId])
 
     return (
         <>
 
-            <Loading />
-
-
-            <Group position="right" >
-                <Button.Group>
-
-                    <Button
-                        size='xs'
-                        radius='md'
-                        color={!editAccess ? 'blue.6' : 'red.6'}
-                        onClick={() => handleClickEditButton()}
-                        leftIcon={!editAccess ? <IconEdit /> : <IconX />}
-                    >
-                        {!editAccess ? 'Edit' : 'Cancel'}
-                    </Button>
-
-                    <Button
-                        form='formEditCustomer'
-                        size='xs'
-                        color='blue.6'
-                        type='submit'
-                        disabled={!form.isDirty()}
-                        leftIcon={<IconDownload />} >
-                        Save Changes</Button>
-                    <Button
-                        size='xs'
-                        color='red.6'
-                        disabled={editAccess}
-                        radius='md'
-                        onClick={openConfirmDeleteCustomer}
-                        leftIcon={<IconTrashX />} >
-                        Delete</Button>
-                </Button.Group>
-            </Group>
+            <ActionButtons
+                editAccess={editAccess}
+                handleClickEditButton={handleClickEditButton}
+                formState={form.isDirty()}
+                handleClickDeleteButton={handleClickDeleteButton}
+                formId='formEditCustomer'
+            />
 
             <form id="formEditCustomer" onSubmit={form.onSubmit(handleSubmit)} >
 
@@ -174,6 +129,7 @@ const ComponentDetailCustomer = () => {
                     radius='md'
                     placeholder='Input phone number'
                     label='Phone'
+                    hideControls
                     readOnly={!editAccess}
                     {...form.getInputProps('phone')}
                     required

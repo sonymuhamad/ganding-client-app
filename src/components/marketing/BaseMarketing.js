@@ -49,9 +49,10 @@ const BaseMarketing = () => {
     return (
         <>
             <BaseLayout
-                outlet={<Outlet links={links} />}
                 navlink={<NavLinks links={links} />}
-            />
+            >
+                <Outlet />
+            </BaseLayout>
 
         </>
     )

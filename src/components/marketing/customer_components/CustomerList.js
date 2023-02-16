@@ -1,21 +1,20 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 
-///await GetAndExpiredTokenHandler('customer')
 import { useRequest } from "../../../hooks";
 import { BaseTableExpanded } from "../../tables";
-import { Button, Group, TextInput, Textarea, NumberInput } from "@mantine/core";
-import { Link } from "react-router-dom";
+import { TextInput, Textarea, NumberInput } from "@mantine/core";
 import { closeAllModals, openModal } from "@mantine/modals";
-import { IconDownload, IconPlus, IconAt, IconMapPin, IconDeviceMobile, IconUserPlus, IconDotsCircleHorizontal } from "@tabler/icons";
+import { IconAt, IconMapPin, IconDeviceMobile, IconUserPlus } from "@tabler/icons";
 import { useForm } from "@mantine/form";
 import { FailedNotif, SuccessNotif } from "../../notifications";
 import { ExpandedCustomerList } from "../../layout";
 
+import { ButtonAdd, HeadSection, NavigationDetailButton, ModalForm } from '../../custom_components'
 
 
 const ModalAddCustomer = ({ handleAddCustomer }) => {
 
-    const { Post, Loading } = useRequest()
+    const { Post } = useRequest()
     const form = useForm({
         initialValues: {
             name: '',
@@ -40,8 +39,9 @@ const ModalAddCustomer = ({ handleAddCustomer }) => {
 
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)} >
-            <Loading />
+        <ModalForm
+            id="formAddCustomer"
+            onSubmit={form.onSubmit(handleSubmit)} >
 
             <TextInput
                 icon={<IconUserPlus />}
@@ -70,6 +70,7 @@ const ModalAddCustomer = ({ handleAddCustomer }) => {
                 radius='md'
                 placeholder='Input phone number'
                 label='Phone'
+                hideControls
                 {...form.getInputProps('phone')}
                 required
             />
@@ -84,17 +85,7 @@ const ModalAddCustomer = ({ handleAddCustomer }) => {
                 required
             />
 
-            <Button
-                type='submit'
-                fullWidth
-                leftIcon={<IconDownload />}
-                radius='md'
-                my='md'
-            >
-                Save
-            </Button>
-
-        </form>
+        </ModalForm>
 
     )
 }
@@ -102,7 +93,7 @@ const ModalAddCustomer = ({ handleAddCustomer }) => {
 const CustomerList = () => {
 
     const [customerList, setCustomerList] = useState([])
-    const { Loading, GetAndExpiredTokenHandler } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
 
     const column = useMemo(() => [
         {
@@ -126,16 +117,9 @@ const CustomerList = () => {
         },
         {
             name: '',
-            selector: row => <Button
-                leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                color='teal.8'
-                variant='subtle'
-                radius='md'
-                component={Link}
-                to={`/home/marketing/customers/${row.id}`}
-            >
-                Detail
-            </Button>,
+            selector: row => <NavigationDetailButton
+                url={`/home/marketing/customers/${row.id}`}
+            />,
         }
 
     ], [])
@@ -165,22 +149,15 @@ const CustomerList = () => {
 
     return (
         <>
-            <Loading />
+            <HeadSection>
 
-            <Group
-                m='xs'
-                position="right"
-            >
-                <Button
+                <ButtonAdd
                     onClick={openModalAddCustomer}
-                    radius='md'
-                    variant='outline'
-                    leftIcon={<IconPlus />}
                 >
                     Customer
-                </Button>
+                </ButtonAdd>
 
-            </Group>
+            </HeadSection>
 
             <BaseTableExpanded
                 noData="No data customer"

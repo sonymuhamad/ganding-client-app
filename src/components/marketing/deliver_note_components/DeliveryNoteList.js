@@ -1,22 +1,25 @@
-
 import React, { useState, useEffect, useMemo } from "react";
+
 import { BaseTable } from "../../tables";
-import { useRequest } from "../../../hooks";
-import { IconSearch, IconDotsCircleHorizontal } from "@tabler/icons";
-import { TextInput, Button, Group } from "@mantine/core";
-import { Link } from "react-router-dom";
+import { useRequest, useSearch } from "../../../hooks"
+import { SearchTextInput, HeadSection, NavigationDetailButton } from "../../custom_components";
+
 
 const DeliveryNoteList = () => {
     const [deliveryNotes, setDeliveryNotes] = useState([])
-    const { GetAndExpiredTokenHandler, Loading } = useRequest()
-    const [searchVal, setSearchVal] = useState('')
+    const { GetAndExpiredTokenHandler } = useRequest()
+    const { lowerCaseQuery, query, setValueQuery } = useSearch()
 
     const filteredDeliveryNotes = useMemo(() => {
 
-        const valFiltered = searchVal.toLowerCase()
-        return deliveryNotes.filter((dn) => dn.customer.name.toLowerCase().includes(valFiltered) || dn.created.includes(valFiltered) || dn.code.includes(valFiltered))
+        return deliveryNotes.filter((dn) => {
+            const { customer, date, code } = dn
+            const { name } = customer
 
-    }, [deliveryNotes, searchVal])
+            return name.toLowerCase().includes(lowerCaseQuery) || date.includes(lowerCaseQuery) || code.includes(lowerCaseQuery)
+        })
+
+    }, [deliveryNotes, lowerCaseQuery])
 
 
     const columnDeliveryNote = useMemo(() => [
@@ -41,16 +44,9 @@ const DeliveryNoteList = () => {
         },
         {
             name: '',
-            selector: row => <Button
-                component={Link}
-                to={`/home/marketing/delivery-note/${row.id}`}
-                leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                color='teal.8'
-                variant='subtle'
-                radius='md'
-            >
-                Detail
-            </Button>,
+            selector: row => <NavigationDetailButton
+                url={`/home/marketing/delivery-note/${row.id}`}
+            />,
             style: {
                 padding: 0,
             }
@@ -75,18 +71,12 @@ const DeliveryNoteList = () => {
     return (
         <>
 
-            <Loading />
-
-            <Group position='right' >
-
-                <TextInput
-                    icon={<IconSearch />}
-                    placeholder='Search'
-                    value={searchVal}
-                    onChange={e => setSearchVal(e.target.value)}
-                    radius='md'
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
-            </Group>
+            </HeadSection>
 
 
 

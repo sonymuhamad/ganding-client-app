@@ -34,5 +34,29 @@ export const DivisionIcons = {
     4: <IconChartInfographic />
 }
 
+export function generateDate(date) {
+    // generate date before being sent to django server
+
+    let year = date.getFullYear()
+    let month = `${date.getMonth() + 1}`
+    let day = `${date.getDate()}`
+
+    if (month.length < 2) {
+        month = '0' + month
+    }
+    if (day.length < 2) {
+        day = '0' + day
+    }
+
+    return [year, month, day].join('-')  // e.g. '2022-02-19'
+}
+
+export function generateDataWithDate(date, data) {
+    if (date) {
+        return { ...data, date: generateDate(date) }
+    }
+    return data
+}
+
 
 

@@ -7,7 +7,7 @@ import { Months } from "../../../services";
 
 const ProductOrderChart = () => {
 
-    const { Loading, GetAndExpiredTokenHandler } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
     const [labels, setLabels] = useState([])
     const [data, setData] = useState([])
 
@@ -33,24 +33,18 @@ const ProductOrderChart = () => {
     }, [])
 
     return (
-        <>
+        <LineChart
+            label={labels}
+            dataset={[
+                {
+                    id: '',
+                    label: 'Total order',
+                    data: data
+                }
+            ]}
 
-            <Loading />
-
-            <LineChart
-                label={labels}
-                dataset={[
-                    {
-                        id: '',
-                        label: 'Total order',
-                        data: data
-                    }
-                ]}
-
-                title='The total number of products ordered each month'
-            />
-
-        </>
+            title='The total number of products ordered each month'
+        />
     )
 }
 

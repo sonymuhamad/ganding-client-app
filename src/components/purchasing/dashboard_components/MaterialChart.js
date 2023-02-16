@@ -8,7 +8,7 @@ import { Months } from "../../../services";
 
 const MaterialChart = () => {
 
-    const { GetAndExpiredTokenHandler, Loading } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
     const [orderDataSet, setOrderDataSet] = useState([])
     const [usageDataSet, setUsageDataSet] = useState([])
     const [labels, setLabels] = useState([])
@@ -39,9 +39,6 @@ const MaterialChart = () => {
 
     return (
         <>
-
-            <Loading />
-
             <LineChart label={labels} dataset={[
                 {
                     id: 1,

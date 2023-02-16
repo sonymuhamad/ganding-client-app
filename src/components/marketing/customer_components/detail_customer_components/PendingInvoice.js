@@ -1,12 +1,10 @@
-import { Button } from "@mantine/core";
 import React, { useState, useEffect, useMemo } from "react";
 
 import { useRequest } from "../../../../hooks";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import { BaseTable } from "../../../tables";
-import { IconDotsCircleHorizontal } from "@tabler/icons";
-
+import { NavigationDetailButton } from "../../../custom_components";
 
 
 const PendingInvoice = () => {
@@ -31,16 +29,9 @@ const PendingInvoice = () => {
         },
         {
             name: '',
-            selector: row => <Button
-                leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                color='teal.8'
-                variant='subtle'
-                radius='md'
-                component={Link}
-                to={`/home/marketing/customers/${row.id}`}
-            >
-                Detail
-            </Button>
+            selector: row => <NavigationDetailButton
+                url={`/home/marketing/invoice/${row.id}`}
+            />
         }
     ], [])
 

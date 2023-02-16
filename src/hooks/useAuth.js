@@ -1,10 +1,9 @@
 import { useCallback, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { showNotification } from "@mantine/notifications";
 import { IconCheck, IconAccessPointOff, IconChecks } from "@tabler/icons";
-import { AuthException, Url } from "../services";
-import { useParams } from "react-router-dom";
+import { AuthException, Url } from "../services"
 import { closeAllModals } from "@mantine/modals"
 
 const sign_in_url = `${Url}/plant-manager/sign-in/`
@@ -22,11 +21,14 @@ export const useAuth = () => {
     }, [])
 
     const params = useParams()
+    const { pathname } = useLocation()
     const navigate = useNavigate()
+
     const [user, setUser] = useState(() => {
         const initialState = initialCompute()
         return initialState
     })
+
 
     const saveToLocalStorage = useCallback((data_user) => {
         const json_data_user = JSON.stringify(data_user)
@@ -67,22 +69,19 @@ export const useAuth = () => {
     const performSaveAndRedirectAfterSignIn = useCallback((data_user) => {
         let redirect
 
-        if (Object.keys(params).length !== 0) {
-            // redirect for user expired token
-            redirect = params["*"].split('=')[1]
+        // redirect for user first time login
+        redirect = `/home/${data_user.division}`
 
-            const name_prev_division = redirect.split('/')[2]
+        if (Object.keys(params).length !== 0) {
+
+            // redirect from expired token or restricted access
+            const previousPath = params["*"].split('=')[1]
+            const name_prev_division = previousPath.split('/')[2]
+
             if (checkPreviousDivision(data_user.groups, name_prev_division)) {
                 data_user.division = name_prev_division
-            } else {
-                redirect = `/home/${data_user.division}`
+                redirect = previousPath
             }
-
-
-        } else {
-            // redirect for user first time login
-
-            redirect = `/home/${data_user.division}`
         }
 
         setDataUser(data_user)
@@ -141,7 +140,7 @@ export const useAuth = () => {
         }
     }, [navigate, performSignOut])
 
-    const resetToken = useCallback(async (redirect) => {
+    const resetToken = useCallback(async () => {
         try {
             await performSignOut()
             showNotification({
@@ -152,14 +151,14 @@ export const useAuth = () => {
                 color: 'red',
                 icon: <IconAccessPointOff />
             })
-            navigate(`/login/next=${redirect}`)
+            navigate(`/login/next=${pathname}`)
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
 
     }, [navigate, performSignOut])
 
-    const restrictedAccessHandler = useCallback(async (redirect) => {
+    const restrictedAccessHandler = useCallback(async () => {
         try {
             await performSignOut()
             showNotification({
@@ -170,7 +169,7 @@ export const useAuth = () => {
                 color: 'red',
                 icon: <IconAccessPointOff />
             })
-            navigate(`/login/next=${redirect}`)
+            navigate(`/login/next=${pathname}`)
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }

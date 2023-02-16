@@ -1,10 +1,35 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 
 import { BaseTableExpanded } from "../../../tables";
 import { ExpandedDescriptionDelivery } from "../../../layout";
 import { Badge } from "@mantine/core";
 
 const ProductDeliveryList = ({ data }) => {
+
+    const getBadgeLabel = useCallback((schedule, deliveryDate) => {
+
+        if (schedule) {
+            const { date } = schedule
+            if (date > deliveryDate) {
+                return 'On time'
+            }
+            return 'Late'
+        }
+        return 'Unscheduled'
+
+    }, [])
+
+    const getBadgeColor = useCallback((schedule, deliveryDate) => {
+        if (schedule) {
+            const { date } = schedule
+            if (date > deliveryDate) {
+                return 'blue.6'
+            }
+            return 'red.6'
+        }
+        return 'blue.6'
+
+    }, [])
 
     const columnProductDelivery = useMemo(() => [
         {
@@ -16,8 +41,8 @@ const ProductDeliveryList = ({ data }) => {
             }
         },
         {
-            name: 'Product number',
-            selector: row => row.product_order.product.code,
+            name: 'Delivery number',
+            selector: row => row.delivery_note_customer.code,
             style: {
                 paddingLeft: 0,
                 marginRight: 0
@@ -42,7 +67,18 @@ const ProductDeliveryList = ({ data }) => {
         },
         {
             name: '',
-            selector: row => <Badge size='sm' color={row.schedules ? row.delivery_note_customer.date > row.schedules.date ? 'red.6' : 'blue.6' : 'blue.6'} variant='filled' >{row.schedules ? row.delivery_note_customer.date > row.schedules.date ? 'Late' : 'On time' : 'Unscheduled'}</Badge>,
+            selector: row => {
+
+                const { schedules, delivery_note_customer } = row
+                const { date } = delivery_note_customer
+                const badgeLabel = getBadgeLabel(schedules, date)
+                const badgeColor = getBadgeColor(schedules, date)
+
+                return (<Badge size='sm' color={badgeColor} variant='filled' >
+                    {badgeLabel}
+                </Badge>)
+
+            },
             style: {
                 paddingLeft: 0,
                 marginLeft: -30,
@@ -51,7 +87,8 @@ const ProductDeliveryList = ({ data }) => {
             }
 
         }
-    ], [])
+
+    ], [getBadgeColor, getBadgeLabel])
 
 
     return (

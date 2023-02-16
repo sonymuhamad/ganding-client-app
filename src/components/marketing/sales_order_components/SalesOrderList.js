@@ -1,20 +1,23 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Badge, Button, Group, Select, Textarea, TextInput } from "@mantine/core";
+import { Badge, Select, Textarea, TextInput } from "@mantine/core";
 
-import { useRequest } from "../../../hooks";
+import { useRequest, useSearch } from "../../../hooks";
 import { openModal, closeAllModals } from "@mantine/modals";
 import { BaseTableExpanded } from "../../tables";
-import { IconClipboard, IconPlus, IconSearch, IconDotsCircleHorizontal, IconUserCheck, IconCodeAsterix, IconCalendar, IconDownload } from "@tabler/icons";
+import { IconClipboard, IconUserCheck, IconCodeAsterix, IconCalendar, } from "@tabler/icons";
 import { DatePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useNavigate } from "react-router-dom";
 import { FailedNotif, SuccessNotif } from "../../notifications";
-import { Link } from "react-router-dom";
+
+import { HeadSection, SearchTextInput, ButtonAdd, NavigationDetailButton, ModalForm } from "../../custom_components";
+
+import { generateDataWithDate } from "../../../services";
 
 
 const ModalAddSalesOrder = () => {
 
-    const { GetAndExpiredTokenHandler, Loading, Post } = useRequest()
+    const { GetAndExpiredTokenHandler, Post } = useRequest()
     const [customerList, setCustomerList] = useState([])
     const navigate = useNavigate()
 
@@ -35,15 +38,10 @@ const ModalAddSalesOrder = () => {
 
     const handleSubmit = async (value) => {
         const { date, ...rest } = value
-        let data
-        if (date) {
-            data = { ...rest, date: date.toLocaleDateString('en-CA') }
-        } else {
-            data = rest
-        }
+        const validate_data = generateDataWithDate(date, rest)
 
         try {
-            const newSo = await Post(data, 'sales-order-management')
+            const newSo = await Post(validate_data, 'sales-order-management')
             SuccessNotif('New sales order added successfully')
             navigate(`/home/marketing/sales-order/${newSo.id}`)
             closeAllModals()
@@ -53,14 +51,14 @@ const ModalAddSalesOrder = () => {
             if (e.message.data.non_field_errors) {
                 FailedNotif(e.message.data.non_field_errors[0])
             }
-            console.log(e)
         }
 
     }
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)}  >
-            <Loading />
+        <ModalForm
+            id="formAddSalesOrder"
+            onSubmit={form.onSubmit(handleSubmit)}  >
 
             <Select
                 data={customerList.map(customer => ({ value: customer.id, label: customer.name }))}
@@ -102,16 +100,7 @@ const ModalAddSalesOrder = () => {
                 icon={<IconClipboard />}
             />
 
-            <Button
-                fullWidth
-                leftIcon={<IconDownload />}
-                type='submit'
-                radius='md'
-            >
-                Save
-            </Button>
-
-        </form>
+        </ModalForm>
     )
 }
 
@@ -134,21 +123,56 @@ const ExpandedSalesOrder = ({ data }) => {
 
 const SalesOrderList = () => {
 
-    const { Loading, GetAndExpiredTokenHandler } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
     const [salesOrderList, setSalesOrderList] = useState([])
-    const [query, setQuery] = useState('')
+    const { query, setValueQuery, lowerCaseQuery } = useSearch()
 
     const filteredSalesOrder = useMemo(() => {
 
-        const valFiltered = query.toLowerCase()
+        return salesOrderList.filter((so) => {
+            const { customer, date, code } = so
+            const { name } = customer
 
-        return salesOrderList.filter((so) => so.customer.name.toLowerCase().includes(valFiltered) || so.date.includes(valFiltered) || so.code.includes(valFiltered))
+            return name.toLowerCase().includes(lowerCaseQuery) || date.includes(lowerCaseQuery) || code.includes(lowerCaseQuery)
+        })
 
-    }, [query, salesOrderList])
+    }, [lowerCaseQuery, salesOrderList])
 
     const finishedSoCheck = useCallback((productorder_set = []) => {
         return !productorder_set.some(po => parseInt(po.ordered) > parseInt(po.delivered))
     }, [])
+
+    const getBadgeColor = useCallback((productorder_set, closed, fixed) => {
+        // get badge color based on sales order's status
+
+        if (closed) {
+            return 'dark.6'
+        }
+        if (finishedSoCheck(productorder_set)) {
+            return 'blue.6'
+        }
+        if (fixed) {
+            return 'green.6'
+        }
+        return 'yellow.6'
+
+    }, [finishedSoCheck])
+
+    const getBadgeLabel = useCallback((productorder_set, closed, fixed) => {
+        // get badge label based on sales order's status
+
+        if (closed) {
+            return 'Closed'
+        }
+        if (finishedSoCheck(productorder_set)) {
+            return 'Finished'
+        }
+        if (fixed) {
+            return 'In Progress'
+        }
+        return 'Pending'
+
+    }, [finishedSoCheck])
 
     const columnSo = useMemo(() => [
         // columns for sales order tables
@@ -171,11 +195,18 @@ const SalesOrderList = () => {
         },
         {
             name: 'Status',
-            selector: row => (<Badge
-                color={row.closed ? 'dark.6' : finishedSoCheck(row.productorder_set) ? 'blue.6' : row.fixed ? 'green.6' : 'yellow.6'}
-            >
-                {row.closed ? 'Closed' : finishedSoCheck(row.productorder_set) ? 'Finished' : row.fixed ? 'In progress' : 'Pending'}
-            </Badge>),
+            selector: row => {
+                const { productorder_set, closed, fixed } = row
+                const badgeColor = getBadgeColor(productorder_set, closed, fixed)
+                const badgeLabel = getBadgeLabel(productorder_set, closed, fixed)
+
+                return (<Badge
+                    color={badgeColor}
+                >
+                    {badgeLabel}
+                </Badge>
+                )
+            },
             style: {
                 paddingLeft: 0,
                 marginLeft: -30,
@@ -184,16 +215,7 @@ const SalesOrderList = () => {
         },
         {
             name: '',
-            selector: row => <Button
-                leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                color='teal.8'
-                variant='subtle'
-                radius='md'
-                component={Link}
-                to={`/home/marketing/sales-order/${row.id}`}
-            >
-                Detail
-            </Button>,
+            selector: row => <NavigationDetailButton url={`/home/marketing/sales-order/${row.id}`} />,
             style: {
                 paddingLeft: 0,
                 marginLeft: 0,
@@ -201,7 +223,7 @@ const SalesOrderList = () => {
             }
         }
 
-    ], [finishedSoCheck])
+    ], [getBadgeLabel, getBadgeColor])
 
     const openModalAddSalesOrder = useCallback(() => openModal({
         title: 'Add sales order',
@@ -218,31 +240,20 @@ const SalesOrderList = () => {
 
     return (
         <>
-            <Loading />
 
-            <Group
-                position="right"
-                m='xs'
-            >
-
-                <TextInput
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    radius='md'
-                    placeholder="Search sales order"
-                    icon={<IconSearch />}
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
 
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+                <ButtonAdd
                     onClick={openModalAddSalesOrder}
                 >
-                    Sales order
-                </Button>
+                    Sales Order
+                </ButtonAdd>
 
-            </Group>
+            </HeadSection>
 
             <BaseTableExpanded
                 noData="No sales order"

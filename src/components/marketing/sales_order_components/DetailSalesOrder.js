@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 import { useParams } from "react-router-dom";
-import { useRequest } from "../../../hooks"
+import { useRequest, useConfirmDelete } from "../../../hooks"
 import { Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { FailedNotif, SuccessNotif } from "../../notifications";
@@ -9,6 +9,7 @@ import { openConfirmModal } from "@mantine/modals";
 import { useNavigate } from "react-router-dom";
 import { ProductOrderList, DeliveryScheduleList, ComponentDetailSalesOrder, ReportDelivery } from "./detail_sales_order_components";
 import { BaseContent } from "../../layout";
+import { generateDataWithDate } from "../../../services";
 
 
 
@@ -16,7 +17,8 @@ const DetailSalesOrder = () => {
 
     const { salesOrderId } = useParams() // salesOrderId
     const navigate = useNavigate()
-    const { Retrieve, Delete, Put, Loading } = useRequest()
+    const { Retrieve, Delete, Put } = useRequest()
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Sales order' })
 
     const [salesOrder, setSalesOrder] = useState({
         id: '',
@@ -122,6 +124,7 @@ const DetailSalesOrder = () => {
 
 
     const changedDataSalesOrderAfterEdit = useCallback((data) => {
+        //changing data sales order after edit
 
         setSalesOrder(prev => {
             const { code, date, description, fixed, closed } = data
@@ -131,26 +134,18 @@ const DetailSalesOrder = () => {
             setClosed(closed)
             setDataForm(newData)
             return newData
-
         })
 
     }, [setDataForm])
-
-    const generateDate = useCallback((date, data) => {
-        if (date) {
-            return { ...data, date: date.toLocaleDateString('en-CA') }
-        }
-        return data
-    }, [])
 
     const generateDataBeforeUpdate = useCallback((data) => {
         const { date, ...rest } = data
         const { id } = customer
 
         let validate_data = { ...rest, customer: id, fixed: fixed, closed: closed }
-        return generateDate(date, validate_data)
+        return generateDataWithDate(date, validate_data)
 
-    }, [customer, fixed, closed, generateDate])
+    }, [customer, fixed, closed])
 
     const handleEditSo = useCallback(async (value) => {
 
@@ -172,8 +167,10 @@ const DetailSalesOrder = () => {
     }, [salesOrderId, changedDataSalesOrderAfterEdit, generateDataBeforeUpdate])
 
     const generateStatus = useCallback((status) => {
+        // generate data before changing status of sales order
+
         const { date, ...rest } = salesOrder
-        const validate_data = generateDate(date, rest)
+        const validate_data = generateDataWithDate(date, rest)
 
         const { id } = customer
         const data = { ...validate_data, customer: id, fixed: fixed, closed: closed }
@@ -191,7 +188,7 @@ const DetailSalesOrder = () => {
         data.fixed = false
         return data
 
-    }, [salesOrder, customer, fixed, closed, generateDate])
+    }, [salesOrder, customer, fixed, closed])
 
     const handleChangeStatus = useCallback(async (status) => {
         const data = generateStatus(status)
@@ -209,21 +206,39 @@ const DetailSalesOrder = () => {
             FailedNotif('Update status failed')
         }
 
-    }, [changedDataSalesOrderAfterEdit, generateStatus])
+    }, [changedDataSalesOrderAfterEdit, generateStatus, salesOrderId])
 
-    const openConfirmStatusChanged = useCallback((value) => openConfirmModal({
-        title: `Change status of sales order`,
-        children: (
-            <Text size="sm">
-                {value === 'closed' ? 'Anda akan mengubah status sales order menjadi Closed, aksi ini akan membuat sales order tidak bisa lagi diubah, Apakah anda yakin? perubahan status akan disimpan' : value === 'progress' ? 'Anda akan mengubah status sales order menjadi Progress, Apakah anda yakin? perubahan status akan disimpan' : 'Anda akan mengubah status sales order menjadi Pending, Apakah anda yakin? perubahan status akan disimpan'}
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, change', cancel: "No, don't change it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleChangeStatus(value),
-    }), [handleChangeStatus])
+    const getWarningMessage = useCallback((value) => {
+        // return a warning message while changing status of sales order
+
+        if (value === 'closed') {
+            return 'Anda akan mengubah status sales order menjadi Closed, aksi ini akan membuat sales order tidak bisa lagi diubah, Apakah anda yakin? perubahan status akan disimpan'
+        }
+        if (value === 'progress') {
+            return 'Anda akan mengubah status sales order menjadi Progress, Apakah anda yakin? perubahan status akan disimpan'
+        }
+
+        return 'Anda akan mengubah status sales order menjadi Pending, Apakah anda yakin? perubahan status akan disimpan'
+    }, [])
+
+    const openConfirmStatusChanged = useCallback((value) => {
+
+        const message = getWarningMessage(value)
+
+        return openConfirmModal({
+            title: `Change status of sales order`,
+            children: (
+                <Text size="sm">
+                    {message}
+                </Text>
+            ),
+            radius: 'md',
+            labels: { confirm: 'Yes, change', cancel: "No, don't change it" },
+            cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+            confirmProps: { radius: 'md' },
+            onConfirm: () => handleChangeStatus(value),
+        })
+    }, [handleChangeStatus, getWarningMessage])
 
     const handleDeleteSo = useCallback(async () => {
         try {
@@ -239,19 +254,7 @@ const DetailSalesOrder = () => {
     }, [salesOrderId, navigate])
 
 
-    const openModalDeleteSo = useCallback(() => openConfirmModal({
-        title: `Delete sales order`,
-        children: (
-            <Text size="sm">
-                Are you sure?, deleted data cannot be recovered.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteSo(),
-    }), [handleDeleteSo])
+    const handleClickDeleteButton = () => openConfirmDeleteData(handleDeleteSo)
 
     useEffect(() => {
         const fetch = async () => {
@@ -288,9 +291,10 @@ const DetailSalesOrder = () => {
         }
         fetch()
 
-    }, [])
+    }, [salesOrderId])
 
     const handleAddProductOrder = useCallback((newProductOrder) => {
+        // add product order to state
 
         setProductOrderList(prev => {
             return [...prev, newProductOrder]
@@ -299,12 +303,13 @@ const DetailSalesOrder = () => {
     }, [])
 
     const handleChangeProductOrder = useCallback((updatedProductOrder) => {
-        const { ordered, price } = updatedProductOrder
+        // change ordered or price of product order
 
+        const { ordered, price, id } = updatedProductOrder
         setProductOrderList(prev => {
 
             return prev.map(po => {
-                if (po.id === updatedProductOrder.id) {
+                if (po.id === id) {
                     return { ...po, ordered: ordered, price: price }
                 }
                 return po
@@ -315,6 +320,7 @@ const DetailSalesOrder = () => {
     }, [])
 
     const handleDeleteProductOrder = useCallback((idDeletedPo) => {
+        // delete product order
 
         setProductOrderList(prev => {
             return prev.filter(po => po.id !== idDeletedPo)
@@ -340,8 +346,8 @@ const DetailSalesOrder = () => {
     }, [])
 
     const handleChangeDeliverySchedule = useCallback((changedDeliverySchedule) => {
-        const { quantity, date, id } = changedDeliverySchedule
 
+        const { quantity, date, id } = changedDeliverySchedule
         setDeliveryScheduleList(prev => {
 
             return prev.map(schedule => {
@@ -364,9 +370,9 @@ const DetailSalesOrder = () => {
             description: '',
             component: <ComponentDetailSalesOrder
                 form={form}
-                handleDeleteSo={openModalDeleteSo}
+                handleClickDeleteButton={handleClickDeleteButton}
                 handleEditSo={handleEditSo}
-                customer={customer}
+                customerName={customer.name}
                 percentage={percentage}
                 handleChangeStatus={openConfirmStatusChanged}
                 status={currentStatusSalesOrder}
@@ -402,6 +408,10 @@ const DetailSalesOrder = () => {
             description: '',
             component: <ReportDelivery
                 data={productDeliverList}
+                customerName={customer.name}
+                productOrderList={productOrderList}
+                noSalesOrder={salesOrder.code}
+                salesOrderDate={salesOrder.date}
             />
         }
     ]
@@ -409,7 +419,7 @@ const DetailSalesOrder = () => {
     return (
         <>
 
-            <Loading />
+
 
             <BaseContent
                 links={links}

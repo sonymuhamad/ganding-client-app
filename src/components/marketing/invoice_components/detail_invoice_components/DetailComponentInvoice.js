@@ -1,13 +1,14 @@
 
 import { TextInput, Group, SegmentedControl, Button, NumberInput, Center, Box, Text } from "@mantine/core";
-import { IconCalendarEvent, IconClipboardCheck, IconCodeAsterix, IconUserCheck, IconReceiptTax, IconDiscount2, IconCalendar, IconCircleDotted, IconShieldLock, IconChecks, IconSum, IconDiscountCheck, IconDiscount, IconReceipt, IconChecklist, IconEdit, IconX, IconDownload, IconTrashX, IconPrinter, IconCornerDownRightDouble } from "@tabler/icons";
-import React, { useCallback, useState } from "react";
-
-import { InvoiceReport } from "../../../outputs";
-
-import { openModal } from "@mantine/modals";
+import { IconCalendarEvent, IconClipboardCheck, IconCodeAsterix, IconUserCheck, IconReceiptTax, IconDiscount2, IconCalendar, IconCircleDotted, IconShieldLock, IconChecks, IconSum, IconDiscountCheck, IconDiscount, IconReceipt, IconChecklist, IconPrinter, IconCornerDownRightDouble } from "@tabler/icons";
+import React, { useState } from "react";
 
 import { DatePicker } from "@mantine/dates";
+import { openModal } from "@mantine/modals";
+
+import { InvoiceReport } from "../../../outputs";
+import { ActionButtons, PriceTextInput } from '../../../custom_components'
+
 
 
 const ModalInvoice = ({ printInvoice }) => {
@@ -44,7 +45,7 @@ const DetailComponentInvoice = ({
     handleClickEditButton,
     editAccess,
     currentStatusInvoice,
-    handleDeleteInvoice,
+    handleClickDeleteButton,
     handleSubmit,
     handleChangeStatus,
     form,
@@ -126,38 +127,13 @@ const DetailComponentInvoice = ({
                     radius='md'
                 />
 
-
-
-                <Group position="right" >
-                    <Button.Group>
-                        <Button
-                            size='xs'
-                            radius='md'
-                            color={!editAccess ? 'blue.6' : 'red.6'}
-                            onClick={() => handleClickEditButton()}
-                            leftIcon={!editAccess ? <IconEdit /> : <IconX />}
-                        >
-                            {!editAccess ? 'Edit' : 'Cancel'}
-                        </Button>
-
-                        <Button
-                            form='formEditInvoice'
-                            size='xs'
-                            color='blue.6'
-                            type='submit'
-                            disabled={form.isDirty() ? editAccess ? false : true : true}
-                            leftIcon={<IconDownload />} >
-                            Save Changes</Button>
-                        <Button
-                            size='xs'
-                            color='red.6'
-                            disabled={editAccess}
-                            radius='md'
-                            onClick={handleDeleteInvoice}
-                            leftIcon={<IconTrashX />} >
-                            Delete</Button>
-                    </Button.Group>
-                </Group>
+                <ActionButtons
+                    formId='formEditInvoice'
+                    formState={form.isDirty()}
+                    editAccess={editAccess}
+                    handleClickEditButton={handleClickEditButton}
+                    handleClickDeleteButton={handleClickDeleteButton}
+                />
 
             </Group>
 
@@ -258,53 +234,28 @@ const DetailComponentInvoice = ({
                 m='xs'
                 grow
             >
-
-                <NumberInput
+                <PriceTextInput
+                    icon={<IconSum />}
                     label='Sub total'
                     variant='filled'
-                    radius='md'
-                    hideControls
-                    readOnly
                     value={subTotal}
-                    icon={<IconSum />}
-                    parser={(value) => value.replace(/Rp\s?|(,*)/g, '')}
-                    formatter={(value) =>
-                        !Number.isNaN(parseFloat(value))
-                            ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                            : 'Rp '
-                    }
+                    readOnly
                 />
 
-                <NumberInput
+                <PriceTextInput
                     label='Total discount'
                     variant='filled'
-                    radius='md'
-                    hideControls
                     readOnly
-                    value={totalDiscount}
                     icon={<IconDiscount />}
-                    parser={(value) => value.replace(/Rp\s?|(,*)/g, '')}
-                    formatter={(value) =>
-                        !Number.isNaN(parseFloat(value))
-                            ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                            : 'Rp '
-                    }
+                    value={totalDiscount}
                 />
 
-                <NumberInput
+                <PriceTextInput
+                    icon={<IconDiscountCheck />}
                     label='Pembayaran'
                     variant='filled'
-                    radius='md'
-                    hideControls
                     readOnly
                     value={totalPriceAfterDiscount}
-                    icon={<IconDiscountCheck />}
-                    parser={(value) => value.replace(/Rp\s?|(,*)/g, '')}
-                    formatter={(value) =>
-                        !Number.isNaN(parseFloat(value))
-                            ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                            : 'Rp '
-                    }
                 />
 
             </Group>
@@ -314,36 +265,19 @@ const DetailComponentInvoice = ({
                 grow
             >
 
-                <NumberInput
+                <PriceTextInput
                     label='PPN'
                     variant='filled'
-                    radius='md'
-                    hideControls
-                    readOnly
                     value={totalTax}
-                    icon={<IconReceipt />}
-                    parser={(value) => value.replace(/Rp\s?|(,*)/g, '')}
-                    formatter={(value) =>
-                        !Number.isNaN(parseFloat(value))
-                            ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                            : 'Rp '
-                    }
+                    readOnly
                 />
 
-                <NumberInput
+                <PriceTextInput
+                    icon={<IconChecklist />}
                     label='Total'
                     variant='filled'
-                    radius='md'
-                    hideControls
-                    readOnly
                     value={totalInvoice}
-                    icon={<IconChecklist />}
-                    parser={(value) => value.replace(/Rp\s?|(,*)/g, '')}
-                    formatter={(value) =>
-                        !Number.isNaN(parseFloat(value))
-                            ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                            : 'Rp '
-                    }
+                    readOnly
                 />
 
 

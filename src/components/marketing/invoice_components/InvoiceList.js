@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 
 import { BaseTable } from "../../tables";
-import { useRequest } from "../../../hooks";
+import { useRequest, useSearch } from "../../../hooks";
 
-import { Badge, Button, Group, TextInput, Select, NumberInput, Text } from "@mantine/core";
-import { Link } from "react-router-dom";
-import { IconClipboardCheck, IconCodeAsterix, IconDotsCircleHorizontal, IconDownload, IconPlus, IconSearch, IconDiscount2, IconReceiptTax, IconCalendar } from "@tabler/icons";
+import { Badge, Group, TextInput, Select, NumberInput, Text } from "@mantine/core";
+import { IconClipboardCheck, IconCodeAsterix, IconDiscount2, IconReceiptTax, IconCalendar } from "@tabler/icons";
 import { openModal, closeAllModals } from "@mantine/modals";
 import { CustomSelectComponentSalesOrder } from "../../layout";
 
 import { useForm } from "@mantine/form";
 import { DatePicker } from "@mantine/dates";
 import { FailedNotif, SuccessNotif } from "../../notifications";
-
+import { ButtonAdd, SearchTextInput, NavigationDetailButton, HeadSection, ModalForm } from "../../custom_components";
+import { generateDataWithDate } from "../../../services";
 
 
 
@@ -27,20 +27,13 @@ const ModalAddInvoice = ({ handleAddInvoice }) => {
             sales_order: null,
         }
     })
-    const { GetAndExpiredTokenHandler, Loading, Post } = useRequest()
+    const { GetAndExpiredTokenHandler, Post } = useRequest()
     const [closedSalesOrder, setClosedSalesOrder] = useState([])
 
     useEffect(() => {
         GetAndExpiredTokenHandler('closed-sales-order-list').then(data => {
             setClosedSalesOrder(data)
         })
-    }, [])
-
-    const generateDate = useCallback((date, data) => {
-        if (date) {
-            return { ...data, date: date.toLocaleDateString('en-CA') }
-        }
-        return data
     }, [])
 
     const getSelectedSalesOrder = useCallback((id) => {
@@ -50,14 +43,14 @@ const ModalAddInvoice = ({ handleAddInvoice }) => {
     const generateData = useCallback((value) => {
         const { date, ...rest } = value
 
-        const validate_data = generateDate(date, rest)
+        const validate_data = generateDataWithDate(date, rest)
 
         const { sales_order } = validate_data
         const selectedSalesOrder = getSelectedSalesOrder(sales_order)
 
         return [validate_data, selectedSalesOrder]
 
-    }, [getSelectedSalesOrder, generateDate])
+    }, [getSelectedSalesOrder])
 
     const handleSubmit = async (value) => {
 
@@ -80,9 +73,9 @@ const ModalAddInvoice = ({ handleAddInvoice }) => {
 
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)}  >
-
-            <Loading />
+        <ModalForm
+            id="formAddInvoice"
+            onSubmit={form.onSubmit(handleSubmit)}  >
 
             <Select
                 label='Sales order'
@@ -159,17 +152,7 @@ const ModalAddInvoice = ({ handleAddInvoice }) => {
 
             </Group>
 
-
-            <Button
-                type="submit"
-                fullWidth
-                radius='md'
-                leftIcon={<IconDownload />}
-            >
-                Save
-            </Button>
-
-        </form>
+        </ModalForm>
     )
 }
 
@@ -177,13 +160,11 @@ const ModalAddInvoice = ({ handleAddInvoice }) => {
 
 const InvoiceList = () => {
 
-    const { Loading, GetAndExpiredTokenHandler } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
     const [invoiceList, setInvoiceList] = useState([])
-    const [query, setQuery] = useState('')
+    const { lowerCaseQuery, query, setValueQuery } = useSearch()
 
     const filteredInvoice = useMemo(() => {
-
-        const searchVal = query.toLowerCase()
 
         return invoiceList.filter(invoice => {
             const { code, date, sales_order } = invoice
@@ -191,10 +172,30 @@ const InvoiceList = () => {
             const { customer } = sales_order
             const { name } = customer
 
-            return code.toLowerCase().includes(searchVal) || date.toLowerCase().includes(searchVal) || sales_order.code.toLowerCase().includes(searchVal) || name.toLowerCase().includes(searchVal)
+            return code.toLowerCase().includes(lowerCaseQuery) || date.toLowerCase().includes(lowerCaseQuery) || sales_order.code.toLowerCase().includes(lowerCaseQuery) || name.toLowerCase().includes(lowerCaseQuery)
         })
 
-    }, [query, invoiceList])
+    }, [lowerCaseQuery, invoiceList])
+
+    const getBadgeColor = useCallback((closed, done) => {
+        if (closed) {
+            return 'dark.6'
+        }
+        if (done) {
+            return 'blue.6'
+        }
+        return 'yellow.6'
+    }, [])
+
+    const getBadgeLabel = useCallback((closed, done) => {
+        if (closed) {
+            return 'Closed'
+        }
+        if (done) {
+            return 'Finished'
+        }
+        return 'Pending'
+    }, [])
 
 
     const columnInvoice = useMemo(() => [
@@ -213,26 +214,25 @@ const InvoiceList = () => {
         },
         {
             name: 'Status',
-            selector: row => (<Badge
-                color={row.closed ? 'dark.6' : row.done ? 'blue.6' : 'yellow.6'}
-            >
-                {row.closed ? 'Closed' : row.done ? 'Finished' : 'Pending'}
-            </Badge>)
+            selector: row => {
+                const { closed, done } = row
+                const badgeColor = getBadgeColor(closed, done)
+                const badgeLabel = getBadgeLabel(closed, done)
+                return (<Badge
+                    color={badgeColor}
+                >
+                    {badgeLabel}
+                </Badge>)
+            }
         },
         {
             name: '',
-            selector: row => <Button
-                leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                color='teal.8'
-                variant='subtle'
-                radius='md'
-                component={Link}
-                to={`/home/marketing/invoice/${row.id}`}
-            >
-                Detail
-            </Button>
+            selector: row => <NavigationDetailButton
+                url={`/home/marketing/invoice/${row.id}`}
+            />
         }
-    ], [])
+
+    ], [getBadgeColor, getBadgeLabel])
 
 
     const handleAddInvoice = useCallback((newInvoice) => {
@@ -263,31 +263,20 @@ const InvoiceList = () => {
     return (
         <>
 
-            <Loading />
+            <HeadSection>
 
-            <Group
-                m='xs'
-                position="right"
-            >
-
-                <TextInput
-                    placeholder="Search"
-                    icon={<IconSearch />}
-                    radius='md'
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
 
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+                <ButtonAdd
                     onClick={openModalAddInvoice}
                 >
                     Invoice
-                </Button>
+                </ButtonAdd>
 
-            </Group>
+            </HeadSection>
 
             <BaseTable
                 noData="No data invoice"

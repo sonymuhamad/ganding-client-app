@@ -6,7 +6,7 @@ import { AuthContext } from "../../context";
 import { DivisionIcons } from "../../services";
 import { openConfirmModal } from "@mantine/modals";
 
-const BaseLayout = ({ outlet, navlink }) => {
+const BaseLayout = ({ children, navlink }) => {
 
     const { classes } = appshellStyle()
     const auth = useContext(AuthContext)
@@ -25,7 +25,7 @@ const BaseLayout = ({ outlet, navlink }) => {
         cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
         confirmProps: { radius: 'md' },
         onConfirm: () => auth.changeDivision(name)
-    }), [])
+    }), [auth])
 
     return (
         <>
@@ -45,7 +45,7 @@ const BaseLayout = ({ outlet, navlink }) => {
                                     <Text variant="gradient"
                                         gradient={{ from: 'indigo', to: 'cyan', deg: 90 }}
                                         weight={700} >
-                                        Ganding Enterprise System
+                                        Supply Chain Management System
                                     </Text>
                                 </Group>
                             </div>
@@ -166,7 +166,7 @@ const BaseLayout = ({ outlet, navlink }) => {
                 }
             >
 
-                {outlet}
+                {children}
 
             </AppShell >
 

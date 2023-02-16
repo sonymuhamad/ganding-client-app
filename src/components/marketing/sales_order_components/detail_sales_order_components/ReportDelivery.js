@@ -1,26 +1,62 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 
 import { BaseTableExpanded } from "../../../tables";
 import { ExpandedDescriptionDelivery } from "../../../layout";
-import { Badge, Group, TextInput } from "@mantine/core";
-import { IconSearch } from "@tabler/icons";
+import { Badge, Button } from "@mantine/core";
+import { IconPrinter } from "@tabler/icons";
 
-const ReportDelivery = ({ data }) => {
+import { DeliveryReport } from "../../../outputs";
+import { openModal } from "@mantine/modals";
+import { useSearch } from "../../../../hooks";
+import { HeadSection, SearchTextInput } from "../../../custom_components";
 
-    const [query, setQuery] = useState('')
+
+const ReportDelivery = ({ data, productOrderList, noSalesOrder, salesOrderDate, customerName }) => {
+
+    const { setValueQuery, query, lowerCaseQuery } = useSearch()
+
+    const openModalPrintDeliveryReport = () => openModal({
+        size: 'auto',
+        radius: 'md',
+        children: <DeliveryReport
+            productOrderList={productOrderList}
+            noSalesOrder={noSalesOrder}
+            salesOrderDate={salesOrderDate}
+            customerName={customerName}
+        />
+    })
+
+    const getBadgeColor = useCallback((schedule, deliveryDate) => {
+
+        if (schedule) {
+            const { date } = schedule
+            if (date > deliveryDate) {
+                return 'blue.6'
+            }
+            return 'red.6'
+        }
+        return 'blue.6'
+
+    }, [])
+
+    const getBadgeLabel = useCallback((schedule, deliveryDate) => {
+
+        if (schedule) {
+            const { date } = schedule
+            if (date > deliveryDate) {
+                return 'On time'
+            }
+            return 'Late'
+        }
+        return 'Unscheduled'
+
+    }, [])
+
 
     const columnProductDelivery = useMemo(() => [
         {
             name: 'Product',
             selector: row => row.product_order.product.name,
-            style: {
-                paddingLeft: 0,
-                marginRight: 0
-            }
-        },
-        {
-            name: 'Product number',
-            selector: row => row.product_order.product.code,
             style: {
                 paddingLeft: 0,
                 marginRight: 0
@@ -53,7 +89,17 @@ const ReportDelivery = ({ data }) => {
         },
         {
             name: '',
-            selector: row => <Badge color={row.schedules ? row.delivery_note_customer.date > row.schedules.date ? 'red.6' : 'blue.6' : 'blue.6'} variant='filled' >{row.schedules ? row.delivery_note_customer.date > row.schedules.date ? 'Late' : 'On time' : 'Unscheduled'}</Badge>,
+            selector: row => {
+                const { schedules, delivery_note_customer } = row
+                const { date } = delivery_note_customer
+                const badgeColor = getBadgeColor(schedules, date)
+                const badgeLabel = getBadgeLabel(schedules, date)
+
+                return (
+                    <Badge color={badgeColor} variant='filled' >
+                        {badgeLabel}</Badge>
+                )
+            },
             style: {
                 paddingLeft: 0,
                 marginLeft: -30,
@@ -62,33 +108,43 @@ const ReportDelivery = ({ data }) => {
             }
 
         }
-    ], [])
+
+    ], [getBadgeColor, getBadgeLabel])
 
 
     const filteredProductDelivery = useMemo(() => {
 
-        return data.filter(pdeliver => pdeliver.product_order.product.name.toLowerCase().includes(query.toLowerCase()) || pdeliver.product_order.product.code.toLowerCase().includes(query.toLowerCase()) || pdeliver.delivery_note_customer.code.toLowerCase().includes(query.toLowerCase()) || pdeliver.delivery_note_customer.date.toLowerCase().includes(query.toLowerCase()))
+        return data.filter(pdeliver => {
+            const { delivery_note_customer, product_order } = pdeliver
+            const { product } = product_order
+            const { date, code } = delivery_note_customer
+            const { name } = product
 
-    }, [query, data])
+            return name.toLowerCase().includes(lowerCaseQuery) || product.code.toLowerCase().includes(lowerCaseQuery) || code.toLowerCase().includes(lowerCaseQuery) || date.toLowerCase().includes(lowerCaseQuery)
+
+        })
+
+    }, [lowerCaseQuery, data])
 
     return (
         <>
 
+            <HeadSection>
 
-            <Group
-                m='xs'
-                position="right"
-            >
-
-                <TextInput
-                    placeholder="Search"
-                    icon={<IconSearch />}
-                    radius='md'
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
 
-            </Group>
+                <Button
+                    radius='md'
+                    leftIcon={<IconPrinter />}
+                    onClick={openModalPrintDeliveryReport}
+                >
+                    Print
+                </Button>
+
+            </HeadSection>
 
             <BaseTableExpanded
                 noData="No data delivery product"

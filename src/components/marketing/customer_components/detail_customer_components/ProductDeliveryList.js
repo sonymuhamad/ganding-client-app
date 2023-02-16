@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 
 import { useRequest } from "../../../../hooks";
 import { useParams } from "react-router-dom";
 import { BaseTableExpanded } from "../../../tables";
 import { ExpandedDescriptionDelivery } from "../../../layout";
 
-import { Badge, Group, TextInput } from "@mantine/core";
-import { IconSearch } from "@tabler/icons";
-
+import { Badge, } from "@mantine/core";
+import { SearchTextInput, HeadSection } from "../../../custom_components";
+import { useSearch } from "../../../../hooks";
 
 
 
@@ -16,26 +16,51 @@ const ProductDeliverList = () => {
     const { customerId } = useParams()
     const { RetrieveWithoutExpiredTokenHandler } = useRequest()
     const [productDeliverList, setProductDeliverList] = useState([])
-    const [query, setQuery] = useState('')
+    const { query, setValueQuery, lowerCaseQuery } = useSearch()
 
     const filteredProductDelivery = useMemo(() => {
 
-        return productDeliverList.filter(pdeliver => pdeliver.product_order.product.name.toLowerCase().includes(query.toLowerCase()) || pdeliver.product_order.product.code.toLowerCase().includes(query.toLowerCase()) || pdeliver.delivery_note_customer.code.toLowerCase().includes(query.toLowerCase()) || pdeliver.delivery_note_customer.date.toLowerCase().includes(query.toLowerCase()))
+        return productDeliverList.filter(pdeliver => {
 
-    }, [query, productDeliverList])
+            const { product_order, delivery_note_customer } = pdeliver
+            const { product } = product_order
+            const { name } = product
+            const { date, code } = delivery_note_customer
+
+            return name.toLowerCase().includes(lowerCaseQuery) || product.code.toLowerCase().includes(lowerCaseQuery) || code.toLowerCase().includes(lowerCaseQuery) || date.toLowerCase().includes(lowerCaseQuery)
+        })
+
+    }, [lowerCaseQuery, productDeliverList])
+
+    const getBadgeColor = useCallback((schedule, deliveryDate) => {
+
+        if (schedule) {
+            const { date } = schedule
+            if (deliveryDate > date) {
+                return 'red.6'
+            }
+            return 'blue.6'
+        }
+        return 'blue.6'
+    }, [])
+
+    const getBadgeLabel = useCallback((schedule, deliveryDate) => {
+
+        if (schedule) {
+            const { date } = schedule
+            if (deliveryDate > date) {
+                return 'Late'
+            }
+            return 'On time'
+        }
+        return 'Unscheduled'
+
+    }, [])
 
     const columnProductDelivery = useMemo(() => [
         {
             name: 'Product',
             selector: row => row.product_order.product.name,
-            style: {
-                paddingLeft: 0,
-                marginRight: 0
-            }
-        },
-        {
-            name: 'Product number',
-            selector: row => row.product_order.product.code,
             style: {
                 paddingLeft: 0,
                 marginRight: 0
@@ -68,7 +93,18 @@ const ProductDeliverList = () => {
         },
         {
             name: '',
-            selector: row => <Badge size='sm' color={row.schedules ? row.delivery_note_customer.date > row.schedules.date ? 'red.6' : 'blue.6' : 'blue.6'} variant='filled' >{row.schedules ? row.delivery_note_customer.date > row.schedules.date ? 'Late' : 'On time' : 'Unscheduled'}</Badge>,
+            selector: row => {
+                const { schedules, delivery_note_customer } = row
+                const { date } = delivery_note_customer
+                const badgeColor = getBadgeColor(schedules, date)
+                const badgeLabel = getBadgeLabel(schedules, date)
+
+                return (
+                    <Badge size='sm' color={badgeColor} variant='filled' >
+                        {badgeLabel}
+                    </Badge>
+                )
+            },
             style: {
                 paddingLeft: 0,
                 marginLeft: -30,
@@ -77,7 +113,7 @@ const ProductDeliverList = () => {
             }
 
         }
-    ], [])
+    ], [getBadgeColor, getBadgeLabel])
 
     useEffect(() => {
 
@@ -90,20 +126,12 @@ const ProductDeliverList = () => {
     return (
         <>
 
-            <Group
-                m='xs'
-                position="right"
-            >
-
-                <TextInput
-                    placeholder="Search"
-                    icon={<IconSearch />}
-                    radius='md'
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
-
-            </Group>
+            </HeadSection>
 
             <BaseTableExpanded
                 noData="No data delivery product"

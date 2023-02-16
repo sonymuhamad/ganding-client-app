@@ -1,25 +1,28 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
+import { openConfirmModal } from "@mantine/modals";
+import { Text } from "@mantine/core";
 
-
-import { useRequest } from "../../../hooks";
+import { useRequest, useConfirmDelete } from "../../../hooks";
 import { BaseContent } from "../../layout";
 import { DetailComponentInvoice, ProductInvoiceList } from "./detail_invoice_components";
 import { FailedNotif, SuccessNotif } from "../../notifications";
-import { openConfirmModal } from "@mantine/modals";
 
-import { Text } from "@mantine/core";
+import { generateDataWithDate } from "../../../services";
+
 
 
 const DetailInvoice = () => {
 
     const { invoiceId } = useParams()
-    const { Retrieve, Loading, Put, Delete } = useRequest()
+    const { Retrieve, Put, Delete } = useRequest()
     const navigate = useNavigate()
     const [editAccess, setEditAccess] = useState(false)
     const [productInvoiceList, setProductInvoiceList] = useState([])
-    const baseData = useMemo(() => ({
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Invoice' })
+
+    const [detailInvoice, setDetailInvoice] = useState({
         id: '',
         code: '',
         date: '',
@@ -27,15 +30,9 @@ const DetailInvoice = () => {
         tax: 10,
         closed: false,
         done: false,
-    }), [])
-
-    const [detailInvoice, setDetailInvoice] = useState({
-        ...baseData
     })
     const form = useForm({
-        initialValues: {
-            ...baseData
-        }
+        initialValues: detailInvoice
     })
 
     const [salesOrder, setSalesOrder] = useState({
@@ -150,26 +147,19 @@ const DetailInvoice = () => {
 
         })
 
-    }, [handleSetDataInvoice])
+    }, [handleSetDataInvoice, invoiceId])
 
     const handleChangeDataInvoice = useCallback((changedInvoice) => {
         const { sales_order, ...rest } = changedInvoice
         handleSetDataInvoice(rest)
     }, [handleSetDataInvoice])
 
-    const generateDate = useCallback((date, data) => {
-        const { id } = salesOrder
-        data.sales_order = id
-        if (date) {
-            return { ...data, date: date.toLocaleDateString('en-CA') }
-        }
-        return data
-    }, [salesOrder])
-
-
     const handleSubmit = async (value) => {
         const { date, ...rest } = value
-        const validate_data = generateDate(date, rest)
+        const { id } = salesOrder
+        rest.sales_order = id
+
+        const validate_data = generateDataWithDate(date, rest)
 
         try {
             const changedInvoice = await Put(invoiceId, validate_data, 'invoice-management')
@@ -208,7 +198,7 @@ const DetailInvoice = () => {
     const handleChangeStatus = useCallback(async (value) => {
         const dataAfterGenerateStatus = generateInputStatus(value)
         const { date, ...rest } = dataAfterGenerateStatus
-        const validate_data = generateDate(date, rest)
+        const validate_data = generateDataWithDate(date, rest)
 
         try {
             const changedInvoice = await Put(invoiceId, validate_data, 'invoice-management')
@@ -221,22 +211,37 @@ const DetailInvoice = () => {
             }
             FailedNotif('Update status invoice failed')
         }
-    }, [generateInputStatus, generateDate])
+    }, [generateInputStatus, handleChangeDataInvoice, invoiceId])
 
+    const getWarningMessage = useCallback((value) => {
+        if (value === 'closed') {
+            return 'Anda akan mengubah status invoice menjadi Closed, aksi ini akan membuat invoice tidak bisa lagi diubah, Apakah anda yakin? perubahan status akan disimpan'
+        }
+        if (value === 'done') {
+            return 'Anda akan mengubah status invoice menjadi Finished, Apakah anda yakin? perubahan status akan disimpan'
+        }
+        return 'Anda akan mengubah status invoice menjadi Pending, Apakah anda yakin? perubahan status akan disimpan'
+    }, [])
 
-    const openConfirmChangeStatusInvoice = useCallback((value) => openConfirmModal({
-        title: `Change status of invoice`,
-        children: (
-            <Text size="sm">
-                {value === 'closed' ? 'Anda akan mengubah status invoice menjadi Closed, aksi ini akan membuat invoice tidak bisa lagi diubah, Apakah anda yakin? perubahan status akan disimpan' : value === 'done' ? 'Anda akan mengubah status invoice menjadi Finished, Apakah anda yakin? perubahan status akan disimpan' : 'Anda akan mengubah status invoice menjadi Pending, Apakah anda yakin? perubahan status akan disimpan'}
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, change', cancel: "No, don't change it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleChangeStatus(value),
-    }), [handleChangeStatus])
+    const openConfirmChangeStatusInvoice = useCallback((value) => {
+
+        const warningMessage = getWarningMessage(value)
+
+        return openConfirmModal({
+            title: `Change status of invoice`,
+            children: (
+                <Text size="sm">
+                    {warningMessage}
+                </Text>
+            ),
+            radius: 'md',
+            labels: { confirm: 'Yes, change', cancel: "No, don't change it" },
+            cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+            confirmProps: { radius: 'md' },
+            onConfirm: () => handleChangeStatus(value),
+        })
+
+    }, [handleChangeStatus, getWarningMessage])
 
     const handleDeleteInvoice = useCallback(async () => {
         try {
@@ -250,21 +255,9 @@ const DetailInvoice = () => {
             }
             FailedNotif('Delete invoice failed')
         }
-    }, [])
+    }, [invoiceId])
 
-    const openConfirmDeleteInvoice = useCallback(() => openConfirmModal({
-        title: `Delete invoice`,
-        children: (
-            <Text size="sm">
-                Are you sure? the data will be deleted and cannot be recovered.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteInvoice(),
-    }), [handleDeleteInvoice])
+    const openConfirmDeleteInvoice = useCallback(() => openConfirmDeleteData(handleDeleteInvoice), [handleDeleteInvoice, openConfirmDeleteData])
 
     const contents = [
         {
@@ -275,7 +268,7 @@ const DetailInvoice = () => {
                 handleClickEditButton={handleClickEditButton}
                 editAccess={editAccess}
                 currentStatusInvoice={currentStatusInvoice}
-                handleDeleteInvoice={openConfirmDeleteInvoice}
+                handleClickDeleteButton={openConfirmDeleteInvoice}
                 handleSubmit={handleSubmit}
                 handleChangeStatus={openConfirmChangeStatusInvoice}
                 form={form}
@@ -305,7 +298,7 @@ const DetailInvoice = () => {
             path: `/home/marketing/invoice/${invoiceId}`,
             label: 'Detail invoice'
         }
-    ], [])
+    ], [invoiceId])
 
 
     const links = useMemo(() => [
@@ -324,8 +317,6 @@ const DetailInvoice = () => {
 
     return (
         <>
-
-            <Loading />
 
             <BaseContent
                 links={links}
