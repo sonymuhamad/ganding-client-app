@@ -1,49 +1,16 @@
 import React, { useEffect, useState, useMemo } from "react"
 
 import { useParams } from "react-router-dom"
-import { useRequest, useSection } from "../../../hooks"
-import { BaseAside } from "../../layout"
-import { BaseTable } from "../../tables"
-import BreadCrumb from "../../BreadCrumb"
-import { TextInput, Group, Textarea, Title, Divider } from "@mantine/core"
-import { IconCalendar, IconClipboardList, IconCodeAsterix, IconTruck, IconUser, IconUserCheck } from "@tabler/icons"
+import { useRequest, } from "../../../hooks"
+
+import { BaseContent } from "../../layout"
+import { SectionDetailDeliveryNoteSubcont, SectionProductDeliverySubcont } from "./detail_delivery_note_subcont_components"
 
 
 const DetailDeliveryNoteSubcont = () => {
 
-    const { Retrieve, Loading } = useRequest()
+    const { Retrieve } = useRequest()
     const { deliverySubcontId } = useParams()
-    const { classes, sectionRefs, activeSection } = useSection()
-
-    const breadcrumb = useMemo(() => [
-        {
-            path: '/home/purchasing',
-            label: 'Purchasing'
-        },
-        {
-            path: '/home/purchasing/shipments-and-receipts',
-            label: 'Shipments and receipts'
-        },
-        {
-            path: `/home/purchasing/shipments-and-receipts/shipment-subcont/${deliverySubcontId}`,
-            label: 'Detail delivery subconstruction'
-        },
-    ], [])
-
-
-    const links = useMemo(() => [
-        {
-            "label": "Detail delivery subconstruction",
-            "link": "#detail",
-            "order": 1
-        },
-        {
-            "label": "List of product in subconstruction",
-            "link": "#product-subcont",
-            "order": 1
-        },
-    ], [])
-
     const [productSubcontList, setProductSubcontList] = useState([])
     const [driver, setDriver] = useState({
         name: '',
@@ -69,30 +36,6 @@ const DetailDeliveryNoteSubcont = () => {
         date: '',
     })
 
-    const columnProductSubcont = useMemo(() => [
-        {
-            name: 'Product name',
-            selector: row => row.product.name,
-            sortable: true
-        },
-        {
-            name: 'Product number',
-            selector: row => row.product.code
-        },
-        {
-            name: 'Process name',
-            selector: row => row.process.process_name
-        },
-        {
-            name: 'Wip',
-            selector: row => `Wip ${row.process.order}`
-        },
-        {
-            name: 'Quantity sent',
-            selector: row => `${row.quantity} Pcs`
-        }
-    ], [])
-
 
     useEffect(() => {
 
@@ -108,107 +51,66 @@ const DetailDeliveryNoteSubcont = () => {
 
         })
 
-    }, [])
+    }, [deliverySubcontId])
 
+    const breadcrumb = useMemo(() => [
+        {
+            path: '/home/purchasing',
+            label: 'Purchasing'
+        },
+        {
+            path: '/home/purchasing/shipments-and-receipts',
+            label: 'Shipments and receipts'
+        },
+        {
+            path: `/home/purchasing/shipments-and-receipts/shipment-subcont/${deliverySubcontId}`,
+            label: 'Detail delivery subconstruction'
+        },
+    ], [deliverySubcontId])
+
+
+    const links = useMemo(() => [
+        {
+            "label": "Detail delivery subconstruction",
+            "link": "detail",
+            "order": 1
+        },
+        {
+            "label": "List of product in subconstruction",
+            "link": "product-subcont",
+            "order": 1
+        },
+    ], [])
+
+
+    const contents = useMemo(() => [
+        {
+            description: '',
+            component: <SectionDetailDeliveryNoteSubcont
+                code={detailDeliveryNoteSubcont.code}
+                date={detailDeliveryNoteSubcont.date}
+                supplierName={supplier.name}
+                note={detailDeliveryNoteSubcont.note}
+                driverName={driver.name}
+                vehicleNumber={vehicle.license_part_number}
+            />
+        },
+        {
+            description: '',
+            component: <SectionProductDeliverySubcont
+                productSubcontList={productSubcontList}
+            />
+        }
+    ], [detailDeliveryNoteSubcont, vehicle, driver, supplier, productSubcontList])
 
 
     return (
         <>
-            <Loading />
-
-
-            <BaseAside links={links} activeSection={activeSection} />
-            <BreadCrumb links={breadcrumb} />
-
-            <section id='detail' className={classes.section} ref={sectionRefs[0]} >
-                <Title className={classes.title} >
-                    <a href="#detail" className={classes.a_href} >
-                        Detail delivery subconstruction
-                    </a>
-                </Title>
-
-                <Divider my='md'></Divider>
-
-                <TextInput
-                    readOnly
-                    variant='filled'
-                    label='Supplier'
-                    m='xs'
-                    radius='md'
-                    icon={<IconUserCheck />}
-                    value={supplier.name}
-                />
-
-                <TextInput
-                    label='Delivery number'
-                    variant='filled'
-                    m='xs'
-                    radius='md'
-                    readOnly
-                    icon={<IconCodeAsterix />}
-                    value={detailDeliveryNoteSubcont.code}
-                />
-
-                <Group m='xs' grow >
-
-
-                    <TextInput
-                        label='Delivery date'
-                        readOnly
-                        variant="filled"
-                        radius='md'
-                        icon={<IconCalendar />}
-                        value={new Date(detailDeliveryNoteSubcont.date).toDateString()}
-                    />
-
-                    <TextInput
-                        label='Driver name'
-                        readOnly
-                        variant='filled'
-                        radius='md'
-                        icon={<IconUser />}
-                        value={driver.name}
-                    />
-
-                    <TextInput
-                        label='Vehicle number'
-                        readOnly
-                        variant='filled'
-                        radius='md'
-                        icon={<IconTruck />}
-                        value={vehicle.license_part_number}
-                    />
-
-                </Group>
-
-                <Textarea
-                    label='Delivery descriptions'
-                    readOnly
-                    variant='filled'
-                    radius='md'
-                    m='xs'
-                    icon={<IconClipboardList />}
-                    value={detailDeliveryNoteSubcont.note}
-                />
-
-            </section>
-
-            <section id='product-subcont' className={classes.section} ref={sectionRefs[1]} >
-                <Title className={classes.title} >
-                    <a href="#product-subcont" className={classes.a_href} >
-                        List of product in subconstruction
-                    </a>
-                </Title>
-
-                <Divider my='md'></Divider>
-
-                <BaseTable
-                    column={columnProductSubcont}
-                    data={productSubcontList}
-                    noData="This delivery note doesn't have products sent "
-                />
-
-            </section>
+            <BaseContent
+                links={links}
+                breadcrumb={breadcrumb}
+                contents={contents}
+            />
         </>
     )
 }

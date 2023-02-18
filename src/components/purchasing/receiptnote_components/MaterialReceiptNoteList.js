@@ -1,22 +1,26 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { IconDotsCircleHorizontal, IconSearch } from "@tabler/icons";
-import { useRequest } from "../../../hooks";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react"
+import { useRequest, useSearch } from "../../../hooks";
 
 import { BaseTable } from "../../tables";
-import { Group, TextInput, Button } from "@mantine/core";
+import { NavigationDetailButton, HeadSection, SearchTextInput } from "../../custom_components";
+
 
 const MaterialReceiptNoteList = () => {
 
-    const { GetAndExpiredTokenHandler, Loading } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
     const [receiptNoteList, setReceiptNoteList] = useState([])
-    const [query, setQuery] = useState('')
+    const { lowerCaseQuery, query, setValueQuery } = useSearch()
 
     const filteredReceiptNoteList = useMemo(() => {
 
-        return receiptNoteList.filter(receiptNote => receiptNote.code.toLowerCase().includes(query.toLocaleLowerCase()) || receiptNote.date.toLowerCase().includes(query.toLocaleLowerCase()) || receiptNote.supplier.name.toLowerCase().includes(query.toLowerCase()))
+        return receiptNoteList.filter(receiptNote => {
+            const { code, date, supplier } = receiptNote
+            const { name } = supplier
 
-    }, [query, receiptNoteList])
+            return code.toLowerCase().includes(lowerCaseQuery) || date.toLowerCase().includes(lowerCaseQuery) || name.toLowerCase().includes(lowerCaseQuery)
+        })
+
+    }, [lowerCaseQuery, receiptNoteList])
 
     const columnReceiptNoteMaterial = useMemo(() => [
         {
@@ -39,25 +43,16 @@ const MaterialReceiptNoteList = () => {
         },
         {
             name: '',
-            selector: row => row.detailButton
+            selector: row => <NavigationDetailButton
+                url={`/home/purchasing/shipments-and-receipts/material/${row.id}`}
+            />
         }
     ], [])
 
     useEffect(() => {
 
         GetAndExpiredTokenHandler('delivery-note-material').then(data => {
-            setReceiptNoteList(data.map(dt => ({
-                ...dt, detailButton: <Button
-                    leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                    color='teal.8'
-                    variant='subtle'
-                    radius='md'
-                    component={Link}
-                    to={`/home/purchasing/shipments-and-receipts/material/${dt.id}`}
-                >
-                    Detail
-                </Button>
-            })))
+            setReceiptNoteList(data)
         })
 
     }, [])
@@ -66,19 +61,12 @@ const MaterialReceiptNoteList = () => {
     return (
         <>
 
-            <Loading />
-
-            <Group m='xs' position="right" >
-
-                <TextInput
-                    placeholder="Search material receipt note"
-                    value={query}
-                    icon={<IconSearch />}
-                    radius='md'
-                    onChange={e => setQuery(e.target.value)}
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
-
-            </Group>
+            </HeadSection>
 
             <BaseTable
                 column={columnReceiptNoteMaterial}

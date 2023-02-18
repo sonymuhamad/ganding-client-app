@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { useRequest } from "../../../hooks";
 import { BaseTable } from "../../tables";
-import { Button } from "@mantine/core";
-import { IconDotsCircleHorizontal } from "@tabler/icons";
+import { NavigationDetailButton } from '../../custom_components'
 
 
 const MaterialReceived = () => {
@@ -33,27 +31,17 @@ const MaterialReceived = () => {
         },
         {
             name: '',
-            selector: row => row.detailButton
+            selector: row => <NavigationDetailButton
+                url={`/home/purchasing/shipments-and-receipts/material/${row.delivery_note_material.id}#materials`}
+            />
         },
     ], [])
 
     useEffect(() => {
         Get('material-receipt-list').then(data => {
-
-            setMaterialReceiptList(data.map(dt => ({
-                ...dt, detailButton: <Button
-                    leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                    color='teal.8'
-                    variant='subtle'
-                    radius='md'
-                    component={Link}
-                    to={`/home/purchasing/shipments-and-receipts/material/${dt.delivery_note_material.id}#materials`}
-                >
-                    Detail
-                </Button>
-            })))
-
+            setMaterialReceiptList(data)
         })
+
     }, [])
 
     return (

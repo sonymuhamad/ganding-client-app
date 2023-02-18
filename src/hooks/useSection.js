@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import useScrollSpy from 'react-use-scrollspy'
-import { sectionStyle } from "../services/styles"
+import { sectionStyle } from "../styles"
 
 export const useSection = () => {
 

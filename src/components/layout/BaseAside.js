@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Aside, MediaQuery, Group, Text, Box, ScrollArea } from "@mantine/core";
-import { asideStyle } from "../../services/styles";
+import { asideStyle } from "../../styles";
 import { IconListSearch } from "@tabler/icons";
 
 export default function BaseAside({ links, activeSection }) {

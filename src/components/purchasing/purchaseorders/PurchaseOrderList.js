@@ -1,21 +1,23 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Button, Group, TextInput, Select, Textarea, NumberInput, Text } from "@mantine/core";
-import { IconPlus, IconSearch, IconDotsCircleHorizontal, IconUserCheck, IconCodeAsterix, IconCalendar, IconDownload, IconReceiptTax, IconDiscount2, IconClipboard } from "@tabler/icons";
+import { useNavigate } from "react-router-dom";
+import { Group, TextInput, Select, Textarea, NumberInput, Text } from "@mantine/core";
+import { IconUserCheck, IconCodeAsterix, IconCalendar, IconReceiptTax, IconDiscount2, IconClipboard } from "@tabler/icons";
 import { useForm } from "@mantine/form";
 import { openModal, closeAllModals } from "@mantine/modals";
 import { DatePicker } from "@mantine/dates";
-import { useRequest } from "../../../hooks";
+import { useRequest, useSearch } from "../../../hooks";
 import { ExpandedPurchaseOrder } from "../../layout";
 import { BaseTableExpanded } from "../../tables";
 import { FailedNotif, SuccessNotif } from "../../notifications";
 
 
+import { generateDataWithDate } from "../../../services";
+import { ModalForm, HeadSection, ButtonAdd, NavigationDetailButton, SearchTextInput } from "../../custom_components";
 
 
 const ModalAddPurchaseOrder = () => {
 
-    const { Get, Loading, Post } = useRequest()
+    const { Get, Post } = useRequest()
     const navigate = useNavigate()
     const [supplierList, setSupplierList] = useState([])
 
@@ -31,14 +33,8 @@ const ModalAddPurchaseOrder = () => {
     })
 
     const handleSubmit = async (value) => {
-        let validate_data
-
-        if (value.date) {
-            validate_data = { ...value, date: value.date.toLocaleDateString('en-CA') }
-        } else {
-            validate_data = value
-        }
-
+        const { date, ...rest } = value
+        const validate_data = generateDataWithDate(date, rest)
 
         try {
             const newPo = await Post(validate_data, 'purchase-order-management')
@@ -59,9 +55,9 @@ const ModalAddPurchaseOrder = () => {
 
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)}  >
-
-            <Loading />
+        <ModalForm
+            formId='formAddPurchaseOrder'
+            onSubmit={form.onSubmit(handleSubmit)}  >
 
             <Select
                 label='Supplier'
@@ -136,18 +132,7 @@ const ModalAddPurchaseOrder = () => {
                 {...form.getInputProps('description')}
             />
 
-
-            <Button
-                fullWidth
-                radius='md'
-                type='submit'
-                leftIcon={<IconDownload />}
-            >
-                Save
-            </Button>
-
-
-        </form>
+        </ModalForm>
     )
 }
 
@@ -157,13 +142,18 @@ const ModalAddPurchaseOrder = () => {
 
 const PurchaseOrderList = () => {
 
-    const { GetAndExpiredTokenHandler, Loading } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
     const [purchaseOrderList, setPurchaseOrderList] = useState([])
-    const [query, setQuery] = useState('')
+    const { lowerCaseQuery, setValueQuery, query } = useSearch()
 
     const filteredPurchaseOrder = useMemo(() => {
-        return purchaseOrderList.filter(po => po.code.toLowerCase().includes(query.toLowerCase()) || po.date.toLowerCase().includes(query.toLowerCase()))
-    }, [purchaseOrderList, query])
+        return purchaseOrderList.filter(po => {
+            const { code, date, supplier } = po
+            const { name } = supplier
+            return name.toLowerCase().includes(lowerCaseQuery) || code.toLowerCase().includes(lowerCaseQuery) || date.toLowerCase().includes(lowerCaseQuery)
+        })
+
+    }, [purchaseOrderList, lowerCaseQuery])
 
     const columnPurchaseOrderList = useMemo(() => [
         {
@@ -187,7 +177,9 @@ const PurchaseOrderList = () => {
         },
         {
             name: '',
-            selector: row => row.detailButton
+            selector: row => <NavigationDetailButton
+                url={`/home/purchasing/purchase-order/${row.id}`}
+            />
         }
     ], [])
 
@@ -202,22 +194,8 @@ const PurchaseOrderList = () => {
     useEffect(() => {
 
         GetAndExpiredTokenHandler('purchase-order').then(data => {
-
-            setPurchaseOrderList(data.map(dt => ({
-                ...dt, detailButton: <Button
-                    leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                    color='teal.8'
-                    variant='subtle'
-                    radius='md'
-                    component={Link}
-                    to={`/home/purchasing/purchase-order/${dt.id}`}
-                >
-                    Detail
-                </Button>
-            })))
-
+            setPurchaseOrderList(data)
         })
-
 
     }, [])
 
@@ -225,26 +203,20 @@ const PurchaseOrderList = () => {
     return (
         <>
 
-            <Loading />
+            <HeadSection>
 
-            <Group position="right" m='xs' >
-                <TextInput
-                    placeholder="Search"
-                    icon={<IconSearch />}
-                    value={query}
-                    radius='md'
-                    onChange={e => setQuery(e.target.value)}
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
 
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+                <ButtonAdd
                     onClick={openModalAddPurchaseOrder}
                 >
                     Purchase order
-                </Button>
-            </Group>
+                </ButtonAdd>
+
+            </HeadSection>
 
             <BaseTableExpanded
                 noData="This supplier doesn't have any purchase order"

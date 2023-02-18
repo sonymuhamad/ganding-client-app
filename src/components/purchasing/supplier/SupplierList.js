@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useMemo, useCallback, } from "react";
-import { Link } from "react-router-dom";
-import { useRequest } from "../../../hooks";
+import { useRequest, useSearch } from "../../../hooks";
 import { BaseTable } from "../../tables";
-import { Button, TextInput, Group, NumberInput, Textarea } from "@mantine/core";
-import { IconSearch, IconDotsCircleHorizontal, IconPlus, IconUserCheck, IconAt, IconDeviceMobile, IconMapPins, IconDownload } from "@tabler/icons";
+import { TextInput, NumberInput, Textarea } from "@mantine/core";
+import { IconUserCheck, IconAt, IconDeviceMobile, IconMapPins } from "@tabler/icons";
 
 import { closeAllModals, openModal } from "@mantine/modals";
 import { useForm } from "@mantine/form";
 import { SuccessNotif } from '../../notifications'
 
+import { ModalForm, ButtonAdd, NavigationDetailButton, SearchTextInput, HeadSection } from "../../custom_components";
 
 const ModalAddSupplier = ({ onAddSupplier }) => {
 
-    const { Post, Loading } = useRequest()
+    const { Post } = useRequest()
     const form = useForm({
         initialValues: {
             name: '',
@@ -24,20 +24,21 @@ const ModalAddSupplier = ({ onAddSupplier }) => {
 
     const handleSubmit = async (value) => {
         try {
-            await Post(value, 'supplier-management')
-            onAddSupplier()
+            const newSupplier = await Post(value, 'supplier-management')
+            onAddSupplier(newSupplier)
             closeAllModals()
             SuccessNotif('Add new supplier success')
         } catch (e) {
             form.setErrors(e.message.data)
-            console.log(e)
         }
     }
 
     return (
 
-        <form onSubmit={form.onSubmit(handleSubmit)} >
-            <Loading />
+        <ModalForm
+            formId='formAddSupplier'
+            onSubmit={form.onSubmit(handleSubmit)} >
+
 
             <TextInput
                 label='Name'
@@ -81,16 +82,8 @@ const ModalAddSupplier = ({ onAddSupplier }) => {
                 {...form.getInputProps('address')}
             />
 
-            <Button
-                radius='md'
-                fullWidth
-                leftIcon={<IconDownload />}
-                type='submit'
-            >
-                Save
-            </Button>
 
-        </form>
+        </ModalForm>
     )
 }
 
@@ -98,14 +91,18 @@ const ModalAddSupplier = ({ onAddSupplier }) => {
 
 const SupplierList = () => {
 
-    const { GetAndExpiredTokenHandler, Loading } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
     const [supplierList, setSupplierList] = useState([])
-    const [query, setQuery] = useState('')
-    const [action, setAction] = useState(0)
+    const { lowerCaseQuery, query, setValueQuery } = useSearch()
 
     const filteredSupplierList = useMemo(() => {
-        return supplierList.filter(supplier => supplier.name.toLowerCase().includes(query.toLowerCase()) || supplier.email.toLowerCase().includes(query.toLowerCase()))
-    }, [query, supplierList])
+
+        return supplierList.filter(supplier => {
+            const { name, email } = supplier
+            return name.toLowerCase().includes(lowerCaseQuery) || email.toLowerCase().includes(lowerCaseQuery)
+        })
+
+    }, [lowerCaseQuery, supplierList])
 
     const columnSupplierList = useMemo(() => [
         {
@@ -126,11 +123,13 @@ const SupplierList = () => {
         },
         {
             name: '',
-            selector: row => row.detailButton
+            selector: row => <NavigationDetailButton
+                url={`/home/purchasing/suppliers/${row.id}`}
+            />
         }
     ], [])
 
-    const handleAddSupplier = useCallback(() => setAction(prev => prev + 1),
+    const handleAddSupplier = useCallback((newSupplier) => setSupplierList(prev => [...prev, newSupplier]),
         [])
 
     const openAddSupplier = useCallback(() => openModal({
@@ -138,25 +137,14 @@ const SupplierList = () => {
         radius: 'md',
         size: 'lg',
         children: <ModalAddSupplier onAddSupplier={handleAddSupplier} />
-    }), [])
+    }), [handleAddSupplier])
 
     useEffect(() => {
         const fetch = async () => {
             try {
                 const supplierList = await GetAndExpiredTokenHandler('supplier')
 
-                setSupplierList(supplierList.map(supplier => ({
-                    ...supplier, detailButton: <Button
-                        leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                        color='teal.8'
-                        variant='subtle'
-                        radius='md'
-                        component={Link}
-                        to={`/home/purchasing/suppliers/${supplier.id}`}
-                    >
-                        Detail
-                    </Button>
-                })))
+                setSupplierList(supplierList)
 
             } catch (e) {
                 console.log(e)
@@ -164,32 +152,24 @@ const SupplierList = () => {
         }
 
         fetch()
-    }, [action])
+    }, [])
 
     return (
         <>
 
-            <Loading />
-
-            <Group position="right" m='xs' >
-
-                <TextInput
-                    placeholder="Search supplier"
-                    icon={<IconSearch />}
-                    radius='md'
-                    onChange={(e) => setQuery(e.target.value)}
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
 
-                <Button
-                    variant='outline'
-                    radius='md'
-                    leftIcon={<IconPlus />}
+                <ButtonAdd
                     onClick={openAddSupplier}
                 >
                     Supplier
-                </Button>
+                </ButtonAdd>
 
-            </Group>
+            </HeadSection>
 
             <BaseTable
                 column={columnSupplierList}

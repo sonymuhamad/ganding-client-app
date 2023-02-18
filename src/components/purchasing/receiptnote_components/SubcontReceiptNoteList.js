@@ -1,23 +1,26 @@
 import React, { useMemo, useEffect, useState } from "react";
 
-import { useRequest } from "../../../hooks";
-import { Button, TextInput, Group } from "@mantine/core";
+import { useRequest, useSearch } from "../../../hooks";
 import { BaseTable } from "../../tables";
-import { Link } from "react-router-dom";
-import { IconSearch, IconDotsCircleHorizontal } from "@tabler/icons";
+import { NavigationDetailButton, HeadSection, SearchTextInput } from "../../custom_components";
 
 
 const SubcontReceiptNoteList = () => {
 
     const { Get } = useRequest()
     const [receiptNoteList, setReceiptNoteList] = useState([])
-    const [query, setQuery] = useState('')
+    const { query, lowerCaseQuery, setValueQuery } = useSearch()
 
     const filteredReceiptNoteList = useMemo(() => {
 
-        return receiptNoteList.filter(note => note.code.toLowerCase().includes(query.toLowerCase()) || note.supplier.name.toLowerCase().includes(query.toLowerCase()) || note.date.toLowerCase().includes(query.toLowerCase()))
+        return receiptNoteList.filter(note => {
+            const { code, supplier, date } = note
+            const { name } = supplier
 
-    }, [query, receiptNoteList])
+            return code.toLowerCase().includes(lowerCaseQuery) || name.toLowerCase().includes(lowerCaseQuery) || date.toLowerCase().includes(lowerCaseQuery)
+        })
+
+    }, [lowerCaseQuery, receiptNoteList])
 
     const columnReceiptNoteSubcont = useMemo(() => [
         {
@@ -41,25 +44,16 @@ const SubcontReceiptNoteList = () => {
         },
         {
             name: '',
-            selector: row => row.detailButton
+            selector: row => <NavigationDetailButton
+                url={`/home/purchasing/shipments-and-receipts/receipt-subcont/${row.id}`}
+            />
         }
     ], [])
 
     useEffect(() => {
 
         Get('receipt-note-subcont').then(data => {
-            setReceiptNoteList(data.map(dt => ({
-                ...dt, detailButton: <Button
-                    leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                    color='teal.8'
-                    variant='subtle'
-                    radius='md'
-                    component={Link}
-                    to={`/home/purchasing/shipments-and-receipts/receipt-subcont/${dt.id}`}
-                >
-                    Detail
-                </Button>
-            })))
+            setReceiptNoteList(data)
         })
 
     }, [])
@@ -68,20 +62,12 @@ const SubcontReceiptNoteList = () => {
     return (
         <>
 
-            <Group
-                m='xs'
-                position="right"
-            >
-
-                <TextInput
-                    placeholder="Search receipt note"
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    icon={<IconSearch />}
-                    radius='md'
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
-
-            </Group>
+            </HeadSection>
 
             <BaseTable
                 column={columnReceiptNoteSubcont}

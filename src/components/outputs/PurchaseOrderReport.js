@@ -151,13 +151,15 @@ const PurchaseOrderReport = ({
             if (currentSchedule) {
                 const { quantity } = currentSchedule
                 arr.push(
-                    <td key={num + 1} >
+                    <td key={materialReceiptSchedule[num].id} >
                         {quantity}
                     </td>)
                 continue
             }
             arr.push(
-                <td></td>
+                <td
+                    key={num + 1}
+                ></td>
             )
         }
 
@@ -170,7 +172,7 @@ const PurchaseOrderReport = ({
         let amountPrice = 0
 
         const rowTables = materialOrderList.map((materialOrder, index) => {
-            const { material, ordered, price, to_product, materialreceiptschedule_set } = materialOrder
+            const { material, ordered, price, to_product, materialreceiptschedule_set, id } = materialOrder
             const { spec, length, width, thickness, uom, name, berat_jenis, weight } = material
 
             const [nameForTable, codeForTable] = getNameAndCodeInTable(to_product, name)
@@ -182,7 +184,7 @@ const PurchaseOrderReport = ({
 
             return (
                 <tr
-                    key={i}
+                    key={id}
                     style={{
                         borderBottom: '1px solid black',
                         borderTop: '1px solid black'

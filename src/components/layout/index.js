@@ -21,7 +21,8 @@ import ExpandedCustomerList from "./ExpandedCustomerList";
 import CustomSelectComponentSalesOrder from "./CustomSelectComponentSalesOrder";
 import TextPrice from "./TextPrice";
 import TextPricePurchaseOrderReport from "./TextPricePurchaseOrderReport";
+import ExpandedMaterial from "./ExpandedMaterial";
 
-export { BaseAside, BaseLayout, CustomSelectComponent, CustomSelectComponentDetailMrp, CustomSelectComponentMrp, CustomSelectComponentProcess, CustomSelectComponentProduct, CustomSelectComponentReceiptSubcont, ExpandedDeliveryNote, ExpandedMaterialOrderList, ExpandedProcess, ExpandedProduct, ExpandedPurchaseOrder, ExpandedSo, ExpandedWarehouseFg, NavLinks, ModalEditStockProduct, BaseContent, ExpandedDescriptionDelivery, ExpandedCustomerList, CustomSelectComponentSalesOrder, TextPrice, TextPricePurchaseOrderReport }
+export { BaseAside, BaseLayout, CustomSelectComponent, CustomSelectComponentDetailMrp, CustomSelectComponentMrp, CustomSelectComponentProcess, CustomSelectComponentProduct, CustomSelectComponentReceiptSubcont, ExpandedDeliveryNote, ExpandedMaterialOrderList, ExpandedProcess, ExpandedProduct, ExpandedPurchaseOrder, ExpandedSo, ExpandedWarehouseFg, NavLinks, ModalEditStockProduct, BaseContent, ExpandedDescriptionDelivery, ExpandedCustomerList, CustomSelectComponentSalesOrder, TextPrice, TextPricePurchaseOrderReport, ExpandedMaterial }
 
 

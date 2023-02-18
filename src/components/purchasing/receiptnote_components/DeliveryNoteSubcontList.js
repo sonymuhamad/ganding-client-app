@@ -1,22 +1,25 @@
 import React, { useMemo, useEffect, useState } from "react";
 
-import { useRequest } from "../../../hooks";
-import { BaseTable } from "../../tables";
-import { TextInput, Group, Button } from "@mantine/core";
-import { IconDotsCircleHorizontal, IconSearch } from "@tabler/icons";
-import { Link } from "react-router-dom";
+import { useRequest, useSearch } from "../../../hooks";
+import { BaseTable } from "../../tables"
+import { NavigationDetailButton, HeadSection, SearchTextInput } from "../../custom_components";
 
 
 const DeliveryNoteSubcontList = () => {
 
     const { Get } = useRequest()
     const [deliveryNoteSubcontList, setDeliveryNoteSubcontList] = useState([])
-    const [query, setQuery] = useState('')
+    const { query, lowerCaseQuery, setValueQuery } = useSearch()
+
     const filteredDeliveryNoteSubcont = useMemo(() => {
 
-        return deliveryNoteSubcontList.filter(dn => dn.code.toLowerCase().includes(query.toLocaleLowerCase()) || dn.supplier.name.toLocaleLowerCase().includes(query.toLowerCase()) || dn.date.toLocaleLowerCase().includes(query.toLowerCase()))
+        return deliveryNoteSubcontList.filter(dn => {
+            const { code, supplier, date } = dn
+            const { name } = supplier
+            return code.toLowerCase().includes(lowerCaseQuery) || name.toLocaleLowerCase().includes(lowerCaseQuery) || date.toLocaleLowerCase().includes(lowerCaseQuery)
+        })
 
-    }, [query, deliveryNoteSubcontList])
+    }, [lowerCaseQuery, deliveryNoteSubcontList])
 
     const columnDeliveryNoteSubcont = useMemo(() => [
         {
@@ -39,25 +42,16 @@ const DeliveryNoteSubcontList = () => {
         },
         {
             name: '',
-            selector: row => row.detailButton
+            selector: row => <NavigationDetailButton
+                url={`/home/purchasing/shipments-and-receipts/shipment-subcont/${row.id}`}
+            />
         }
     ], [])
 
     useEffect(() => {
 
         Get('delivery-note-subcont').then(data => {
-            setDeliveryNoteSubcontList(data.map(dt => ({
-                ...dt, detailButton: <Button
-                    leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                    color='teal.8'
-                    variant='subtle'
-                    radius='md'
-                    component={Link}
-                    to={`/home/purchasing/shipments-and-receipts/shipment-subcont/${dt.id}`}
-                >
-                    Detail
-                </Button>
-            })))
+            setDeliveryNoteSubcontList(data)
         })
 
     }, [])
@@ -65,17 +59,12 @@ const DeliveryNoteSubcontList = () => {
     return (
         <>
 
-            <Group position="right" m='md' >
-
-                <TextInput
-                    placeholder="Search delivery note"
-                    value={query}
-                    icon={<IconSearch />}
-                    radius='md'
-                    onChange={e => setQuery(e.target.value)}
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
-
-            </Group>
+            </HeadSection>
 
             <BaseTable
                 column={columnDeliveryNoteSubcont}

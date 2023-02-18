@@ -6,7 +6,7 @@ const ModalForm = (props) => {
 
     // form input used in every modal
 
-    const { children, onSubmit, formId } = props
+    const { children, onSubmit, formId = 'form' } = props
 
     return (
         <form
