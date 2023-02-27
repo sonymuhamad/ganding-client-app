@@ -1,98 +1,36 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import { BaseTableExpanded } from "../../tables";
-import { IconDotsCircleHorizontal, IconSearch, IconClipboardCheck, IconBarcode, IconUser, IconCodeAsterix, IconPackgeExport, IconTruck, IconPlus, IconCalendarEvent, IconDownload, IconTruckDelivery, IconUserCheck } from "@tabler/icons";
+import { BaseTable } from "../../tables";
+import { IconClipboardCheck, IconUser, IconCodeAsterix, IconCalendarEvent, IconTruckDelivery, IconUserCheck } from "@tabler/icons";
 
-import { useRequest } from "../../../hooks";
+import { useRequest, useSearch } from "../../../hooks";
 import { openModal, closeAllModals } from "@mantine/modals";
 
-import { Button, TextInput, Group, Paper, Textarea, Select } from "@mantine/core";
+import { TextInput, Group, Textarea, Select } from "@mantine/core";
 import { SuccessNotif, FailedNotif } from '../../notifications'
 import { useForm } from "@mantine/form";
 import { DatePicker } from "@mantine/dates";
+import { generateDataWithDate } from "../../../services";
 
+import { ModalForm, SearchTextInput, NavigationDetailButton, ButtonAdd, HeadSection } from '../../custom_components'
 
-const ExpandedDeliveryNote = ({ data }) => {
-    return (
-        <Paper p='sm' >
-
-            <Textarea
-                readOnly
-                label='Note'
-                radius='md'
-                value={data.note}
-                m='xs'
-                variant="filled"
-                icon={<IconClipboardCheck />}
-            />
-
-            <Group m='xs' grow >
-
-                <TextInput
-                    icon={<IconUser />}
-                    readOnly
-                    label='Driver'
-                    radius='md'
-                    variant='filled'
-                    value={data.driver.name}
-                />
-
-                <TextInput
-                    icon={<IconTruck />}
-                    readOnly
-                    label='Vehicle number'
-                    radius='md'
-                    variant="filled"
-                    value={data.vehicle.license_part_number}
-                />
-            </Group>
-
-            {data.productdelivercustomer_set.map(delivered => (
-                <Paper p='xs' radius='md' key={delivered.id} m='xs' withBorder  >
-
-                    <TextInput
-                        icon={<IconBarcode />}
-                        readOnly
-                        radius='md'
-                        variant='filled'
-                        label='Product name'
-                        value={delivered.product_order.product.name}
-                    />
-
-                    <TextInput
-                        icon={<IconCodeAsterix />}
-                        readOnly
-                        radius='md'
-                        variant='filled'
-                        label='Product number'
-                        value={delivered.product_order.product.code}
-                    />
-
-                    <TextInput
-                        icon={<IconPackgeExport />}
-                        readOnly
-                        radius='md'
-                        variant='filled'
-                        label='Quantity shipped'
-                        value={delivered.quantity}
-                    />
-
-                </Paper>
-            ))}
-
-        </Paper>
-    )
-}
 
 const ModalAddDeliveryNote = () => {
 
-    const { Get, Post, Loading } = useRequest()
+    const { Get, Post } = useRequest()
     const navigate = useNavigate()
 
     const [customerList, setCustomerList] = useState([])
     const [driverList, setDriverList] = useState([])
     const [vehicleList, setVehicleList] = useState([])
+
+    const validate = useCallback((value, entity) => {
+        if (value === null) {
+            return `Please select a ${entity}`
+        }
+        return null
+    }, [])
 
     const form = useForm({
         initialValues: {
@@ -104,10 +42,10 @@ const ModalAddDeliveryNote = () => {
             date: null
         },
         validate: {
-            customer: value => value === null ? 'Please select customer' : null,
-            driver: value => value === null ? 'Please select driver' : null,
-            vehicle: value => value === null ? 'Please select vehicle' : null,
-            date: value => value === null ? 'Select delivery date' : null
+            customer: value => validate(value, 'Customer'),
+            driver: value => validate(value, 'Driver'),
+            vehicle: value => validate(value, 'Vehicle'),
+            date: value => validate(value, 'Date')
         }
     })
 
@@ -126,29 +64,27 @@ const ModalAddDeliveryNote = () => {
             console.log(e)
         }
 
-    }, [Get])
+    }, [])
+
+    const validateNote = useCallback((data) => {
+        if (data.note === '') {
+            const { note, ...rest } = data
+            return rest
+        }
+        return data
+
+    }, [])
 
 
     const handleSubmit = useCallback(async (data) => {
 
-        let val
-        let dateInput // set input date format to YYYY-MM-DD, so that be able to inputted to django
+        const validateDataWithNote = validateNote(data)
+        const { date, ...rest } = validateDataWithNote
 
-        if (data.note === '') {
-
-            // if note is empty, remove it
-
-            const { note, date, ...restProps } = data
-            val = restProps
-            dateInput = date.toLocaleDateString('en-CA')
-        } else {
-            const { date, ...restProps } = data
-            val = restProps
-            dateInput = date.toLocaleDateString('en-CA')
-        }
+        const validate_data = generateDataWithDate(date, rest)
 
         try {
-            const newDeliveryNote = await Post({ ...val, date: dateInput }, 'delivery-note-management')
+            const newDeliveryNote = await Post(validate_data, 'delivery-note-management')
             SuccessNotif('Add delivery note success')
             navigate(`/home/ppic/delivery/${newDeliveryNote.id}`)
             closeAllModals()
@@ -157,7 +93,7 @@ const ModalAddDeliveryNote = () => {
             FailedNotif('Add delivery note failed')
         }
 
-    }, [Post, navigate])
+    }, [navigate, validateNote])
 
     useEffect(() => {
         fetchData()
@@ -165,9 +101,10 @@ const ModalAddDeliveryNote = () => {
 
     return (
         <>
-            <Loading />
 
-            <form onSubmit={form.onSubmit(handleSubmit)}  >
+            <ModalForm
+                formId='formAddDeliveryNote'
+                onSubmit={form.onSubmit(handleSubmit)}  >
 
 
                 <Select
@@ -235,17 +172,7 @@ const ModalAddDeliveryNote = () => {
                     {...form.getInputProps('note')}
                 />
 
-                <Button
-                    leftIcon={<IconDownload />}
-                    my='md'
-                    fullWidth
-                    radius='md'
-                    type="submit"
-                >
-                    Save
-                </Button>
-
-            </form>
+            </ModalForm>
 
         </>
     )
@@ -254,15 +181,20 @@ const ModalAddDeliveryNote = () => {
 
 const DeliveryNote = () => {
 
-    const { Get, Loading } = useRequest()
+    const { Get } = useRequest()
     const [deliveryNote, setDeliveryNote] = useState([])
-    const [searchDeliveryNote, setSearchDeliveryNote] = useState('')
+    const { query, lowerCaseQuery, setValueQuery } = useSearch()
 
     const filteredDeliveryNote = useMemo(() => {
 
-        return deliveryNote.filter(dn => dn.code.toLowerCase().includes(searchDeliveryNote.toLowerCase()) || dn.date.toLowerCase().includes(searchDeliveryNote.toLowerCase()) || dn.customer.name.toLowerCase().includes(searchDeliveryNote.toLowerCase()))
+        return deliveryNote.filter(dn => {
+            const { code, date, customer } = dn
+            const { name } = customer
 
-    }, [deliveryNote, searchDeliveryNote])
+            return code.toLowerCase().includes(lowerCaseQuery) || date.toLowerCase().includes(lowerCaseQuery) || name.toLowerCase().includes(lowerCaseQuery)
+        })
+
+    }, [deliveryNote, lowerCaseQuery])
 
 
     const columnDeliveryNote = useMemo(() => [
@@ -276,20 +208,13 @@ const DeliveryNote = () => {
         },
         {
             name: 'Date',
-            selector: row => new Date(row.date).toDateString()
-        },
-        {
-            name: 'Number of product shipped',
-            selector: row => row.productdelivercustomer_set.length,
-            style: {
-                padding: -5,
-                margin: -10,
-                justifyContent: 'center'
-            }
+            selector: row => row.date
         },
         {
             name: '',
-            selector: row => row.buttonDetail,
+            selector: row => <NavigationDetailButton
+                url={`/home/ppic/delivery/${row.id}`}
+            />,
         }
     ], [])
 
@@ -303,56 +228,33 @@ const DeliveryNote = () => {
     useEffect(() => {
 
         Get('delivery-note').then(data => {
-
-            setDeliveryNote(data.map(dn => ({
-                ...dn, buttonDetail: <Button
-                    leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                    color='teal.8'
-                    variant='subtle'
-                    radius='md'
-                    component={Link}
-                    to={`/home/ppic/delivery/${dn.id}`}
-                >
-                    Detail
-                </Button>
-            })))
-
+            setDeliveryNote(data)
         })
-
 
     }, [])
 
     return (
         <>
-            <Loading />
 
-            <Group m='xs' position="right" >
+            <HeadSection>
 
-                <TextInput
-                    icon={<IconSearch />}
-                    placeholder="Search delivery note"
-                    radius='md'
-                    value={searchDeliveryNote}
-                    onChange={e => setSearchDeliveryNote(e.target.value)}
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
 
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+                <ButtonAdd
                     onClick={openModalAddDeliveryNote}
                 >
                     Delivery
-                </Button>
+                </ButtonAdd>
 
-            </Group>
+            </HeadSection>
 
-            <BaseTableExpanded
-
+            <BaseTable
                 column={columnDeliveryNote}
                 data={filteredDeliveryNote}
-                expandComponent={ExpandedDeliveryNote}
-
+                noData='Tidak ada data pengiriman product finished goods'
             />
 
         </>

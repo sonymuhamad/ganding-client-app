@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from "react"
+import { closeAllModals, openConfirmModal } from "@mantine/modals"
+import { NumberInput, Text } from "@mantine/core"
 
 import { useRequest } from "../../hooks"
-import { closeAllModals, openConfirmModal } from "@mantine/modals"
 import { SuccessNotif, FailedNotif } from "../notifications"
-import { Button, NumberInput, Text } from "@mantine/core"
+import { ModalForm } from "../custom_components"
+import { IconBuildingWarehouse } from "@tabler/icons"
 
 
-const ModalEditStockProduct = ({ whProduct, setaction }) => {
+const ModalEditStockProduct = ({ whProduct, setUpdateWarehouse }) => {
 
     const [quantity, setQuantity] = useState('')
     const { Put } = useRequest()
 
     const handleSubmit = async () => {
         try {
-            await Put(whProduct.id, { quantity: quantity }, 'warehouse-management-product')
+            const updatedWarehouse = await Put(whProduct.id, { quantity: quantity }, 'warehouse-management-product')
             closeAllModals()
-            setaction(prev => prev + 1)
+            setUpdateWarehouse(updatedWarehouse)
             SuccessNotif('Edit stock success')
         } catch (e) {
             console.log(e)
@@ -29,8 +31,6 @@ const ModalEditStockProduct = ({ whProduct, setaction }) => {
         children: (
             <Text size="sm">
                 Are you sure?, you will change stock in the warehouse directly.
-                <br />
-                this action will impact a lack of data on changes of stock product, use production instead.
             </Text>
         ),
         radius: 'md',
@@ -49,41 +49,34 @@ const ModalEditStockProduct = ({ whProduct, setaction }) => {
     }, [whProduct])
 
     return (
-        <>
-            <form onSubmit={(e) => {
+
+        <ModalForm
+            formId='formEditStockWarehouseProduct'
+            onSubmit={(e) => {
                 e.preventDefault()
                 openConfirmSubmit()
             }}  >
 
-                <NumberInput
-                    radius='md'
-                    label='Quantity'
-                    hideControls
-                    required
-                    min={0}
-                    value={quantity}
-                    onChange={(e) => {
+            <NumberInput
+                radius='md'
+                label='Quantity'
+                hideControls
+                icon={<IconBuildingWarehouse />}
+                required
+                min={0}
+                value={quantity}
+                onChange={(e) => {
 
-                        if (e === undefined) {
-                            setQuantity(0)
-                        } else {
-                            setQuantity(e)
-                        }
+                    if (e === undefined) {
+                        setQuantity(0)
+                    } else {
+                        setQuantity(e)
+                    }
 
-                    }}
-                />
+                }}
+            />
 
-                <Button
-                    my='md'
-                    radius='md'
-                    fullWidth
-                    type='submit'
-                    disabled={quantity === whProduct.quantity}
-                >
-                    Save
-                </Button>
-            </form>
-        </>
+        </ModalForm>
     )
 }
 

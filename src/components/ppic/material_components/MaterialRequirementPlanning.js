@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react"
 
-import { useRequest } from "../../../hooks"
+import { useRequest, useConfirmDelete } from "../../../hooks"
 import { CustomSelectComponentDetailMrp } from "../../layout"
 
 import { BaseTableExpanded, BaseTable } from "../../tables"
@@ -8,11 +8,11 @@ import { SuccessNotif, FailedNotif } from "../../notifications"
 
 import { Paper, TextInput, Group, NumberInput, Divider, Text, Button, ActionIcon, Select, NativeSelect, Badge } from "@mantine/core"
 
-import { IconPlus, IconZoomCheck, IconAsset, IconBuildingWarehouse, IconAssembly, IconBarcode, IconTrash, IconChecklist, IconEdit, IconClipboardList, IconDownload } from "@tabler/icons"
+import { IconPlus, IconZoomCheck, IconAsset, IconBuildingWarehouse, IconAssembly, IconBarcode, IconTrash, IconChecklist, IconClipboardList } from "@tabler/icons"
 
 import { useForm } from "@mantine/form"
-import { openModal, closeAllModals, openConfirmModal } from "@mantine/modals"
-
+import { openModal, closeAllModals } from "@mantine/modals"
+import { ButtonAdd, HeadSection, ButtonDelete, ButtonEdit, ModalForm } from "../../custom_components"
 
 
 const ExpandedMrp = ({ data }) => {
@@ -35,8 +35,9 @@ const ExpandedMrp = ({ data }) => {
 
 
     return (
-        <Paper m='xs' p='xs' >
-
+        <Paper
+            mb='sm'
+        >
             <TextInput
                 radius='md'
                 label='Material name'
@@ -88,7 +89,6 @@ const ExpandedMrp = ({ data }) => {
             }
 
             <BaseTable
-                dense={true}
                 column={columnDetailMrp}
                 pagination={false}
                 noData="There is no allocation data for this request material"
@@ -99,9 +99,9 @@ const ExpandedMrp = ({ data }) => {
 }
 
 
-const PostMaterialRequest = ({ setaction }) => {
+const AddMaterialRequest = ({ setAction }) => {
 
-    const { Post, Get, Loading } = useRequest()
+    const { Post, Get } = useRequest()
     const [materialList, setMaterialList] = useState([])
 
     const form = useForm({
@@ -126,7 +126,7 @@ const PostMaterialRequest = ({ setaction }) => {
         } catch (e) {
             console.log(e)
         }
-    }, [Get])
+    }, [])
 
     useEffect(() => {
         fetch()
@@ -135,8 +135,8 @@ const PostMaterialRequest = ({ setaction }) => {
     const handleSubmit = useCallback(async (value) => {
         try {
             await Post(value, 'mrp-management')
+            setAction()
             SuccessNotif('Add request material success')
-            setaction(prev => prev + 1)
             closeAllModals()
         } catch (e) {
             console.log(e)
@@ -146,11 +146,22 @@ const PostMaterialRequest = ({ setaction }) => {
                 FailedNotif('Add request material failed')
             }
         }
-    }, [Post, setaction])
+    }, [setAction])
+
+    const dataProduct = useMemo(() => {
+        if (form.values.material !== null) {
+            const selectedMaterial = materialList.find(material => material.id === parseInt(form.values.material))
+            const { ppic_requirementmaterial_related } = selectedMaterial
+
+            return ppic_requirementmaterial_related.map(reqMaterial => ({ value: reqMaterial.process.product.id, label: reqMaterial.process.product.name, process: reqMaterial.process.process_name, order: reqMaterial.process.order }))
+        }
+        return []
+
+    }, [form.values.material, materialList])
 
     const detailmrp = useMemo(() => {
         return form.values.detailmrp_set.map((mrp, index) => (
-            <Paper m='xs' p='xs' radius='md' shadow='xs' key={index}  >
+            <Paper m='xs' p='xs' radius='md' shadow='xs' key={index + 2}  >
 
                 <Group position="right" >
 
@@ -174,7 +185,7 @@ const PostMaterialRequest = ({ setaction }) => {
                         radius='md'
                         required
                         placeholder="Select product"
-                        data={form.values.material !== null ? materialList.find(material => material.id === parseInt(form.values.material)).ppic_requirementmaterial_related.map(reqMaterial => ({ value: reqMaterial.process.product.id, label: reqMaterial.process.product.name, process: reqMaterial.process.process_name, order: reqMaterial.process.order })) : []}
+                        data={dataProduct}
                         {...form.getInputProps(`detailmrp_set.${index}.product`)}
                     />
                 </Group>
@@ -209,12 +220,14 @@ const PostMaterialRequest = ({ setaction }) => {
             </Paper>
         ))
 
-    }, [form, materialList])
+    }, [form, dataProduct])
 
     return (
         <>
-            <Loading />
-            <form id='formRequestMaterial' onSubmit={form.onSubmit(handleSubmit)}  >
+
+            <ModalForm
+                formId='formRequestMaterial'
+                onSubmit={form.onSubmit(handleSubmit)}  >
 
                 <NativeSelect
                     icon={<IconAsset />}
@@ -263,25 +276,14 @@ const PostMaterialRequest = ({ setaction }) => {
                     Product
                 </Button>
 
-                <Button
-                    radius='md'
-                    my='md'
-                    form="formRequestMaterial"
-                    type="submit"
-                    fullWidth
-                    leftIcon={<IconDownload />}
-                >
-                    Save
-                </Button>
-
-            </form>
+            </ModalForm>
         </>
     )
 }
 
-const SendMaterialRequest = ({ mrp, setaction }) => {
+const EditMaterialRequest = ({ mrp, setAction }) => {
 
-    const { Put, Get, Loading } = useRequest()
+    const { Put, Get } = useRequest()
     const [materialList, setMaterialList] = useState([])
 
     const form = useForm({
@@ -318,15 +320,17 @@ const SendMaterialRequest = ({ mrp, setaction }) => {
 
         try {
             await Put(value.id, value, 'mrp-management')
-            SuccessNotif('Material request data change is successful')
-            setaction(prev => prev + 1)
+            setAction()
+            SuccessNotif('Edit material request success')
             closeAllModals()
         } catch (e) {
-            console.log(e)
-            FailedNotif('Failed to change material request data')
-            FailedNotif(e.message.data.detailmrp_set)
+            if (e.message.data.detailmrp_set) {
+                FailedNotif(e.message.data.detailmrp_set)
+                return
+            }
+            FailedNotif('Edit material request failed')
         }
-    }, [Put, setaction])
+    }, [setAction])
 
     const detailmrp = useMemo(() => {
 
@@ -394,8 +398,10 @@ const SendMaterialRequest = ({ mrp, setaction }) => {
 
     return (
         <>
-            <Loading />
-            <form id='formRequestMaterial' onSubmit={form.onSubmit(handleSubmit)}  >
+
+            <ModalForm
+                formId='formRequestMaterial'
+                onSubmit={form.onSubmit(handleSubmit)}  >
 
                 <NativeSelect
                     icon={<IconAsset />}
@@ -444,18 +450,7 @@ const SendMaterialRequest = ({ mrp, setaction }) => {
                     Product
                 </Button>
 
-                <Button
-                    radius='md'
-                    my='md'
-                    form="formRequestMaterial"
-                    type="submit"
-                    fullWidth
-                    leftIcon={<IconDownload />}
-                >
-                    Save
-                </Button>
-
-            </form>
+            </ModalForm>
         </>
     )
 
@@ -468,7 +463,53 @@ const MaterialRequirementPlanning = () => {
     const { Get, Delete } = useRequest()
 
     const [mrpAction, setMrpAction] = useState(0)
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Mrp' })
     const [mrp, setMrp] = useState([])
+
+    const setAction = useCallback(() => {
+        setMrpAction(prev => prev + 1)
+    }, [])
+
+    const handleDeleteMrp = useCallback(async (id) => {
+        try {
+            await Delete(id, 'mrp-management')
+            setAction()
+            SuccessNotif('Delete mrp success')
+        } catch (e) {
+            FailedNotif('Delete mrp failed')
+        }
+    }, [setAction])
+
+    const openEditMrpModal = useCallback((mrp) => openModal({
+        title: 'Edit material request',
+        size: 'xl',
+        radius: 'md',
+        children: <EditMaterialRequest mrp={mrp} setAction={setAction} />
+    }), [setAction])
+
+    const openPostMrpModal = useCallback(() => openModal({
+        title: 'Add material request',
+        size: 'xl',
+        radius: 'md',
+        children: <AddMaterialRequest setAction={setAction} />
+    }), [setAction])
+
+    const fetchMrp = useCallback(async () => {
+        try {
+
+            const mrpList = await Get('mrp-details')
+            setMrp(mrpList)
+        } catch (e) {
+            console.log(e)
+        }
+    }, [])
+
+    useEffect(() => {
+        // effect for mrp and mrp recommendations
+        fetchMrp()
+
+    }, [fetchMrp, mrpAction])
+
     const columnMrp = useMemo(() => [
         {
             name: 'Material name',
@@ -491,120 +532,29 @@ const MaterialRequirementPlanning = () => {
         },
         {
             name: '',
-            selector: row => row.buttonEdit,
-            style: {
-                margin: 0,
-                padding: 0
-            }
+            selector: row => row.id ? <ButtonEdit
+                onClick={() => openEditMrpModal(row)}
+            /> : null,
         },
         {
             name: '',
-            selector: row => row.buttonDelete,
-            style: {
-                margin: 0,
-                padding: 0
-            }
+            selector: row => row.id ? <ButtonDelete
+                onClick={() => openConfirmDeleteData(() => handleDeleteMrp(row.id))}
+            /> : null,
         }
-    ], [])
-
-    const handleDeleteMrp = useCallback(async (id) => {
-        try {
-            await Delete(id, 'mrp-management')
-            setMrpAction(prev => prev + 1)
-            SuccessNotif('Delete mrp success')
-        } catch (e) {
-            console.log(e)
-            FailedNotif('Delete mrp failed')
-        }
-    }, [])
-
-
-    const openEditMrpModal = useCallback((mrp) => openModal({
-        title: 'Edit material request',
-        size: 'xl',
-        radius: 'md',
-        children: <SendMaterialRequest mrp={mrp} setaction={setMrpAction} />
-    }), [])
-
-    const openPostMrpModal = useCallback(() => openModal({
-        title: 'Add material request',
-        size: 'xl',
-        radius: 'md',
-        children: <PostMaterialRequest setaction={setMrpAction} />
-    }), [])
-
-
-    const openDeleteMrp = useCallback((id) => openConfirmModal({
-        title: `Delete material request`,
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteMrp(id)
-    }), [handleDeleteMrp])
-
-
-    const fetchMrp = useCallback(async () => {
-        try {
-
-            const mrps = await Get('mrp-details')
-            const dataMrp = mrps.map(mrp => ({
-                ...mrp, buttonEdit: mrp.id ?
-
-                    <Button
-                        leftIcon={<IconEdit stroke={2} size={16} />}
-                        color='teal.6'
-                        variant='subtle'
-                        radius='md'
-                        mx='xs'
-                        onClick={() => openEditMrpModal(mrp)}
-                    >
-                        Edit
-                    </Button> : null,
-                buttonDelete: mrp.id ? <Button
-                    leftIcon={<IconTrash stroke={2} size={16} />}
-                    color='red.6'
-                    variant='subtle'
-                    radius='md'
-                    onClick={() => openDeleteMrp(mrp.id)}
-                >
-                    Delete
-                </Button> : null
-
-            }))
-            setMrp(dataMrp)
-        } catch (e) {
-            console.log(e)
-        }
-    }, [openEditMrpModal, openDeleteMrp])
-
-    useEffect(() => {
-        // effect for mrp and mrp recommendations
-        fetchMrp()
-
-    }, [mrpAction, fetchMrp])
-
+    ], [openConfirmDeleteData, handleDeleteMrp, openEditMrpModal])
 
 
     return (
         <>
 
-
-            <Group position="right" >
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+            <HeadSection>
+                <ButtonAdd
                     onClick={openPostMrpModal}
                 >
-                    Add mrp
-                </Button>
-            </Group>
+                    Mrp
+                </ButtonAdd>
+            </HeadSection>
 
             <BaseTableExpanded
                 column={columnMrp}

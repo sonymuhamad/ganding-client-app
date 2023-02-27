@@ -6,7 +6,7 @@ import { closeAllModals } from "@mantine/modals"
 import { useForm } from "@mantine/form"
 import { useRequest } from "../../../../hooks"
 import { generateDataWithDate } from "../../../../services"
-import { ModalForm } from "../../../custom_components"
+import { ModalForm, ReadOnlyTextInput } from "../../../custom_components"
 import { SuccessNotif, FailedNotif } from "../../../notifications"
 import { Group } from "@mantine/core"
 
@@ -50,12 +50,9 @@ const ModalEditReceiptSchedule = ({ data, setUpdateSchedule }) => {
             formId='formEditReceiptSchedule'
             onSubmit={form.onSubmit(handleSubmit)} >
 
-            <TextInput
+            <ReadOnlyTextInput
                 label='Material'
-                radius='md'
                 m='xs'
-                readOnly
-                variant="filled"
                 icon={<IconAsset />}
                 value={data.material_order.material.name}
             />

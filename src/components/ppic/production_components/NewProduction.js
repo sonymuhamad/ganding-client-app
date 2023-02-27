@@ -10,10 +10,11 @@ import BreadCrumb from "../../BreadCrumb"
 import { SuccessNotif, FailedNotif } from "../../notifications"
 import { CustomSelectComponentProcess } from "../../layout"
 
+import { generateDataWithDate } from "../../../services"
 
 const NewProduction = () => {
 
-    const { Get, Post, Loading, GetAndExpiredTokenHandler } = useRequest()
+    const { Get, Post, GetAndExpiredTokenHandler } = useRequest()
     const { classes } = sectionStyle()
     const [machineList, setMachineList] = useState([])
     const [operatorList, setOperatorList] = useState([])
@@ -46,15 +47,8 @@ const NewProduction = () => {
 
     const handleSubmit = async () => {
 
-        let validate_data
         const data = { product: product, quantity: quantity, quantity_not_good: quantityNotGood, machine: machine, operator: operator, process: process }
-
-        if (date) {
-            validate_data = { ...data, date: date.toLocaleDateString('en-CA') }
-        } else {
-            validate_data = data
-        }
-
+        const validate_data = generateDataWithDate(date, data)
 
         try {
             await Post(validate_data, 'production-report-management')
@@ -118,8 +112,6 @@ const NewProduction = () => {
             <Title className={classes.title} >
                 New production
             </Title>
-
-            <Loading />
 
             <form onSubmit={openConfirmSubmit}  >
 

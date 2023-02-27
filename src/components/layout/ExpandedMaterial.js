@@ -1,43 +1,57 @@
-import { Paper, TextInput, Group } from "@mantine/core"
+import { Paper, Group, Text } from "@mantine/core"
 import { IconScale, IconRuler2, IconDimensions, IconRulerMeasure } from "@tabler/icons"
+import { ReadOnlyTextInput } from "../custom_components"
 
 const ExpandedMaterial = ({ data }) => {
+
+    const { weight, length, width, thickness } = data
 
     return (
         <Paper m='xs' >
             <Group m='xs' grow >
-
-                <TextInput
+                <ReadOnlyTextInput
                     icon={<IconScale />}
                     label='Weight'
-                    readOnly
-                    radius='md'
-                    variant='filled'
-                    value={data.weight}
+                    value={weight}
+                    rightSection={<Text
+                        color='dimmed'
+                        size='sm'
+                    >
+                        mm
+                    </Text>}
                 />
-                <TextInput
+                <ReadOnlyTextInput
                     label='Length'
-                    readOnly
+                    rightSection={<Text
+                        color='dimmed'
+                        size='sm'
+                    >
+                        mm
+                    </Text>}
                     icon={<IconRuler2 />}
-                    value={data.length}
-                    variant='filled'
-                    radius='md'
+                    value={length}
                 />
-                <TextInput
+                <ReadOnlyTextInput
                     label='Width'
-                    readOnly
-                    radius='md'
+                    rightSection={<Text
+                        color='dimmed'
+                        size='sm'
+                    >
+                        mm
+                    </Text>}
                     icon={<IconDimensions />}
-                    variant='filled'
-                    value={data.width}
+                    value={width}
                 />
-                <TextInput
-                    readOnly
-                    radius='md'
+                <ReadOnlyTextInput
+                    rightSection={<Text
+                        color='dimmed'
+                        size='sm'
+                    >
+                        mm
+                    </Text>}
                     label='Thickness'
-                    variant='filled'
                     icon={<IconRulerMeasure />}
-                    value={data.thickness}
+                    value={thickness}
                 />
             </Group>
 

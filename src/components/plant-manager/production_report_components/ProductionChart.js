@@ -23,7 +23,7 @@ const ProductionChart = () => {
 
             const date = production_date.split('-')
 
-            labels.push(`${Months[date[1]]} ${date[0]}`)
+            labels.push(`${Months[parseInt(date[1]) - 1]} ${date[0]}`)
             dataGood.push(total_good_production)
             dataNotGood.push(total_not_good_production)
         }

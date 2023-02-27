@@ -1,41 +1,42 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-
-import { IconEdit, IconTrash, IconPlus, IconId, IconDownload } from "@tabler/icons";
-import { openModal, closeAllModals, openConfirmModal } from "@mantine/modals";
-import { Button, Group, TextInput, Text } from "@mantine/core";
-import { useRequest } from "../../../hooks";
-import { BaseTable } from '../../tables'
-import { FailedNotif, SuccessNotif } from "../../notifications";
+import { IconId } from "@tabler/icons";
+import { openModal, closeAllModals } from "@mantine/modals";
+import { TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 
+import { useRequest, useConfirmDelete } from "../../../hooks";
+import { BaseTable } from '../../tables'
+import { FailedNotif, SuccessNotif } from "../../notifications";
+import { ModalForm, ButtonAdd, ButtonDelete, ButtonEdit, HeadSection } from "../../custom_components";
 
 
-const ModalEditOperator = ({ data, action }) => {
+const ModalEditOperator = ({ data, setUpdateOperator }) => {
 
     const form = useForm({
         initialValues: {
             name: data.name
         }
     })
-    const { Put, Loading } = useRequest()
+    const { Put } = useRequest()
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Put(data.id, value, 'operator-management')
+            const updatedOperator = await Put(data.id, value, 'operator-management')
+            setUpdateOperator(updatedOperator)
             closeAllModals()
-            action(prev => prev + 1)
             SuccessNotif('Edit operator name success')
         } catch (e) {
             form.setErrors(e.message.data)
             FailedNotif('Edit operator name failed')
         }
-    }, [Put, action, data.id])
+    }, [setUpdateOperator, data.id])
 
 
     return (
         <>
-            <Loading />
-            <form onSubmit={form.onSubmit(handleSubmit)}  >
+            <ModalForm
+                formId='formEditOperator'
+                onSubmit={form.onSubmit(handleSubmit)}  >
 
                 <TextInput
                     icon={<IconId />}
@@ -46,34 +47,24 @@ const ModalEditOperator = ({ data, action }) => {
                     {...form.getInputProps('name')}
                 />
 
-                <Button
-                    my='md'
-                    radius='md'
-                    fullWidth
-                    leftIcon={<IconDownload />}
-                    type='submit'
-                    disabled={data.name === form.values.name}
-                >
-                    Save
-                </Button>
-            </form>
+            </ModalForm>
         </>
     )
 }
 
-const ModalAddOperator = ({ action }) => {
+const ModalAddOperator = ({ setAddOperator }) => {
     const form = useForm({
         initialValues: {
             name: ''
         }
     })
-    const { Post, Loading } = useRequest()
+    const { Post } = useRequest()
 
     const handleSubmit = async (value) => {
         try {
-            await Post(value, 'operator-management')
+            const newOperator = await Post(value, 'operator-management')
+            setAddOperator(newOperator)
             closeAllModals()
-            action(prev => prev + 1)
             SuccessNotif('Add new operator success')
         } catch (e) {
             form.setErrors(e.message.data)
@@ -83,30 +74,20 @@ const ModalAddOperator = ({ action }) => {
     }
 
     return (
-        <>
-            <Loading />
-            <form onSubmit={form.onSubmit(handleSubmit)}  >
+        <ModalForm
+            formId='formAddOperator'
+            onSubmit={form.onSubmit(handleSubmit)}  >
 
-                <TextInput
-                    radius='md'
-                    label='Operator name'
-                    required
-                    m='xs'
-                    icon={<IconId />}
-                    {...form.getInputProps('name')}
-                />
+            <TextInput
+                radius='md'
+                label='Operator name'
+                required
+                m='xs'
+                icon={<IconId />}
+                {...form.getInputProps('name')}
+            />
 
-                <Button
-                    leftIcon={<IconDownload />}
-                    my='md'
-                    radius='md'
-                    fullWidth
-                    type='submit'
-                >
-                    Save
-                </Button>
-            </form>
-        </>
+        </ModalForm>
     )
 }
 
@@ -115,8 +96,72 @@ const ModalAddOperator = ({ action }) => {
 const Operator = () => {
 
     const [operator, setOperator] = useState([])
-    const [action, setAction] = useState([])
     const { Get, Delete } = useRequest()
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Operator' })
+
+    const setAddOperator = useCallback((newOperator) => {
+        setOperator(prev => [...prev, newOperator])
+    }, [])
+
+    const setUpdateOperator = useCallback((updatedOperator) => {
+        const { id, name } = updatedOperator
+        setOperator(prev => prev.map(operator => {
+            if (operator.id === id) {
+                return { ...operator, name: name }
+            }
+            return operator
+        }))
+
+    }, [])
+
+    const setDeleteOperator = useCallback((idDeletedOperator) => {
+        setOperator(prev => prev.filter(operator => operator.id !== idDeletedOperator))
+    }, [])
+
+    const openEditOperator = useCallback((operator) => openModal({
+        title: 'Edit operator name',
+        radius: 'md',
+        children: <ModalEditOperator
+            data={operator}
+            setUpdateOperator={setUpdateOperator} />
+    }), [setUpdateOperator])
+
+
+    const openAddOperator = useCallback(() => openModal({
+        title: 'Add new operator',
+        radius: 'md',
+        children: <ModalAddOperator
+            setAddOperator={setAddOperator} />
+    }), [setAddOperator])
+
+    const handleDeleteOperator = useCallback(async (id) => {
+        try {
+            await Delete(id, 'operator-management')
+            SuccessNotif('Delete data operator success')
+            setDeleteOperator(id)
+        } catch (e) {
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+                return
+            }
+            FailedNotif('Delete operator failed')
+        }
+    }, [setDeleteOperator])
+
+    const fetchOperator = useCallback(async () => {
+        try {
+            const operatorList = await Get('operator')
+            setOperator(operatorList)
+        } catch (e) {
+            console.log(e)
+        }
+    }, [])
+
+    useEffect(() => {
+        fetchOperator()
+
+    }, [fetchOperator])
+
 
     const columnOperator = useMemo(() => [
         {
@@ -129,114 +174,29 @@ const Operator = () => {
         },
         {
             name: '',
-            selector: row => row.buttonEdit
+            selector: row => <ButtonEdit
+                onClick={() => openEditOperator(row)}
+            />
         },
         {
             name: '',
-            selector: row => row.buttonDelete
+            selector: row => <ButtonDelete
+                onClick={() => openConfirmDeleteData(() => handleDeleteOperator(row.id))}
+            />
         },
 
-    ], [])
-
-
-
-    const openEditOperator = useCallback((operator) => openModal({
-        title: 'Edit operator name',
-        radius: 'md',
-        children: <ModalEditOperator data={operator} action={setAction} />
-    }), [])
-
-
-    const openAddOperator = useCallback(() => openModal({
-        title: 'Add new operator',
-        radius: 'md',
-        children: <ModalAddOperator action={setAction} />
-    }), [])
-
-    const handleDeleteOperator = useCallback(async (id) => {
-        try {
-            await Delete(id, 'operator-management')
-            SuccessNotif('delete data operator success')
-            setAction(prev => prev + 1)
-        } catch (e) {
-
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
-        }
-    }, [])
-
-    const openDeleteOperator = useCallback((id) => openConfirmModal({
-        title: 'Delete operator',
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteOperator(id)
-    }), [handleDeleteOperator])
-
-
-
-    const fetchOperator = useCallback(async () => {
-        try {
-            const dataOperator = await Get('operator')
-
-            const operatorList = dataOperator.map(op => ({
-                ...op, buttonEdit:
-
-                    <Button
-                        leftIcon={<IconEdit stroke={2} size={16} />}
-                        color='blue.6'
-                        variant='subtle'
-                        radius='md'
-                        mx='xs'
-                        onClick={() => openEditOperator(op)}
-                    >
-                        Edit
-                    </Button>,
-                buttonDelete: <Button
-                    leftIcon={<IconTrash stroke={2} size={16} />}
-                    color='red'
-                    variant='subtle'
-                    radius='md'
-                    onClick={() => openDeleteOperator(op.id)}
-                >
-                    Delete
-                </Button>
-            }))
-
-            setOperator(operatorList)
-        } catch (e) {
-            console.log(e)
-        }
-    }, [openDeleteOperator, openEditOperator])
-
-    useEffect(() => {
-        // effect for fetch operator
-
-        fetchOperator()
-
-    }, [action, fetchOperator])
-
+    ], [openEditOperator, openConfirmDeleteData, handleDeleteOperator])
 
     return (
         <>
-
-            <Group position="right" >
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+            <HeadSection>
+                <ButtonAdd
                     onClick={openAddOperator}
                 >
                     Operator
-                </Button>
-            </Group>
+                </ButtonAdd>
+            </HeadSection>
+
             <BaseTable
                 column={columnOperator}
                 data={operator}

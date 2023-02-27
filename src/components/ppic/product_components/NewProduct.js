@@ -1,22 +1,22 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
-import { TextInput, NumberInput, ActionIcon, NativeSelect, Group, Title, Button, FileButton, Text, Divider, UnstyledButton, Paper, Center } from "@mantine/core";
+import { TextInput, NumberInput, NativeSelect, Group, Title, Button, FileButton, Text, Divider, UnstyledButton, Paper, Center } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 
-import { IconWriting, IconFileTypography, IconCodeAsterix, IconScale, IconTrashX, IconDownload, IconUser, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload, IconReceipt2 } from "@tabler/icons";
+import { IconWriting, IconFileTypography, IconCodeAsterix, IconScale, IconTrashX, IconDownload, IconUser, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload } from "@tabler/icons";
 
 import BreadCrumb from "../../BreadCrumb";
 import { useRequest } from "../../../hooks";
 import { sectionStyle } from "../../../styles";
 import { FailedNotif, SuccessNotif } from "../../notifications";
-
+import { DecimalInput, PriceTextInput } from '../../custom_components'
 
 
 const NewProduct = () => {
 
     const { classes } = sectionStyle()
-    const { Get, Post, Loading } = useRequest()
+    const { Get, Post } = useRequest()
     const [processType, setProcessType] = useState([])
     const [productType, setProductType] = useState([])
     const [productAssemblyList, setProductAssemblyList] = useState([])
@@ -37,7 +37,7 @@ const NewProduct = () => {
         }
     })
 
-    const links = [
+    const links = useMemo(() => [
         {
             path: '/home/ppic',
             label: 'Ppic'
@@ -50,7 +50,7 @@ const NewProduct = () => {
             path: `/home/ppic/product/new`,
             label: `New product`
         }
-    ]
+    ], [])
 
     useEffect(() => {
         const fetch = async () => {
@@ -93,8 +93,7 @@ const NewProduct = () => {
             console.log(e)
 
         }
-    }
-        , [navigate])
+    }, [navigate])
 
     const openSubmitModal = useCallback((val) => openConfirmModal({
         title: `Add new product`,
@@ -109,9 +108,6 @@ const NewProduct = () => {
         confirmProps: { radius: 'md' },
         onConfirm: () => handleSubmitNewProduct(val)
     }), [handleSubmitNewProduct])
-
-
-
 
     const processFields = useMemo(() => {
         return <>
@@ -160,39 +156,46 @@ const NewProduct = () => {
                         key={`${process.id}${index}`}
                     />
 
-                    <Divider mt="xl" mb='xs' size='sm' label="Bill of material" />
+                    <Divider mt='md' size='sm' label="Bill of material" />
                     {form.values.ppic_process_related[index].requirementmaterial_set.length === 0 &&
                         <Text my='md' align="center" size='sm' color='dimmed' >
                             This process has no bill of material
                         </Text>
                     }
                     {form.values.ppic_process_related[index].requirementmaterial_set.map((reqMaterial, j) => (
-                        <Paper ml='lg' mb='xs' key={`${reqMaterial.id}${j}`} >
 
+                        <Paper
+                            p='xs'
+                            radius='md'
+                            m='xs'
+                            withBorder
+                            key={`${reqMaterial.id}${j}`} >
+                            <Group grow >
+                                <NativeSelect
+                                    m='xs'
+                                    radius='md'
+                                    label='Material'
+                                    required
+                                    icon={<IconAsset />}
+                                    placeholder="Select material"
+                                    data={materialList.map(material => ({ value: material.id, label: material.name }))}
+                                    {...form.getInputProps(`ppic_process_related.${index}.requirementmaterial_set.${j}.material`)}
+                                />
 
-                            <Group position="right" >
-                                <ActionIcon
+                                <Button
+                                    mt='sm'
+                                    radius='md'
                                     color="red"
                                     onClick={() => {
                                         form.removeListItem(`ppic_process_related.${index}.requirementmaterial_set`, j)
                                     }}
+                                    variant='outline'
+                                    leftIcon={<IconTrash />}
                                 >
-                                    <IconTrash />
-                                </ActionIcon>
+                                    Remove bill of material
+                                </Button>
 
                             </Group>
-
-                            <NativeSelect
-                                m='xs'
-                                radius='md'
-                                label='Material'
-                                required
-                                icon={<IconAsset />}
-                                placeholder="Select material"
-                                data={materialList.map(material => ({ value: material.id, label: material.name }))}
-                                {...form.getInputProps(`ppic_process_related.${index}.requirementmaterial_set.${j}.material`)}
-
-                            />
 
                             <Group grow m='xs' >
 
@@ -200,9 +203,9 @@ const NewProduct = () => {
                                     hideControls
                                     radius='md'
                                     required
-                                    placeholder="input quantity of consumption bill of material"
+                                    placeholder="Input jumlah penggunaan material"
                                     icon={<IconTransferIn />}
-                                    label='Consumption'
+                                    label='Material input'
                                     {...form.getInputProps(`ppic_process_related.${index}.requirementmaterial_set.${j}.input`)}
                                 />
 
@@ -210,29 +213,29 @@ const NewProduct = () => {
                                     hideControls
                                     required
                                     icon={<IconTransferOut />}
-                                    placeholder='input quantity output product'
+                                    placeholder='Input jumlah product yang dihasilkan'
                                     radius='md'
-                                    label='Output'
+                                    label='Output product'
                                     {...form.getInputProps(`ppic_process_related.${index}.requirementmaterial_set.${j}.output`)}
                                 />
                             </Group>
-
-
                         </Paper>
 
                     ))}
                     <Button
                         radius='md'
+                        fullWidth
                         leftIcon={<IconPlus />}
                         color='cyan.5'
+                        variant='outline'
                         onClick={() => {
                             form.insertListItem(`ppic_process_related.${index}.requirementmaterial_set`, { material: '', input: '', output: '' })
                         }}
                     >
-                        Add material
+                        Add bill of material
                     </Button>
 
-                    <Divider mt="xl" mb='xs' size='sm' label="Product assembly" />
+                    <Divider mt="xl" size='sm' label="Product assembly" />
 
                     {form.values.ppic_process_related[index].requirementproduct_set.length === 0 &&
                         <Text my='md' align="center" size='sm' color='dimmed' >
@@ -240,31 +243,41 @@ const NewProduct = () => {
                         </Text>
                     }
                     {form.values.ppic_process_related[index].requirementproduct_set.map((reqProduct, i) => (
-                        <Paper ml='lg' mb='xs' key={`${reqProduct.id}${i}`} >
 
-                            <Group position="right">
-                                <ActionIcon
+                        <Paper
+                            p='xs'
+                            radius='md'
+                            m='xs'
+                            withBorder
+                            key={`${reqProduct.id}${i}`} >
+                            <Group grow>
+
+                                <NativeSelect
+                                    m='xs'
+                                    radius='md'
+                                    required
+                                    icon={<IconBarcode />}
+                                    label='Product'
+                                    placeholder="Select product"
+                                    data={productAssemblyList.map(product => ({ value: product.id, label: product.name }))}
+                                    {...form.getInputProps(`ppic_process_related.${index}.requirementproduct_set.${i}.product`)}
+
+                                />
+
+                                <Button
                                     color="red"
                                     onClick={() => {
                                         form.removeListItem(`ppic_process_related.${index}.requirementproduct_set`, i)
                                     }}
+                                    variant='outline'
+                                    leftIcon={<IconTrash />}
+                                    mt='md'
+                                    radius='md'
                                 >
-                                    <IconTrash />
-                                </ActionIcon>
+                                    Remove product assembly
+                                </Button>
 
                             </Group>
-
-                            <NativeSelect
-                                m='xs'
-                                radius='md'
-                                required
-                                icon={<IconBarcode />}
-                                label='Product'
-                                placeholder="Select product"
-                                data={productAssemblyList.map(product => ({ value: product.id, label: product.name }))}
-                                {...form.getInputProps(`ppic_process_related.${index}.requirementproduct_set.${i}.product`)}
-
-                            />
 
                             <Group grow m='xs' >
 
@@ -272,31 +285,31 @@ const NewProduct = () => {
                                     required
                                     hideControls
                                     radius='md'
-                                    placeholder="input quantity consumption product assembly"
+                                    placeholder="Input jumlah penggunaan product assembly"
                                     icon={<IconTransferIn />}
-                                    label='Consumption'
+                                    label='Product input'
                                     {...form.getInputProps(`ppic_process_related.${index}.requirementproduct_set.${i}.input`)}
                                 />
                                 <NumberInput
                                     hideControls
                                     required
-                                    placeholder='input quantity output product'
+                                    placeholder='Input jumlah product yang dihasilkan'
                                     icon={<IconTransferOut />}
                                     radius='md'
-                                    label='Output'
+                                    label='Product output'
                                     {...form.getInputProps(`ppic_process_related.${index}.requirementproduct_set.${i}.output`)}
                                 />
                             </Group>
-
                         </Paper>
-
-
                     ))}
 
                     <Button
                         radius='md'
+                        fullWidth
+                        mb='sm'
                         leftIcon={<IconPlus />}
                         color='cyan.5'
+                        variant='outline'
                         onClick={() => {
                             form.insertListItem(`ppic_process_related.${index}.requirementproduct_set`, {
                                 product: '',
@@ -307,11 +320,7 @@ const NewProduct = () => {
                     >
                         Add product assembly
                     </Button>
-
                 </Paper>
-
-
-
             ))}
 
 
@@ -326,6 +335,7 @@ const NewProduct = () => {
                     radius='md'
                     leftIcon={<IconPlus />}
                     color='cyan.5'
+                    variant='outline'
                     onClick={() => {
                         form.insertListItem(`ppic_process_related`, {
                             process_name: '',
@@ -336,7 +346,7 @@ const NewProduct = () => {
 
                     }}
                 >
-                    Add process
+                    Add manufacturing process
                 </Button>
             </Center>
         </>
@@ -348,8 +358,6 @@ const NewProduct = () => {
         <>
 
             <BreadCrumb links={links} />
-            <Loading />
-
             <Title className={classes.title} >
                 Add new product
             </Title>
@@ -367,8 +375,6 @@ const NewProduct = () => {
                     {...form.getInputProps('customer')}
                     data={customerList.map(customer => ({ value: customer.id, label: customer.name }))}
                 />
-
-
 
                 <TextInput
                     m='xs'
@@ -399,36 +405,23 @@ const NewProduct = () => {
                         {...form.getInputProps('type')}
                         data={productType.map(type => ({ value: type.id, label: type.name }))}
                     />
-                    <NumberInput
+
+                    <DecimalInput
                         required
-                        radius='md'
                         {...form.getInputProps('weight')}
-                        icon={<IconScale />}
-                        label='Weight / unit'
-                        min={0}
                         rightSection={<Text size='sm' color='dimmed'  >
                             Kg
                         </Text>}
-                        decimalSeparator=','
-                        precision={2}
-                        step={0.5}
+                        icon={<IconScale />}
+                        label='Weight / unit'
+
                     />
 
-                    <NumberInput
+                    <PriceTextInput
                         label='Harga / unit'
                         placeholder="Input harga per unit"
                         {...form.getInputProps('price')}
-                        radius='md'
-                        hideControls
                         required
-                        min={0}
-                        parser={(value) => value.replace(/\Rp\s?|(,*)/g, '')}
-                        formatter={(value) =>
-                            !Number.isNaN(parseFloat(value))
-                                ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                                : 'Rp '
-                        }
-                        icon={<IconReceipt2 />}
                     />
 
                 </Group>
@@ -477,6 +470,7 @@ const NewProduct = () => {
                 my='md'
                 type="submit"
                 form='formNewProduct'
+                fullWidth
             >
                 Save
             </Button>

@@ -20,10 +20,10 @@ export default function SectionReceiptSchedule(
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Receipt schedule' })
 
     const setUpdateSchedule = useCallback((updatedSchedule) => {
-        //
+        const { id, quantity, date } = updatedSchedule
         setScheduleList(schedule => schedule.map(sch => {
-            if (sch.id === updatedSchedule.id) {
-                return { ...sch, quantity: updatedSchedule.quantity, date: updatedSchedule.date }
+            if (sch.id === id) {
+                return { ...sch, quantity: quantity, date: date }
             }
             return sch
         }))
@@ -85,14 +85,14 @@ export default function SectionReceiptSchedule(
         },
         {
             name: 'Date',
-            selector: row => new Date(row.date).toDateString()
+            selector: row => row.date
         },
         {
-            name: 'Quantity',
+            name: 'Rencana',
             selector: row => `${row.quantity} ${row.material_order.material.uom.name}`
         },
         {
-            name: 'Arrived material',
+            name: 'Diterima',
             selector: row => `${row.fulfilled_quantity} ${row.material_order.material.uom.name}`
         },
         {

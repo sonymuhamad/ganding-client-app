@@ -38,11 +38,6 @@ const SubcontReceiptNoteList = () => {
             sortable: true
         },
         {
-            name: 'Total product received',
-            selector: row => row.subcontreceipt_set.length,
-            sortable: true
-        },
-        {
             name: '',
             selector: row => <NavigationDetailButton
                 url={`/home/purchasing/shipments-and-receipts/receipt-subcont/${row.id}`}

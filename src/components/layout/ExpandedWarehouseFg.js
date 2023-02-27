@@ -1,35 +1,30 @@
 import React from "react"
-import { Paper, Group, TextInput } from "@mantine/core"
+import { Paper, Group } from "@mantine/core"
 import { IconBarcode, IconCodeAsterix, IconTypography } from "@tabler/icons"
+import { ReadOnlyTextInput } from "../custom_components"
 
 const ExpandedWarehouseFg = ({ data }) => {
     return (
         <Paper p='sm'  >
             <Group grow >
-                <TextInput
+                <ReadOnlyTextInput
                     icon={<IconBarcode />}
                     label='Product name'
                     value={data.product.name}
-                    readOnly
-                    radius='md'
                 />
 
-                <TextInput
+                <ReadOnlyTextInput
                     icon={<IconTypography />}
                     label='Product type'
                     value={data.product.type.name}
-                    readOnly
-                    radius='md'
                 />
             </Group>
 
             <Group grow my='xs' >
-                <TextInput
+                <ReadOnlyTextInput
                     icon={<IconCodeAsterix />}
                     label='Product number'
                     value={data.product.code}
-                    readOnly
-                    radius='md'
                 />
             </Group>
 

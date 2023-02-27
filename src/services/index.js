@@ -1,1 +1,1 @@
-export { AuthException, Months, customTableStyle, Url, DivisionIcons, FullNameMonths, generateDataWithDate, getScheduleState } from './External'
+export { AuthException, Months, customTableStyle, Url, DivisionIcons, FullNameMonths, generateDataWithDate, getScheduleState, generateDataWithNote, generateDataWithImage, generateDataWithDescription } from './External'

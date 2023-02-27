@@ -1,27 +1,25 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-
-import { Group, TextInput, Text, NumberInput, Paper, Divider, Title, Button, Select, UnstyledButton } from "@mantine/core";
-import { useParams } from "react-router-dom";
-
-import { useRequest } from "../../../hooks";
-import BreadCrumb from "../../BreadCrumb";
-import { sectionStyle } from "../../../styles";
-
+import { Group, TextInput, Text, NumberInput, Paper, Divider, Title, Select, UnstyledButton } from "@mantine/core";
+import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
-import { IconBarcode, IconCodeAsterix, IconTimeline, IconFileTypography, IconSortAscending2, IconBuildingFactory, IconUser, IconArchive, IconEdit, IconX, IconDownload, IconTrashX, IconAsset, IconSum, IconPerspective, IconScale, IconRuler2, IconDimensions, IconRulerMeasure, IconAtom2, IconCalendar, } from "@tabler/icons";
-import { openConfirmModal } from "@mantine/modals";
-import { FailedNotif, SuccessNotif } from "../../notifications";
-import { useNavigate } from "react-router-dom";
+import { IconBarcode, IconCodeAsterix, IconTimeline, IconFileTypography, IconSortAscending2, IconBuildingFactory, IconUser, IconArchive, IconAsset, IconSum, IconPerspective, IconScale, IconRuler2, IconDimensions, IconRulerMeasure, IconAtom2, IconCalendar, } from "@tabler/icons";
+import { openConfirmModal } from "@mantine/modals"
 import { DatePicker } from "@mantine/dates";
 
+import { useRequest, useConfirmDelete } from "../../../hooks";
+import BreadCrumb from "../../BreadCrumb";
+import { sectionStyle } from "../../../styles";
+import { FailedNotif, SuccessNotif } from "../../notifications";
+import { ActionButtons, ReadOnlyTextInput } from "../../custom_components";
+import { generateDataWithDate } from "../../../services";
 
 const DetailProduction = () => {
 
-    const params = useParams()
+    const { productionId } = useParams()
     const [action, setAction] = useState(0)
-    const { Retrieve, Get, Put, Delete, Loading } = useRequest()
+    const { Retrieve, Get, Put, Delete } = useRequest()
     const navigate = useNavigate()
-
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Production report' })
     const [detailProduction, setDetailProduction] = useState({
         quantity: '',
         created: '',
@@ -54,30 +52,12 @@ const DetailProduction = () => {
     const [editAccess, setEditAccess] = useState(false)
 
     const form = useForm({
-        initialValues: {
-            quantity: '',
-            created: '',
-            quantity_not_good: '',
-            machine: '',
-            operator: '',
-            process: {
-                id: '',
-                process_name: '',
-                order: '',
-                process_type: {
-                    id: '',
-                    name: ''
-                },
-            },
-            product: {
-                id: '',
-                name: '',
-                code: '',
-            },
-            last_update: '',
-            date: null
-        }
+        initialValues: detailProduction
     })
+    const { values } = form
+    const { product, process } = values
+    const { code, name } = product
+    const { process_name, order, process_type } = process
 
     const breadcrumb = [
         {
@@ -89,14 +69,14 @@ const DetailProduction = () => {
             label: 'Production'
         },
         {
-            path: `/home/ppic/production/${params.productionId}`,
+            path: `/home/ppic/production/${productionId}`,
             label: 'Detail'
         }
     ]
 
     useEffect(() => {
 
-        Retrieve(params.productionId, 'production-report').then(data => {
+        Retrieve(productionId, 'production-report').then(data => {
             const { operator, machine, date, ...restProps } = data
             const detailProductionReport = { ...restProps, machine: machine.id, operator: operator.id, date: new Date(date) }
 
@@ -113,7 +93,7 @@ const DetailProduction = () => {
             setOperatorList(data)
         })
 
-    }, [params.productionId, Get, Retrieve, action])
+    }, [productionId, action])
 
     const handleClickEditButton = () => {
 
@@ -124,7 +104,7 @@ const DetailProduction = () => {
 
     const handleDeleteProduction = useCallback(async () => {
         try {
-            await Delete(params.productionId, 'production-report-management')
+            await Delete(productionId, 'production-report-management')
             SuccessNotif('Delete production report success')
             navigate('/home/ppic/production')
         } catch (e) {
@@ -132,35 +112,17 @@ const DetailProduction = () => {
                 FailedNotif(e.message.data)
             }
         }
-    }, [navigate, Delete, params.productionId])
-
-    const openDeleteProduction = useCallback(() => openConfirmModal({
-        title: 'Delete production report',
-        children: (
-            <Text size='sm' >
-                Are you sure, data changes will be deleted
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteProduction()
-    }), [handleDeleteProduction])
+    }, [navigate, productionId])
 
     const handleSubmit = async (data) => {
-        let validate_data
+
         const { process, product, date, ...restProps } = data
         const tempData = { ...restProps, process: process.id, product: product.id }
 
-        if (date) {
-            validate_data = { ...tempData, date: date.toLocaleDateString('en-CA') }
-        } else {
-            validate_data = tempData
-        }
+        const validate_data = generateDataWithDate(date, tempData)
 
         try {
-            await Put(params.productionId, validate_data, 'production-report-management')
+            await Put(productionId, validate_data, 'production-report-management')
             setAction(prev => prev + 1)
             SuccessNotif('Edit data production success')
             setDetailProduction(prev => ({ ...prev, machine: data.machine, operator: data.operator, quantity: data.quantity, quantity_not_good: data.quantity_not_good }))
@@ -202,21 +164,14 @@ const DetailProduction = () => {
             <Paper key={matUsed.id} style={{ border: `1px solid #ced4da` }} radius='md' m='xs'  >
 
                 <Group grow m='xs' >
-
-                    <TextInput
+                    <ReadOnlyTextInput
                         icon={<IconAsset />}
-                        radius='md'
                         label='Material name'
-                        variant='filled'
-                        readOnly
                         value={matUsed.material.name}
                     />
-                    <TextInput
+                    <ReadOnlyTextInput
                         icon={<IconSum />}
-                        variant='filled'
                         label='Quantity used in production'
-                        radius='md'
-                        readOnly
                         value={matUsed.quantity}
                         rightSection={<Text size='sm' color='dimmed' >
                             {matUsed.material.uom.name}
@@ -226,70 +181,50 @@ const DetailProduction = () => {
                 </Group>
 
                 <Group grow m='xs' >
-                    <TextInput
+                    <ReadOnlyTextInput
                         icon={<IconPerspective />}
-                        variant='filled'
-                        radius='md'
                         label='Specification material'
-                        readOnly
                         value={matUsed.material.spec}
                     />
-                    <TextInput
+                    <ReadOnlyTextInput
                         icon={<IconScale />}
-                        variant='filled'
                         label='Weight'
-                        radius='md'
-                        readOnly
                         value={matUsed.material.weight}
                         rightSection={<Text size='sm' color='dimmed' >
                             Kg
                         </Text>}
                     />
-                    <TextInput
+                    <ReadOnlyTextInput
                         icon={<IconRuler2 />}
-                        variant='filled'
                         label='Length'
-                        radius='md'
-                        readOnly
                         value={matUsed.material.length}
                         rightSection={<Text size='sm' color='dimmed' >
                             mm
                         </Text>}
                     />
-                    <TextInput
+                    <ReadOnlyTextInput
                         icon={<IconDimensions />}
-                        variant='filled'
                         label='Width'
-                        radius='md'
-                        readOnly
                         value={matUsed.material.width}
                         rightSection={<Text size='sm' color='dimmed' >
                             mm
                         </Text>}
                     />
-                    <TextInput
+                    <ReadOnlyTextInput
                         icon={<IconRulerMeasure />}
-                        variant='filled'
                         label='Thickness'
-                        radius='md'
-                        readOnly
                         value={matUsed.material.thickness}
                         rightSection={<Text size='sm' color='dimmed' >
                             mm
                         </Text>}
                     />
-                    <TextInput
+                    <ReadOnlyTextInput
                         icon={<IconAtom2 />}
-                        variant='filled'
                         label='Unit of material'
-                        radius='md'
-                        readOnly
                         value={matUsed.material.uom.name}
                     />
 
                 </Group>
-
-
             </Paper>
         ))
     }, [detailProduction])
@@ -297,31 +232,22 @@ const DetailProduction = () => {
     const productUsed = useMemo(() => {
         return detailProduction.productproductionreport_set.map(prodUsed => (
             <Paper key={prodUsed.id} style={{ border: `1px solid #ced4da` }} radius='md' m='xs' >
-                <TextInput
+                <ReadOnlyTextInput
                     icon={<IconBarcode />}
-                    radius='md'
-                    variant="filled"
                     label='Product name'
-                    readOnly
                     m='xs'
                     value={prodUsed.product.name}
                 />
-                <TextInput
+                <ReadOnlyTextInput
                     icon={<IconCodeAsterix />}
-                    variant='filled'
                     label='Product number'
-                    radius='md'
                     m='xs'
-                    readOnly
                     value={prodUsed.product.code}
                 />
-                <TextInput
+                <ReadOnlyTextInput
                     icon={<IconSum />}
-                    variant='filled'
                     label='Quantity used in production'
                     m='xs'
-                    radius='md'
-                    readOnly
                     value={prodUsed.quantity}
 
                 />
@@ -341,83 +267,46 @@ const DetailProduction = () => {
                 Detail production report
             </Title>
 
-            <Loading />
+            <ActionButtons
+                editAccess={editAccess}
+                handleClickEditButton={handleClickEditButton}
+                handleClickDeleteButton={() => openConfirmDeleteData(handleDeleteProduction)}
+                formState={form.isDirty()}
+                formId='formEditProduction'
+            />
 
-
-            <Group position="right" mt='md' mb='md' mr='md'   >
-                <Button.Group>
-
-                    <Button
-                        size='xs'
-                        radius='md'
-                        color={!editAccess ? 'blue.6' : 'red.6'}
-                        onClick={handleClickEditButton}
-                        leftIcon={!editAccess ? <IconEdit /> : <IconX />}
-                    >
-                        {!editAccess ? 'Edit' : 'Cancel'}
-                    </Button>
-
-                    <Button
-                        type="submit"
-                        size='xs'
-                        color='blue.6'
-                        form="formEditProduction"
-                        disabled={form.isDirty() ? false : true}
-                        leftIcon={<IconDownload />} >
-                        Save Changes</Button>
-                    <Button
-                        size='xs'
-                        color='red.6'
-                        disabled={!editAccess ? false : true}
-                        radius='md'
-                        onClick={() => openDeleteProduction()}
-                        leftIcon={<IconTrashX />} >
-                        Delete</Button>
-                </Button.Group>
-            </Group>
-
-            <TextInput
-                variant="filled"
-                readOnly
+            <ReadOnlyTextInput
                 m='xs'
                 icon={<IconBarcode />}
                 label='Product name'
-                value={form.values.product.name}
+                value={name}
             />
 
-            <TextInput
-                variant="filled"
+            <ReadOnlyTextInput
                 icon={<IconCodeAsterix />}
-                readOnly
                 m='xs'
                 label='Product number'
-                value={form.values.product.code}
+                value={code}
             />
 
             <Group grow m='xs' >
 
-                <TextInput
-                    variant="filled"
+                <ReadOnlyTextInput
                     icon={<IconTimeline />}
-                    readOnly
                     label='Process name'
-                    value={form.values.process.process_name}
+                    value={process_name}
                 />
 
-                <TextInput
-                    variant="filled"
+                <ReadOnlyTextInput
                     icon={<IconFileTypography />}
-                    readOnly
                     label='Process type'
-                    value={form.values.process.process_type.name}
+                    value={process_type.name}
                 />
 
-                <TextInput
-                    variant="filled"
+                <ReadOnlyTextInput
                     icon={<IconSortAscending2 />}
-                    readOnly
                     label='Wip'
-                    value={`Wip${form.values.process.order}`}
+                    value={`Wip${order}`}
                 />
 
             </Group>

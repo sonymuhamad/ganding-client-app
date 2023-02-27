@@ -1,19 +1,21 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 
-import { useRequest } from "../../../hooks";
-import { SuccessNotif, FailedNotif } from "../../notifications";
-import { BaseTable } from "../../tables";
-import { openModal, openConfirmModal, closeAllModals } from "@mantine/modals";
-
-import { IconEdit, IconTrash, IconPlus, IconTir, IconDownload } from "@tabler/icons";
-import { Button, Group, Text, TextInput } from "@mantine/core";
+import { openModal, closeAllModals } from "@mantine/modals";
+import { IconTir } from "@tabler/icons";
+import { TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 
+import { BaseTable } from "../../tables";
+import { useRequest, useConfirmDelete } from "../../../hooks";
+import { SuccessNotif, FailedNotif } from "../../notifications";
+import { ModalForm, ButtonAdd, ButtonDelete, ButtonEdit, HeadSection } from "../../custom_components";
 
 
-const ModalAddVehicle = ({ setAction }) => {
 
-    const { Post, Loading } = useRequest()
+
+const ModalAddVehicle = ({ setAddVehicle }) => {
+
+    const { Post } = useRequest()
 
     const form = useForm({
         initialValues: {
@@ -23,21 +25,21 @@ const ModalAddVehicle = ({ setAction }) => {
 
     const handleSubmit = useCallback(async (data) => {
         try {
-            await Post(data, 'vehicle-management')
+            const newVehicle = await Post(data, 'vehicle-management')
             SuccessNotif('Add vehicle success')
             closeAllModals()
-            setAction(prev => prev + 1)
+            setAddVehicle(newVehicle)
         } catch (e) {
             FailedNotif('Add vehicle failed')
             form.setErrors(e.message.data)
         }
-    }, [Post, setAction])
+    }, [Post, setAddVehicle])
 
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)} >
-
-            <Loading />
+        <ModalForm
+            formId='formAddVehicle'
+            onSubmit={form.onSubmit(handleSubmit)} >
 
             <TextInput
                 label='Vehicle number'
@@ -50,22 +52,13 @@ const ModalAddVehicle = ({ setAction }) => {
                 {...form.getInputProps('license_part_number')}
             />
 
-            <Button
-                fullWidth
-                leftIcon={<IconDownload />}
-                radius='md'
-                type='submit'
-            >
-                Save
-            </Button>
-
-        </form>
+        </ModalForm>
     )
 }
 
-const ModalEditVehicle = ({ data, setAction }) => {
+const ModalEditVehicle = ({ data, setUpdateVehicle }) => {
 
-    const { Put, Loading } = useRequest()
+    const { Put } = useRequest()
     const form = useForm({
         initialValues: {
             license_part_number: data.license_part_number
@@ -74,21 +67,21 @@ const ModalEditVehicle = ({ data, setAction }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Put(data.id, value, 'vehicle-management')
+            const updatedVehicle = await Put(data.id, value, 'vehicle-management')
+            setUpdateVehicle(updatedVehicle)
             SuccessNotif('Edit vehicle number success')
             closeAllModals()
-            setAction(prev => prev + 1)
         } catch (e) {
             FailedNotif('Edit vehicle number failed')
             form.setErrors(e.message.data)
         }
-    }, [Put, data.id, setAction])
+    }, [Put, data.id, setUpdateVehicle])
 
     return (
 
-        <form onSubmit={form.onSubmit(handleSubmit)} >
-
-            <Loading />
+        <ModalForm
+            formId='formEditVehicle'
+            onSubmit={form.onSubmit(handleSubmit)} >
 
             <TextInput
                 label='Vehicle number'
@@ -101,17 +94,7 @@ const ModalEditVehicle = ({ data, setAction }) => {
                 {...form.getInputProps('license_part_number')}
             />
 
-            <Button
-                disabled={form.values.license_part_number === data.license_part_number}
-                fullWidth
-                leftIcon={<IconDownload />}
-                radius='md'
-                type='submit'
-            >
-                Save
-            </Button>
-
-        </form>
+        </ModalForm>
     )
 }
 
@@ -120,7 +103,73 @@ const Vehicle = () => {
 
     const { Get, Delete } = useRequest()
     const [vehicleList, setVehicleList] = useState([])
-    const [action, setAction] = useState([])
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Vehicle' })
+
+
+    const setDeleteVehicle = useCallback((idDeletedVehicle) => {
+        setVehicleList(prev => prev.filter(vehicle => vehicle.id !== idDeletedVehicle))
+    }, [])
+
+    const setAddVehicle = useCallback((newVehicle) => {
+        setVehicleList(prev => [...prev, newVehicle])
+    }, [])
+
+    const setUpdateVehicle = useCallback((updatedVehicle) => {
+        const { id, license_part_number } = updatedVehicle
+        setVehicleList(prev => {
+            return prev.map(vehicle => {
+
+                if (vehicle.id === id) {
+                    return { ...vehicle, license_part_number: license_part_number }
+                }
+                return vehicle
+            })
+
+        })
+
+    }, [])
+
+    const handleDeleteVehicle = useCallback(async (id) => {
+        try {
+            await Delete(id, 'vehicle-management')
+            setDeleteVehicle(id)
+            SuccessNotif('Delete vehicle success')
+        } catch (e) {
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
+        }
+    }, [setDeleteVehicle])
+
+    const openEditVehicle = useCallback((data) => openModal({
+        title: 'Edit vehicle license number',
+        radius: 'md',
+        size: 'lg',
+        children: <ModalEditVehicle data={data} setUpdateVehicle={setUpdateVehicle} />
+    }), [setUpdateVehicle])
+
+    const openAddVehicle = useCallback(() => openModal({
+        title: 'Add vehicle',
+        radius: 'md',
+        size: 'lg',
+        children: <ModalAddVehicle setAddVehicle={setAddVehicle} />
+    }), [setAddVehicle])
+
+
+
+    useEffect(() => {
+
+        const fetch = async () => {
+            try {
+                const dataVehicle = await Get('vehicle')
+                setVehicleList(dataVehicle)
+            } catch (e) {
+                console.log(e)
+            }
+        }
+        fetch()
+
+    }, [])
 
     const columnVehicle = useMemo(() => [
         {
@@ -133,113 +182,29 @@ const Vehicle = () => {
         },
         {
             name: '',
-            selector: row => row.editButton
+            selector: row => <ButtonEdit
+                onClick={() => openEditVehicle(row)}
+            />
         },
         {
             name: '',
-            selector: row => row.deleteButton
+            selector: row => <ButtonDelete
+                onClick={() => openConfirmDeleteData(() => handleDeleteVehicle(row.id))}
+            />
         }
-    ], [])
-
-
-    const handleDeleteVehicle = useCallback(async (id) => {
-        try {
-            await Delete(id, 'vehicle-management')
-            SuccessNotif('Delete vehicle success')
-            setAction(prev => prev + 1)
-        } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
-        }
-    }, [])
-
-    const openEditVehicle = useCallback((data) => openModal({
-        title: 'Edit vehicle license number',
-        radius: 'md',
-        size: 'lg',
-        children: <ModalEditVehicle data={data} setAction={setAction} />
-    }), [])
-
-
-    const openDeleteVehicle = useCallback((id) => openConfirmModal({
-        title: 'Delete data vehicle',
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteVehicle(id)
-    }), [handleDeleteVehicle])
-
-    const openAddVehicle = useCallback(() => openModal({
-        title: 'Add vehicle',
-        radius: 'md',
-        size: 'lg',
-        children: <ModalAddVehicle setAction={setAction} />
-    }), [])
-
-
-
-    useEffect(() => {
-
-        const fetch = async () => {
-            try {
-                const dataVehicle = await Get('vehicle')
-
-                const vehicleList = dataVehicle.map(vehicle => ({
-                    ...vehicle, editButton:
-
-                        <Button
-                            leftIcon={<IconEdit stroke={2} size={16} />}
-                            color='blue.6'
-                            variant='subtle'
-                            radius='md'
-                            mx='xs'
-                            onClick={() => openEditVehicle(vehicle)}
-                        >
-                            Edit
-                        </Button>,
-                    deleteButton: <Button
-                        leftIcon={<IconTrash stroke={2} size={16} />}
-                        color='red'
-                        variant='subtle'
-                        radius='md'
-                        onClick={() => openDeleteVehicle(vehicle.id)}
-                    >
-                        Delete
-                    </Button>
-                }))
-
-                setVehicleList(vehicleList)
-
-            } catch (e) {
-
-            }
-        }
-
-        fetch()
-
-    }, [action, openDeleteVehicle, openEditVehicle])
+    ], [openEditVehicle, openConfirmDeleteData, handleDeleteVehicle])
 
 
     return (
         <>
 
-            <Group position="right">
-                <Button
-                    leftIcon={<IconPlus />}
-                    variant='outline'
-                    radius='md'
+            <HeadSection>
+                <ButtonAdd
                     onClick={openAddVehicle}
                 >
                     Vehicle
-                </Button>
-            </Group>
+                </ButtonAdd>
+            </HeadSection>
 
             <BaseTable
                 column={columnVehicle}

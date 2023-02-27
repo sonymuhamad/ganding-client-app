@@ -1,31 +1,24 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Button, TextInput, Group, Text } from "@mantine/core";
+import { TextInput } from "@mantine/core";
+import { IconSignature } from "@tabler/icons";
+import { openModal, closeAllModals } from "@mantine/modals";
 
-import { IconPlus, IconTrash, IconEdit, IconSignature, IconDownload, } from "@tabler/icons";
-
-
-import { openModal, closeAllModals, openConfirmModal } from "@mantine/modals";
-
-import { useRequest } from "../../../hooks";
+import { useRequest, useConfirmDelete } from "../../../hooks";
 import { BaseTable } from "../../tables";
 import { FailedNotif, SuccessNotif } from '../../notifications'
+import { ButtonEdit, ButtonAdd, ButtonDelete, HeadSection, ModalForm } from "../../custom_components";
 
+const EditUnitOfMaterial = ({ uom, setEditUom }) => {
 
-
-const EditUnitOfMaterial = ({ uom, setaction }) => {
-
-    const [name, setName] = useState('')
-    const { Put, Loading } = useRequest()
+    const [name, setName] = useState(uom.name)
+    const { Put } = useRequest()
     const [errorName, setErrorName] = useState(false)
-    useEffect(() => {
-        setName(uom.name)
-    }, [uom.name])
 
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault()
         try {
-            await Put(uom.id, { name: name }, 'uom-management')
-            setaction(prev => prev + 1)
+            const updatedUom = await Put(uom.id, { name: name }, 'uom-management')
+            setEditUom(updatedUom)
             SuccessNotif('Edit unit of material success')
             closeAllModals()
         } catch (e) {
@@ -34,13 +27,13 @@ const EditUnitOfMaterial = ({ uom, setaction }) => {
             }
             FailedNotif('Edit unit of material failed')
         }
-    }
-        , [Put, setaction, name, uom.id])
+    }, [setEditUom, name, uom.id])
 
     return (
         <>
-            <Loading />
-            <form onSubmit={handleSubmit}   >
+            <ModalForm
+                formId='formEditUom'
+                onSubmit={handleSubmit}   >
 
                 <TextInput
                     icon={<IconSignature />}
@@ -53,31 +46,21 @@ const EditUnitOfMaterial = ({ uom, setaction }) => {
                     }}
                 />
 
-                <Button
-                    my='md'
-                    radius='md'
-                    type="submit"
-                    fullWidth
-                    leftIcon={<IconDownload />}
-                    disabled={name === '' || name === uom.name}
-                >
-                    Save
-                </Button>
-            </form>
+            </ModalForm>
         </>
     )
 }
 
-const PostUnitOfMaterial = ({ setaction }) => {
+const PostUnitOfMaterial = ({ setAddUom }) => {
     const [name, setName] = useState('')
-    const { Post, Loading } = useRequest()
+    const { Post } = useRequest()
     const [errorName, setErrorName] = useState(false)
 
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault()
         try {
-            await Post({ name: name }, 'uom-management')
-            setaction(prev => prev + 1)
+            const addedUom = await Post({ name: name }, 'uom-management')
+            setAddUom(addedUom)
             SuccessNotif('Add unit of material success')
             closeAllModals()
         } catch (e) {
@@ -87,14 +70,16 @@ const PostUnitOfMaterial = ({ setaction }) => {
             FailedNotif('Add unit of material failed')
         }
     }
-        , [Post, setaction, name])
+        , [setAddUom, name])
 
 
 
     return (
         <>
-            <Loading />
-            <form onSubmit={handleSubmit}  >
+
+            <ModalForm
+                formId='formAddUom'
+                onSubmit={handleSubmit}  >
 
                 <TextInput
                     error={errorName}
@@ -109,16 +94,7 @@ const PostUnitOfMaterial = ({ setaction }) => {
                     }}
                 />
 
-                <Button
-                    my='md'
-                    radius='md'
-                    type="submit"
-                    fullWidth
-                    leftIcon={<IconDownload />}
-                >
-                    Save
-                </Button>
-            </form>
+            </ModalForm>
         </>
     )
 }
@@ -127,7 +103,70 @@ const UnitOfMaterial = () => {
 
     const { Get, Delete } = useRequest()
     const [uoms, setUoms] = useState([])
-    const [uomAction, setUomAction] = useState(0)
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Unit of material' })
+
+
+    const setDeleteUom = useCallback((idDeletedUom) => {
+        setUoms(prev => prev.filter(uom => uom.id !== idDeletedUom))
+    }, [])
+
+    const setAddUom = useCallback((newUom) => {
+        setUoms(prev => [...prev, newUom])
+    }, [])
+
+    const setEditUom = useCallback((updatedUom) => {
+        const { name, id } = updatedUom
+        setUoms(prev => {
+            return prev.map(uom => {
+                if (uom.id === id) {
+                    return { ...uom, name: name }
+                }
+                return uom
+            })
+        })
+
+    }, [])
+
+    const handleDeleteUom = useCallback(async (id) => {
+        try {
+            await Delete(id, 'uom-management')
+            setDeleteUom(id)
+            SuccessNotif('Delete unit of material success')
+        } catch (e) {
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
+        }
+    }, [setDeleteUom])
+
+    const openEditUomModal = useCallback((uom) => openModal({
+        title: `Edit unit of material`,
+        radius: 'md',
+        children: <EditUnitOfMaterial
+            uom={uom}
+            setEditUom={setEditUom} />,
+    }), [setEditUom])
+
+    const openPostUomModal = useCallback(() => openModal({
+        title: `Add unit of material`,
+        radius: 'md',
+        children: <PostUnitOfMaterial
+            setAddUom={setAddUom} />,
+    }), [setAddUom])
+
+    const fetchUom = useCallback(async () => {
+        try {
+            const uomList = await Get('uom-list')
+            setUoms(uomList)
+        } catch (e) {
+            console.log(e)
+        }
+    }, [])
+
+    useEffect(() => {
+        fetchUom()
+    }, [fetchUom])
+
     const columnUoms = useMemo(() => [
         {
             name: 'Unit of material',
@@ -136,111 +175,33 @@ const UnitOfMaterial = () => {
         },
         {
             name: 'Amount of material',
-            selector: row => row.materials
+            selector: row => row.materials ? row.materials : 0
         },
         {
             name: '',
-            selector: row => row.buttonEdit
+            selector: row => <ButtonEdit
+                onClick={() => openEditUomModal(row)}
+            />
         },
         {
             name: '',
-            selector: row => row.buttonDelete
+            selector: row => <ButtonDelete
+                onClick={() => openConfirmDeleteData(() => handleDeleteUom(row.id))}
+            />
         }
-    ], [])
-
-    const handleDeleteUom = useCallback(async (id) => {
-        try {
-            await Delete(id, 'uom-management')
-            setUomAction(prev => prev + 1)
-            SuccessNotif('Delete unit of material success')
-        } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
-        }
-    }, [])
-
-    const openEditUomModal = useCallback((uom) => openModal({
-        title: `Edit unit of material`,
-        radius: 'md',
-        children: <EditUnitOfMaterial uom={uom} setaction={setUomAction} />,
-    }), [])
-
-    const openPostUomModal = useCallback(() => openModal({
-        title: `Add unit of material`,
-        radius: 'md',
-        children: <PostUnitOfMaterial setaction={setUomAction} />,
-    }), [])
-
-    const openDeleteUom = useCallback((id) => openConfirmModal({
-        title: `Delete unit of material`,
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteUom(id)
-    }), [handleDeleteUom])
-
-    const fetchUom = useCallback(async () => {
-        try {
-            const uoms = await Get('uom-list')
-            const unitOfMaterials = uoms.map(uom => ({
-                ...uom, buttonEdit:
-
-                    <Button
-                        leftIcon={<IconEdit stroke={2} size={16} />}
-                        color='teal.8'
-                        variant='subtle'
-                        radius='md'
-                        mx='xs'
-                        onClick={() => openEditUomModal(uom)}
-                    >
-                        Edit
-                    </Button>,
-                buttonDelete: <Button
-                    leftIcon={<IconTrash stroke={2} size={16} />}
-                    color='red'
-                    variant='subtle'
-                    radius='md'
-                    onClick={() => openDeleteUom(uom.id)}
-                >
-                    Delete
-                </Button>
-            }))
-
-            setUoms(unitOfMaterials)
-        } catch (e) {
-            console.log(e)
-        }
-    }, [openEditUomModal, openDeleteUom])
-
-    useEffect(() => {
-
-        // effect for unit of material
-
-        fetchUom()
-
-    }, [fetchUom, uomAction])
+    ], [openEditUomModal, openConfirmDeleteData, handleDeleteUom])
 
 
     return (
         <>
 
-            <Group position="right" >
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
+            <HeadSection>
+                <ButtonAdd
                     onClick={openPostUomModal}
-                    variant='outline'
                 >
-                    Add unit of material
-                </Button>
-            </Group>
+                    Unit of material
+                </ButtonAdd>
+            </HeadSection>
 
             <BaseTable
                 column={columnUoms}

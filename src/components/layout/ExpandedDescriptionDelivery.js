@@ -1,5 +1,6 @@
-import { Paper, Textarea, TextInput } from "@mantine/core"
+import { Paper, Textarea } from "@mantine/core"
 import { IconBarcode, IconClipboard } from "@tabler/icons"
+import { ReadOnlyTextInput } from "../custom_components"
 
 const ExpandedDescriptionDelivery = ({ data }) => {
 
@@ -11,10 +12,7 @@ const ExpandedDescriptionDelivery = ({ data }) => {
         <Paper
             p='xs'
         >
-            <TextInput
-                variant="filled"
-                readOnly
-                radius='md'
+            <ReadOnlyTextInput
                 m='xs'
                 label='Product number'
                 icon={<IconBarcode />}

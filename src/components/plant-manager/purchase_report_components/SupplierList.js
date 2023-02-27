@@ -116,7 +116,7 @@ const SupplierList = () => {
             selector: row => row.email
         },
         {
-            name: 'Total quantity of materials ordered',
+            name: 'Total pesanan',
             selector: row => row.supplier_total_order
         },
     ], [])

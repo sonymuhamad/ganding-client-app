@@ -1,5 +1,5 @@
 
-import { ActionButtons } from "../../../custom_components"
+import { ActionButtons, ReadOnlyTextInput } from "../../../custom_components"
 import { TextInput, Group, HoverCard, Text, SegmentedControl, Box, Center, Button, Badge, Textarea, NumberInput } from "@mantine/core"
 import { IconChecks, IconUserCheck, IconReceiptTax, IconDiscount2, IconCircleDotted, IconCheck, IconClipboard, IconFolderOff, IconPrinter, IconShieldLock, IconCodeAsterix, IconShoppingCart, IconCalendar } from "@tabler/icons"
 import { DatePicker } from '@mantine/dates'
@@ -89,12 +89,9 @@ const SectionDetailPurchaseOrder = (
 
             <form id='formEditPurchaseOrder' onSubmit={form.onSubmit(handleEditPurchaseOrder)} >
 
-                <TextInput
-                    variant="filled"
+                <ReadOnlyTextInput
                     label='Supplier'
-                    radius='md'
                     m='xs'
-                    readOnly
                     icon={<IconUserCheck />}
                     value={supplierName}
                 />
@@ -153,13 +150,10 @@ const SectionDetailPurchaseOrder = (
                     />
 
 
-                    <TextInput
+                    <ReadOnlyTextInput
                         label='Number of material ordered'
-                        readOnly
                         icon={<IconShoppingCart />}
-                        radius='md'
                         m='xs'
-                        variant='filled'
                         value={amountOfMaterialOrdered}
                     />
 

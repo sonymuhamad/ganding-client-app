@@ -1,32 +1,35 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { Button, Paper, Group, TextInput } from "@mantine/core";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 
-import { IconDotsCircleHorizontal, IconSearch, IconPlus } from "@tabler/icons";
+import { BaseTableExpanded } from "../../tables"
+import { useRequest, useSearch } from "../../../hooks";
+import { ExpandedMaterial } from "../../layout";
+import { NavigationDetailButton, ButtonAdd, HeadSection, SearchTextInput } from '../../custom_components'
 
-import { BaseTable, BaseTableDefaultExpanded } from "../../tables"
-import { useRequest } from "../../../hooks";
 
 
+const MaterialList = () => {
 
-const ExpandedMaterial = ({ data }) => {
+    const { GetAndExpiredTokenHandler } = useRequest()
+    const [materialList, setMaterialList] = useState([])
+    const { lowerCaseQuery, query, setValueQuery } = useSearch()
 
-    const materials = useMemo(() => {
-        return data.ppic_material_related.map(material => ({
-            ...material, button: <Button
-                leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                color='teal.8'
-                variant='subtle'
-                radius='md'
-                component={Link}
-                to={`${material.id}`}
-            >
-                Detail
-            </Button>
-        }))
-    }, [data])
+    const filteredMaterialList = useMemo(() => {
 
-    const productColumn = useMemo(() => [
+        return materialList.filter(material => {
+            const { name, spec, supplier, uom } = material
+            return name.toLowerCase().includes(lowerCaseQuery) || spec.toLowerCase().includes(lowerCaseQuery) || supplier.name.toLowerCase().includes(lowerCaseQuery) || uom.name.toLowerCase().includes(lowerCaseQuery)
+
+        })
+
+    }, [materialList, lowerCaseQuery])
+
+
+    const columnMaterialList = useMemo(() => [
+        {
+            name: 'Supplier name',
+            selector: row => row.supplier.name
+        },
         {
             name: 'Material name',
             selector: row => row.name,
@@ -37,123 +40,44 @@ const ExpandedMaterial = ({ data }) => {
             selector: row => row.spec,
         },
         {
-            name: 'Material type',
-            selector: row => row.uom.name,
-
-        },
-        {
             name: '',
-            selector: row => row.button,
-            style: {
-                padding: 0,
-            }
+            selector: row => <NavigationDetailButton
+                url={`/home/ppic/material/${row.id}`}
+            />,
         }
     ], [])
-
-
-    return (
-        <>
-            <Paper ml='lg' mb='md' >
-                <BaseTable
-                    column={productColumn}
-                    data={materials}
-                    pagination={false}
-                />
-
-            </Paper>
-
-        </>
-    )
-}
-
-const MaterialList = () => {
-
-    const { Loading, GetAndExpiredTokenHandler } = useRequest()
-    const [supplierMaterial, setSupplierMaterial] = useState([])
-    const [searchVal, setSearchVal] = useState('')
-
-    const filteredSupplierMaterial = useMemo(() => {
-        const valFiltered = searchVal.toLowerCase()
-
-        return supplierMaterial.reduce((prev, current) => {
-            const materials = current.ppic_material_related.filter(material => material.spec.toLowerCase().includes(valFiltered) || material.name.toLowerCase().includes(valFiltered) || material.uom.name.toLowerCase().includes(valFiltered))
-
-            if (valFiltered === '') {
-                return [...prev, current]
-            }
-
-            if (materials.length !== 0) {
-                return [...prev, { ...current, ppic_material_related: materials }]
-            } else {
-                return prev
-            }
-
-        }, [])
-    }, [searchVal, supplierMaterial])
-
-
-    const columnSupplier = useMemo(() => [
-        {
-            name: 'Supplier name',
-            selector: row => row.name,
-            sortable: true
-        },
-        {
-            name: 'Amount of material',
-            selector: row => row.ppic_material_related.length
-        }
-    ], [])
-
-    const fetchMaterials = useCallback(async () => {
-        try {
-            const supplierMaterials = await GetAndExpiredTokenHandler('supplier-material-list')
-
-            setSupplierMaterial(supplierMaterials)
-
-        } catch (e) {
-            console.log(e)
-        }
-    }, [])
 
     useEffect(() => {
-        // effect for supplier nested to materials
-        fetchMaterials()
 
-    }, [fetchMaterials])
+        GetAndExpiredTokenHandler('material-list').then(materialList => {
+            setMaterialList(materialList)
+        })
+
+    }, [])
 
 
 
     return (
         <>
-            <Loading />
-            <Group position="right" >
-                <TextInput
-                    icon={<IconSearch />}
-                    placeholder='Search material'
-                    radius='md'
-                    value={searchVal}
-                    onChange={e => setSearchVal(e.target.value)}
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
-                <Button
-                    variant='outline'
-                    style={{ float: 'right' }}
-                    radius='md'
-                    leftIcon={<IconPlus />}
+
+                <ButtonAdd
                     component={Link}
-                    to='new'
+                    to={'/home/ppic/material/new'}
                 >
-                    Add material
-                </Button>
+                    Material
+                </ButtonAdd>
 
-            </Group>
+            </HeadSection>
 
-
-            <BaseTableDefaultExpanded
-
-                column={columnSupplier}
-                data={filteredSupplierMaterial}
+            <BaseTableExpanded
+                column={columnMaterialList}
+                data={filteredMaterialList}
                 expandComponent={ExpandedMaterial}
-                condition={row => row.ppic_material_related.length !== 0}
             />
         </>
     )

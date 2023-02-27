@@ -1,16 +1,19 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 
-import { IconDownload, IconEdit, IconPlus, IconSignature, IconTrash } from "@tabler/icons";
-import { useRequest } from "../../../hooks";
+import { IconSignature } from "@tabler/icons";
+import { useRequest, useConfirmDelete } from "../../../hooks";
 import { BaseTable } from "../../tables";
-import { openModal, openConfirmModal, closeAllModals } from "@mantine/modals";
-import { Button, Group, Text, TextInput } from "@mantine/core";
+import { openModal, closeAllModals } from "@mantine/modals";
+import { TextInput } from "@mantine/core";
 import { FailedNotif, SuccessNotif } from "../../notifications";
 import { useForm } from "@mantine/form";
+import { ModalForm, ButtonAdd, ButtonDelete, ButtonEdit, HeadSection } from "../../custom_components";
 
-const ModalAddDriver = ({ setAction }) => {
 
-    const { Post, Loading } = useRequest()
+
+const ModalAddDriver = ({ setAddDriver }) => {
+
+    const { Post } = useRequest()
     const form = useForm({
         initialValues: {
             name: ''
@@ -19,19 +22,21 @@ const ModalAddDriver = ({ setAction }) => {
 
     const handleSubmit = useCallback(async (data) => {
         try {
-            await Post(data, 'driver-management')
+            const newDriver = await Post(data, 'driver-management')
             SuccessNotif('Add driver success')
             closeAllModals()
-            setAction(prev => prev + 1)
+            setAddDriver(newDriver)
         } catch (e) {
             form.setErrors(e.message.data)
             FailedNotif('Add driver failed')
         }
-    }, [Post, setAction])
+    }, [Post, setAddDriver])
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)} >
-            <Loading />
+        <ModalForm
+            formId='formAddDriver'
+            onSubmit={form.onSubmit(handleSubmit)} >
+
             <TextInput
                 icon={<IconSignature />}
                 label='Driver name'
@@ -43,21 +48,13 @@ const ModalAddDriver = ({ setAction }) => {
                 {...form.getInputProps('name')}
             />
 
-            <Button
-                radius='md'
-                fullWidth
-                type="submit"
-                leftIcon={<IconDownload />}
-            >
-                Save
-            </Button>
-        </form>
+        </ModalForm>
     )
 }
 
-const ModalEditDriver = ({ data, setAction }) => {
+const ModalEditDriver = ({ data, setUpdateDriver }) => {
 
-    const { Put, Loading } = useRequest()
+    const { Put } = useRequest()
 
     const form = useForm({
         initialValues: {
@@ -67,9 +64,9 @@ const ModalEditDriver = ({ data, setAction }) => {
 
     const handleSubmit = async (value) => {
         try {
-            await Put(data.id, value, 'driver-management')
+            const updatedDriver = await Put(data.id, value, 'driver-management')
             SuccessNotif('Edit driver success')
-            setAction(prev => prev + 1)
+            setUpdateDriver(updatedDriver)
             closeAllModals()
         } catch (e) {
             FailedNotif('Edit driver failed')
@@ -78,8 +75,10 @@ const ModalEditDriver = ({ data, setAction }) => {
     }
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)} >
-            <Loading />
+        <ModalForm
+            formId='formEditDriver'
+            onSubmit={form.onSubmit(handleSubmit)} >
+
             <TextInput
                 icon={<IconSignature />}
                 label='Driver name'
@@ -91,25 +90,79 @@ const ModalEditDriver = ({ data, setAction }) => {
                 {...form.getInputProps('name')}
             />
 
-            <Button
-                radius='md'
-                fullWidth
-                type="submit"
-                disabled={form.values.name === data.name}
-                leftIcon={<IconDownload />}
-            >
-                Save
-            </Button>
-        </form>
+        </ModalForm>
     )
 }
 
 
 const Driver = () => {
 
-    const { Get, Delete, Loading } = useRequest()
+    const { Get, Delete } = useRequest()
     const [driverList, setDriverList] = useState([])
-    const [action, setAction] = useState([])
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Driver' })
+
+    const setAddDriver = useCallback((newDriver) => {
+        setDriverList(prev => [...prev, newDriver])
+    }, [])
+
+    const setUpdateDriver = useCallback((updatedDriver) => {
+        const { id, name } = updatedDriver
+
+        setDriverList(prev => {
+            return prev.map(driver => {
+                if (driver.id === id) {
+                    return { ...driver, name: name }
+                }
+
+                return driver
+            })
+        })
+
+    }, [])
+
+    const setDeleteDriver = useCallback((idDeletedDriver) => {
+        setDriverList(prev => prev.filter(driver => driver.id !== idDeletedDriver))
+    }, [])
+
+    const handleDeleteDriver = useCallback(async (id) => {
+        try {
+            await Delete(id, 'driver-management')
+            SuccessNotif('Delete driver success')
+            setDeleteDriver(id)
+        } catch (e) {
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
+        }
+    }, [setDeleteDriver])
+
+    const openEditDriver = useCallback((data) => openModal({
+        title: 'Edit driver name',
+        radius: 'md',
+        size: 'lg',
+        children: <ModalEditDriver data={data} setUpdateDriver={setUpdateDriver} />
+    }), [setUpdateDriver])
+
+    const openAddDriver = useCallback(() => openModal({
+        title: 'Add driver',
+        radius: 'md',
+        size: 'lg',
+        children: <ModalAddDriver setAddDriver={setAddDriver} />
+    }), [setAddDriver])
+
+
+    useEffect(() => {
+        const fetch = async () => {
+            try {
+                const dataDriver = await Get('driver')
+                setDriverList(dataDriver)
+            } catch (e) {
+                console.log(e)
+            }
+        }
+        fetch()
+
+    }, [])
 
     const columnDriver = useMemo(() => [
         {
@@ -122,111 +175,29 @@ const Driver = () => {
         },
         {
             name: '',
-            selector: row => row.editButton
+            selector: row => <ButtonEdit
+                onClick={() => openEditDriver(row)}
+            />
         },
         {
             name: '',
-            selector: row => row.deleteButton
+            selector: row => <ButtonDelete
+                onClick={() => openConfirmDeleteData(() => handleDeleteDriver(row.id))}
+            />
         }
-    ], [])
+    ], [openEditDriver, openConfirmDeleteData, handleDeleteDriver])
 
-    const handleDeleteDriver = useCallback(async (id) => {
-        try {
-            await Delete(id, 'driver-management')
-            SuccessNotif('Delete driver success')
-            setAction(prev => prev + 1)
-        } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
-        }
-    }, [])
-
-    const openEditDriver = useCallback((data) => openModal({
-        title: 'Edit driver name',
-        radius: 'md',
-        size: 'lg',
-        children: <ModalEditDriver data={data} setAction={setAction} />
-    }), [])
-
-    const openDeleteDriver = useCallback((id) => openConfirmModal({
-        title: 'Delete driver',
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteDriver(id)
-    }), [handleDeleteDriver])
-
-    const openAddDriver = useCallback(() => openModal({
-        title: 'Add driver',
-        radius: 'md',
-        size: 'lg',
-        children: <ModalAddDriver setAction={setAction} />
-    }), [])
-
-
-    useEffect(() => {
-
-        const fetch = async () => {
-            try {
-                const dataDriver = await Get('driver')
-
-                const driver = dataDriver.map(driver => ({
-                    ...driver, editButton:
-
-                        <Button
-                            leftIcon={<IconEdit stroke={2} size={16} />}
-                            color='blue.6'
-                            variant='subtle'
-                            radius='md'
-                            mx='xs'
-                            onClick={() => openEditDriver(driver)}
-                        >
-                            Edit
-                        </Button>,
-                    deleteButton: <Button
-                        leftIcon={<IconTrash stroke={2} size={16} />}
-                        color='red'
-                        variant='subtle'
-                        radius='md'
-                        onClick={() => openDeleteDriver(driver.id)}
-                    >
-                        Delete
-                    </Button>
-                }))
-
-                setDriverList(driver)
-
-            } catch (e) {
-                console.log(e)
-            }
-        }
-
-        fetch()
-
-    }, [action, openEditDriver, openDeleteDriver])
 
     return (
         <>
 
-            <Loading />
-
-            <Group position="right" >
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant="outline"
+            <HeadSection>
+                <ButtonAdd
                     onClick={openAddDriver}
                 >
                     Driver
-                </Button>
-            </Group>
+                </ButtonAdd>
+            </HeadSection>
 
             <BaseTable
                 column={columnDriver}

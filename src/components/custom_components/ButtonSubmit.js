@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@mantine/core";
+import { IconDownload } from "@tabler/icons";
 
 const ButtonSubmit = ({ formId }) => {
 
@@ -10,6 +11,7 @@ const ButtonSubmit = ({ formId }) => {
             fullWidth
             my='md'
             form={formId}
+            leftIcon={<IconDownload />}
         >
             Save
         </Button>

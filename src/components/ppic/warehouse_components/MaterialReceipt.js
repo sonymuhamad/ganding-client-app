@@ -1,77 +1,23 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Link } from "react-router-dom";
-import { useRequest } from "../../../hooks";
-import { BaseTableExpanded } from "../../tables";
-import { Button, Textarea, Paper, TextInput, NumberInput, Group, NativeSelect, Text, FileButton } from "@mantine/core";
-import { IconDotsCircleHorizontal, IconClipboard, IconPlus, IconUpload, IconTrash, IconSearch, IconAsset, IconPackgeImport, IconCodeAsterix, IconUserCheck, IconClipboardCheck, IconCalendar } from "@tabler/icons";
+import { useRequest, useSearch } from "../../../hooks";
+import { BaseTable } from "../../tables";
+import { Button, Textarea, TextInput, Group, NativeSelect, Text, FileButton } from "@mantine/core";
+import { IconUpload, IconTrash, IconCodeAsterix, IconUserCheck, IconClipboardCheck, IconCalendar } from "@tabler/icons";
 import { openModal, closeAllModals } from "@mantine/modals";
 import { useForm } from "@mantine/form";
 import { FailedNotif, SuccessNotif } from "../../notifications";
 import { useNavigate } from "react-router-dom";
 import { DatePicker } from "@mantine/dates";
 
+import { HeadSection, SearchTextInput, NavigationDetailButton, ButtonAdd, ModalForm } from '../../custom_components'
+import { generateDataWithDate } from "../../../services";
 
-const ExpandedMaterialReceipt = ({ data }) => {
-
-    const materialReceipts = useMemo(() => {
-        return data.materialreceipt_set.map(mr => (
-            <Group key={mr.id} grow my='lg' >
-
-                <TextInput
-                    icon={<IconAsset />}
-                    label='Material'
-                    radius='md'
-                    value={mr.material_order.material.name}
-                    readOnly
-                />
-
-                <NumberInput
-                    icon={<IconPackgeImport />}
-                    radius='md'
-                    hideControls
-                    label='Quantity'
-                    value={mr.quantity}
-                    readOnly
-                />
-
-                <TextInput
-                    icon={<IconCodeAsterix />}
-                    label='Purchase order'
-                    radius='md'
-                    value={mr.material_order.purchase_order_material.code}
-                    readOnly
-                />
-
-            </Group>
-        ))
-    }, [data])
-
-    return (
-        <Paper m='xs' p='xs' >
-
-            <Textarea
-                icon={<IconClipboard />}
-                label='Receipt descriptions'
-                readOnly
-                value={data.note}
-                radius='md'
-            />
-
-            {materialReceipts.length === 0 ?
-                <Text align="center" size='sm' color='dimmed' my='md' >
-                    This receipt note doesn't have material received
-                </Text>
-                : materialReceipts}
-
-        </Paper>
-    )
-}
 
 const ModalAddDeliveryNoteMaterial = () => {
 
     const [supplierList, setSupplierList] = useState([])
     const navigate = useNavigate()
-    const { Get, Loading, Post } = useRequest()
+    const { Get, Post } = useRequest()
     const form = useForm({
         initialValues: {
             supplier: null,
@@ -90,121 +36,102 @@ const ModalAddDeliveryNoteMaterial = () => {
         Get('supplier-list').then(data => {
             setSupplierList(data)
         })
-    }, [Get])
+    }, [])
 
     const handleSubmit = useCallback(async (value) => {
-        let validate_data
-
-        if (value.date) {
-            validate_data = { ...value, date: value.date.toLocaleDateString('en-CA') }
-        } else {
-            validate_data = value
-        }
-
+        const { date, ...rest } = value
+        const validate_data = generateDataWithDate(date, rest)
         try {
             const newDnMaterial = await Post(validate_data, 'deliverynote-material-management', 'multipart/form-data')
             SuccessNotif('Add material delivery note success')
             closeAllModals()
             navigate(`/home/ppic/warehouse/material-receipt/${newDnMaterial.id}`)
         } catch (e) {
-            console.log(e)
+            form.setErrors(e.message.data)
             FailedNotif('Add material delivery note failed')
         }
     }, [Post, navigate])
 
 
     return (
-        <>
-            <Loading />
 
-            <form onSubmit={form.onSubmit(handleSubmit)} >
+        <ModalForm
+            formId='formAddReceiptNoteMaterial'
+            onSubmit={form.onSubmit(handleSubmit)} >
 
-                <NativeSelect
-                    icon={<IconUserCheck />}
+            <NativeSelect
+                icon={<IconUserCheck />}
+                radius='md'
+                m='xs'
+                label='Supplier'
+                placeholder="Select supplier"
+                data={supplierList.map(supplier => ({ value: supplier.id, label: supplier.name }))}
+                {...form.getInputProps('supplier')}
+            />
+
+            <TextInput
+                icon={<IconCodeAsterix />}
+                m='xs'
+                label='Receipt number'
+                radius='md'
+                required
+                placeholder="Input receipt note number"
+                {...form.getInputProps('code')}
+            />
+
+            <DatePicker
+                icon={<IconCalendar />}
+                label='Receipt date'
+                m='xs'
+                placeholder="Select receipt date"
+                radius='md'
+                required
+                {...form.getInputProps('date')}
+            />
+
+            <Textarea
+                m='xs'
+                icon={<IconClipboardCheck />}
+                label='Material receipt description'
+                radius='md'
+                placeholder="Input description for this material receipt"
+                {...form.getInputProps('note')}
+            />
+
+
+            <Group m='xs' >
+
+                <FileButton
+                    mt='md'
                     radius='md'
-                    m='xs'
-                    label='Supplier'
-                    placeholder="Select supplier"
-                    data={supplierList.map(supplier => ({ value: supplier.id, label: supplier.name }))}
-                    {...form.getInputProps('supplier')}
-                />
-
-
-
-                <TextInput
-                    icon={<IconCodeAsterix />}
-                    m='xs'
-                    label='Receipt number'
-                    radius='md'
-                    required
-                    placeholder="Input receipt note number"
-                    {...form.getInputProps('code')}
-                />
-
-                <DatePicker
-                    icon={<IconCalendar />}
-                    label='Receipt date'
-                    m='xs'
-                    placeholder="Select receipt date"
-                    radius='md'
-                    required
-                    {...form.getInputProps('date')}
-                />
-
-                <Textarea
-                    m='xs'
-                    icon={<IconClipboardCheck />}
-                    label='Material receipt description'
-                    radius='md'
-                    placeholder="Input description for this material receipt"
-                    {...form.getInputProps('note')}
-                />
-
-
-                <Group m='xs' >
-
-                    <FileButton
-                        mt='md'
-                        radius='md'
-                        leftIcon={<IconUpload />}
-                        style={{ display: form.values.image === null ? '' : 'none' }}
-                        {...form.getInputProps('image')}
-                        accept="image/png,image/jpeg" >
-                        {(props) => <Button   {...props}>Upload image</Button>}
-                    </FileButton>
-
-                    <Button
-                        mt='md'
-                        radius='md'
-                        leftIcon={<IconTrash />}
-                        color='red.7'
-                        onClick={() => {
-                            form.setFieldValue('image', null)
-                            form.setDirty('image')
-                        }}
-                        style={{ display: form.values.image !== null ? '' : 'none' }} >
-                        Delete image
-                    </Button>
-
-                    {form.values.image && (
-                        <Text size="sm" color='dimmed' align="center" mt="sm">
-                            {form.values.image.name}
-                        </Text>
-                    )}
-                </Group>
+                    leftIcon={<IconUpload />}
+                    style={{ display: form.values.image === null ? '' : 'none' }}
+                    {...form.getInputProps('image')}
+                    accept="image/png,image/jpeg" >
+                    {(props) => <Button   {...props}>Upload image</Button>}
+                </FileButton>
 
                 <Button
-                    fullWidth
-                    type="submit"
+                    mt='md'
                     radius='md'
-                    my='lg'
-                >
-                    Save
+                    leftIcon={<IconTrash />}
+                    color='red.7'
+                    onClick={() => {
+                        form.setFieldValue('image', null)
+                        form.setDirty('image')
+                    }}
+                    style={{ display: form.values.image !== null ? '' : 'none' }} >
+                    Delete image
                 </Button>
 
-            </form>
+                {form.values.image && (
+                    <Text size="sm" color='dimmed' align="center" mt="sm">
+                        {form.values.image.name}
+                    </Text>
+                )}
+            </Group>
 
-        </>
+        </ModalForm>
     )
 }
 
@@ -213,15 +140,16 @@ const MaterialReceipt = () => {
 
     const { Get } = useRequest()
     const [data, setData] = useState([])
-    const [searchVal, setSearchVal] = useState('')
+    const { query, setValueQuery, lowerCaseQuery } = useSearch()
 
     const filteredData = useMemo(() => {
+        return data.filter(dn => {
+            const { supplier, code, date } = dn
+            const { name } = supplier
+            return name.toLowerCase().includes(lowerCaseQuery) || code.toLowerCase().includes(lowerCaseQuery) || date.toLowerCase().includes(lowerCaseQuery)
+        })
 
-        const filteredVal = searchVal.toLowerCase()
-
-        return data.filter(dn => dn.supplier.name.toLowerCase().includes(filteredVal) || dn.code.toLowerCase().includes(filteredVal) || dn.date.toLowerCase().includes(filteredVal))
-
-    }, [searchVal, data])
+    }, [lowerCaseQuery, data])
 
     const columnDeliveryNotes = useMemo(() => [
         {
@@ -234,15 +162,13 @@ const MaterialReceipt = () => {
         },
         {
             name: 'Date',
-            selector: row => new Date(row.date).toDateString()
-        },
-        {
-            name: 'Amount of material received',
-            selector: row => row.materialreceipt_set.length,
+            selector: row => row.date
         },
         {
             name: '',
-            selector: row => row.buttonDetail,
+            selector: row => <NavigationDetailButton
+                url={`/home/ppic/warehouse/material-receipt/${row.id}`}
+            />,
         }
     ], [])
 
@@ -258,21 +184,7 @@ const MaterialReceipt = () => {
         const fetchData = async () => {
             try {
                 const data = await Get('deliverynote-material')
-                const dataDeliveryNotes = data.map(dn => ({
-                    ...dn, buttonDetail: <Button
-                        leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                        color='teal.6'
-                        variant='subtle'
-                        radius='md'
-                        component={Link}
-                        to={`/home/ppic/warehouse/material-receipt/${dn.id}`}
-                    >
-                        Detail
-                    </Button>
-                }))
-
-                setData(dataDeliveryNotes)
-
+                setData(data)
             } catch (e) {
                 console.log(e)
             }
@@ -283,27 +195,22 @@ const MaterialReceipt = () => {
 
     return (
         <>
-            <Group position="right" >
-                <TextInput
-                    icon={<IconSearch />}
-                    placeholder='Search receipt note'
-                    onChange={e => setSearchVal(e.target.value)}
-                    value={searchVal}
-                    radius='md'
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+                <ButtonAdd
                     onClick={openAddDeliveryNoteMaterial}
                 >
-                    Add material receipt note
-                </Button>
-            </Group>
-            <BaseTableExpanded
+                    Material receipt note
+                </ButtonAdd>
+            </HeadSection>
+
+            <BaseTable
                 column={columnDeliveryNotes}
                 data={filteredData}
-                expandComponent={ExpandedMaterialReceipt}
+                noData='Tidak ada data penerimaan material'
             />
         </>
     )

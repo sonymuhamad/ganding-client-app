@@ -25,7 +25,7 @@ const CustomerList = () => {
             selector: row => row.email
         },
         {
-            name: 'Total product ordered',
+            name: 'Total pesanan',
             selector: row => `${row.customer_total_order} Unit`
         }
     ], [])

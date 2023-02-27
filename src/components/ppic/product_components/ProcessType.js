@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 
-import { useRequest } from "../../../hooks";
-import { Button, Group, TextInput, Text } from "@mantine/core";
+import { useRequest, useConfirmDelete } from "../../../hooks";
+import { TextInput, } from "@mantine/core";
 
 import { BaseTable } from "../../tables";
-import { IconPlus, IconTrash, IconEdit, IconDownload, IconSignature } from "@tabler/icons";
+import { IconSignature } from "@tabler/icons";
 import { FailedNotif, SuccessNotif } from "../../notifications";
-import { openConfirmModal, closeAllModals, openModal } from "@mantine/modals";
+import { closeAllModals, openModal } from "@mantine/modals";
 import { useForm } from "@mantine/form";
+import { ModalForm, ButtonAdd, ButtonDelete, ButtonEdit, HeadSection } from "../../custom_components";
 
 
-const AddProcessType = ({ setaction }) => {
+const AddProcessType = ({ setAddProcessType }) => {
 
-    const { Post, Loading } = useRequest()
+    const { Post } = useRequest()
     const form = useForm({
         initialValues: {
             name: ''
@@ -21,49 +22,40 @@ const AddProcessType = ({ setaction }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Post(value, 'process-type-management')
-            closeAllModals()
-            setaction(prev => prev + 1)
+            const newProcessType = await Post(value, 'process-type-management')
+            setAddProcessType(newProcessType)
             SuccessNotif('Add process type success')
+            closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
             FailedNotif('Add process type failed')
         }
-    }, [Post, setaction])
+    }, [Post, setAddProcessType])
 
     return (
-        <>
-            <Loading />
-            <form onSubmit={form.onSubmit(handleSubmit)}  >
+        <ModalForm
+            formId='formAddProcessType'
+            onSubmit={form.onSubmit(handleSubmit)}  >
 
-                <TextInput
-                    icon={<IconSignature />}
-                    radius='md'
-                    {...form.getInputProps('name')}
-                    required
-                    label='Type name'
-                    placeholder="Input name of new type"
-                />
+            <TextInput
+                icon={<IconSignature />}
+                radius='md'
+                {...form.getInputProps('name')}
+                required
+                label='Type name'
+                placeholder="Input name of new type"
+            />
 
-                <Button
-                    my='md'
-                    radius='md'
-                    type="submit"
-                    fullWidth
-                    leftIcon={<IconDownload />}
-                >
-                    Save
-                </Button>
-            </form>
-        </>
+        </ModalForm>
+
     )
 }
 
 
-const EditProcessType = ({ setaction, data }) => {
+const EditProcessType = ({ setUpdateProcessType, data }) => {
 
 
-    const { Put, Loading } = useRequest()
+    const { Put } = useRequest()
     const form = useForm({
         initialValues: {
             name: data.name
@@ -73,42 +65,31 @@ const EditProcessType = ({ setaction, data }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Put(data.id, value, 'process-type-management')
+            const updatedProcessType = await Put(data.id, value, 'process-type-management')
             closeAllModals()
-            setaction(prev => prev + 1)
+            setUpdateProcessType(updatedProcessType)
             SuccessNotif('Edit process type success')
         } catch (e) {
             form.setErrors(e.message.data)
             FailedNotif('Edit process type failed')
         }
-    }, [setaction, Put, data.id])
+    }, [setUpdateProcessType, data.id])
 
     return (
-        <>
-            <Loading />
-            <form onSubmit={form.onSubmit(handleSubmit)}  >
+        <ModalForm
+            formId='formEditProcessType'
+            onSubmit={form.onSubmit(handleSubmit)}  >
 
-                <TextInput
-                    icon={<IconSignature />}
-                    radius='md'
-                    label='Type'
-                    placeholder="Input type of process"
-                    required
-                    {...form.getInputProps('name')}
-                />
+            <TextInput
+                icon={<IconSignature />}
+                radius='md'
+                label='Type'
+                placeholder="Input type of process"
+                required
+                {...form.getInputProps('name')}
+            />
 
-                <Button
-                    my='md'
-                    radius='md'
-                    fullWidth
-                    type="submit"
-                    disabled={data.name === form.values.name}
-                    leftIcon={<IconDownload />}
-                >
-                    Save
-                </Button>
-            </form>
-        </>
+        </ModalForm>
     )
 
 }
@@ -119,8 +100,68 @@ const ProcessType = () => {
 
     const { Get, Delete } = useRequest()
     const [processType, setProcessType] = useState([])
-    const [actionProcessType, setActionProcessType] = useState(0)
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Process type' })
 
+    const setAddProcessType = useCallback((newProcessType) => {
+        setProcessType(prev => [...prev, newProcessType])
+    }, [])
+
+    const setUpdateProcessType = useCallback((updatedProcessType) => {
+        const { name, id } = updatedProcessType
+        setProcessType(prev => {
+            return prev.map(processType => {
+                if (processType.id === id) {
+                    return { ...processType, name: name }
+                }
+                return processType
+            })
+        })
+    }, [])
+
+    const setDeleteProcessType = useCallback((idDeletedProcessType) => {
+        setProcessType(prev => prev.filter(processType => processType.id !== idDeletedProcessType))
+    }, [])
+
+    const openAddProcessType = useCallback(() => openModal({
+        title: `Add process type`,
+        radius: 'md',
+        children: <AddProcessType setAddProcessType={setAddProcessType} />,
+    }), [setAddProcessType])
+
+    const openEditProcessType = useCallback((data) => openModal({
+        title: `Edit process type`,
+        radius: 'md',
+        children: <EditProcessType
+            data={data}
+            setUpdateProcessType={setUpdateProcessType} />
+    }), [setUpdateProcessType])
+
+    const handleDeleteProcessType = useCallback(async (id) => {
+        try {
+            await Delete(id, 'process-type-management')
+            setDeleteProcessType(id)
+            SuccessNotif('Delete process type success')
+        } catch (e) {
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+                return
+            }
+            FailedNotif('Delete process type failed')
+        }
+    }, [setDeleteProcessType])
+
+    useEffect(() => {
+        const fetchProcessType = async () => {
+            try {
+                const process_type = await Get('process-type')
+                setProcessType(process_type)
+            } catch (e) {
+                console.log(e)
+            }
+        }
+        fetchProcessType()
+
+    }, [])
 
 
     const columnProcessType = useMemo(() => [
@@ -130,112 +171,32 @@ const ProcessType = () => {
         },
         {
             name: 'Amount of process',
-            selector: row => row.amount_of_process
+            selector: row => row.amount_of_process ? row.amount_of_process : 0
         },
         {
             name: '',
-            selector: row => row.buttonEdit
+            selector: row => <ButtonEdit
+                onClick={() => openEditProcessType(row)}
+            />
         },
         {
             name: '',
-            selector: row => row.buttonDelete
+            selector: row => <ButtonDelete
+                onClick={() => openConfirmDeleteData(() => handleDeleteProcessType(row.id))}
+            />
         }
-
-    ], [])
-
-    const openAddProcessType = useCallback(() => openModal({
-        title: `Add process type`,
-        radius: 'md',
-        children: <AddProcessType setaction={setActionProcessType} />,
-    }), [])
-
-    const openEditProcessType = useCallback((data) => openModal({
-        title: `Edit process type`,
-        radius: 'md',
-        children: <EditProcessType data={data} setaction={setActionProcessType} />
-    }), [])
-
-    const handleDeleteProcessType = useCallback(async (id) => {
-        try {
-            await Delete(id, 'process-type-management')
-            setActionProcessType(prev => prev + 1)
-            SuccessNotif('Delete process type success')
-        } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
-        }
-    }, [])
-
-
-    const openDeleteProcessTypeModal = useCallback((id) => openConfirmModal({
-        title: 'Delete process type',
-        children: (
-            <Text size="sm">
-                Are you sure?, this process type will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteProcessType(id)
-    }), [handleDeleteProcessType])
-
-    useEffect(() => {
-        // effect for process type
-
-        const fetchProcessType = async () => {
-            try {
-                const process_type = await Get('process-type')
-                const types = process_type.map(type => ({
-                    ...type, buttonEdit:
-
-                        <Button
-                            leftIcon={<IconEdit stroke={2} size={16} />}
-                            color='teal.8'
-                            variant='subtle'
-                            radius='md'
-                            mx='xs'
-                            onClick={() => openEditProcessType(type)}
-                        >
-                            Edit
-                        </Button>,
-                    buttonDelete: <Button
-                        leftIcon={<IconTrash stroke={2} size={16} />}
-                        color='red'
-                        variant='subtle'
-                        radius='md'
-                        onClick={() => openDeleteProcessTypeModal(type.id)}
-                    >
-                        Delete
-                    </Button>
-                }))
-
-                setProcessType(types)
-            } catch (e) {
-                console.log(e)
-            }
-        }
-
-        fetchProcessType()
-
-    }, [actionProcessType, openEditProcessType, openDeleteProcessTypeModal])
-
+    ], [openEditProcessType, handleDeleteProcessType, openConfirmDeleteData])
 
     return (
         <>
 
-            <Group position="right" >
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+            <HeadSection>
+                <ButtonAdd
                     onClick={openAddProcessType}
                 >
                     Process type
-                </Button>
-            </Group>
+                </ButtonAdd>
+            </HeadSection>
 
             <BaseTable
                 column={columnProcessType}

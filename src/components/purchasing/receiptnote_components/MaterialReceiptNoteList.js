@@ -38,10 +38,6 @@ const MaterialReceiptNoteList = () => {
             sortable: true
         },
         {
-            name: 'Total material received',
-            selector: row => row.materialreceipt_set.length,
-        },
-        {
             name: '',
             selector: row => <NavigationDetailButton
                 url={`/home/purchasing/shipments-and-receipts/material/${row.id}`}

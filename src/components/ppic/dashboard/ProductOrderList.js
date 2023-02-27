@@ -1,52 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 
 import { useRequest } from '../../../hooks'
-
-import { BaseTableExpanded } from '../../tables'
-import { TextInput, Paper } from "@mantine/core";
-
-import { IconBarcode, IconCodeAsterix, IconUserCheck, } from "@tabler/icons";
-
-
-
-const ExpandedProductList = ({ data }) => {
-    return (
-        <Paper m='xs' >
-
-
-            <TextInput
-                label='Customer name'
-                readOnly
-                value={data.customer.name}
-                icon={<IconUserCheck />}
-                radius='md'
-                variant='filled'
-                m='xs'
-            />
-            <TextInput
-                m='xs'
-                variant="filled"
-                readOnly
-                label='Product name'
-                value={data.name}
-                icon={<IconBarcode />}
-                radius='md'
-            />
-
-            <TextInput
-                m='xs'
-                variant="filled"
-                readOnly
-                label='Product number'
-                value={data.code}
-                icon={<IconCodeAsterix />}
-                radius='md'
-            />
-
-        </Paper>
-    )
-}
-
+import { BaseTable } from '../../tables'
 
 const ProductOrderList = () => {
 
@@ -69,7 +24,7 @@ const ProductOrderList = () => {
             selector: row => row.code
         },
         {
-            name: 'Rest of the order',
+            name: 'Quantity',
             selector: row => `${row.rest_order} Pcs`
         }
     ], [])
@@ -90,10 +45,9 @@ const ProductOrderList = () => {
 
     return (
         <>
-            <BaseTableExpanded
+            <BaseTable
                 column={columnProductOrderList}
                 data={productOrder}
-                expandComponent={ExpandedProductList}
                 noData="No product order"
             />
         </>

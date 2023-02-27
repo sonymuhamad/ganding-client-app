@@ -234,57 +234,31 @@ const DeliveryScheduleList = ({ data, productOrderList, handleChangeDeliverySche
         {
             name: 'Product',
             selector: row => row.product_order.product.name,
-            style: {
-                paddingLeft: 0,
-                marginRight: 0
-            }
-        },
-        {
-            name: 'Product number',
-            selector: row => row.product_order.product.code,
-            style: {
-                paddingLeft: 0,
-                marginRight: 0
-            }
         },
         {
             name: 'Date',
             selector: row => row.date,
             sortable: true,
-            style: {
-                paddingLeft: 0,
-                marginRight: 0
-            }
         },
         {
-            name: 'Quantity',
-            selector: row => row.quantity,
-            style: {
-                paddingLeft: 0,
-                marginRight: 0
-            }
+            name: 'Rencana',
+            selector: row => `${row.quantity} pcs`,
+        },
+        {
+            name: 'Dikirim',
+            selector: row => `${row.fulfilled_quantity} pcs`,
         },
         {
             name: '',
             selector: row => <ButtonEdit
                 onClick={() => openModalEditDeliverySchedule(row)}
             />,
-            style: {
-                paddingLeft: 0,
-                marginLeft: -30,
-                marginRight: 0
-            }
         },
         {
             name: '',
             selector: row => <ButtonDelete
                 onClick={() => openModalDeleteSchedule(row.id)}
             />,
-            style: {
-                paddingLeft: 0,
-                marginLeft: -30,
-                marginRight: 0
-            }
         }
     ], [openModalDeleteSchedule, openModalEditDeliverySchedule])
 

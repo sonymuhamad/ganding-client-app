@@ -1,6 +1,7 @@
 import React from "react"
-import { TextInput, Group, Textarea } from "@mantine/core"
+import { Group, Textarea } from "@mantine/core"
 import { IconUserCheck, IconUser, IconCodeAsterix, IconClipboardList, IconTruck, IconCalendar } from "@tabler/icons"
+import { ReadOnlyTextInput } from "../../../custom_components"
 
 const SectionDetailDeliveryNoteSubcont = (
     { supplierName, code, date, driverName, vehicleNumber, note }
@@ -8,22 +9,16 @@ const SectionDetailDeliveryNoteSubcont = (
 
     return (
         <>
-            <TextInput
-                readOnly
-                variant='filled'
+            <ReadOnlyTextInput
                 label='Supplier'
                 m='xs'
-                radius='md'
                 icon={<IconUserCheck />}
                 value={supplierName}
             />
 
-            <TextInput
+            <ReadOnlyTextInput
                 label='Delivery number'
-                variant='filled'
                 m='xs'
-                radius='md'
-                readOnly
                 icon={<IconCodeAsterix />}
                 value={code}
             />
@@ -31,29 +26,20 @@ const SectionDetailDeliveryNoteSubcont = (
             <Group m='xs' grow >
 
 
-                <TextInput
+                <ReadOnlyTextInput
                     label='Delivery date'
-                    readOnly
-                    variant="filled"
-                    radius='md'
                     icon={<IconCalendar />}
                     value={new Date(date).toDateString()}
                 />
 
-                <TextInput
+                <ReadOnlyTextInput
                     label='Driver name'
-                    readOnly
-                    variant='filled'
-                    radius='md'
                     icon={<IconUser />}
                     value={driverName}
                 />
 
-                <TextInput
+                <ReadOnlyTextInput
                     label='Vehicle number'
-                    readOnly
-                    variant='filled'
-                    radius='md'
                     icon={<IconTruck />}
                     value={vehicleNumber}
                 />

@@ -31,16 +31,16 @@ const DeliveryReport = ({ productOrderList, noSalesOrder, salesOrderDate, custom
 
 
         let count = 0
-        return productOrderList.map(productOrder => {
+        return productOrderList.map((productOrder, indx) => {
             const { productdelivercustomer_set, total_deliver, product } = productOrder
             const { name, code } = product
 
             const productDeliver = productdelivercustomer_set.map((pDeliver, index) => {
-                const { delivery_note_customer, quantity } = pDeliver
+                const { delivery_note_customer, quantity, id } = pDeliver
                 const date = new Date(delivery_note_customer.date)
                 count += 1
                 return (
-                    <tr key={index}  >
+                    <tr key={id + index}  >
                         <td>{count}</td>
                         <td>{delivery_note_customer.code}</td>
                         <td>{noSalesOrder}</td>
@@ -53,10 +53,14 @@ const DeliveryReport = ({ productOrderList, noSalesOrder, salesOrderDate, custom
             })
 
             return (
-                <>
+                <React.Fragment
+                    key={productOrder.id}
+                >
                     {productDeliver}
 
-                    <tr>
+                    <tr
+                        key={productOrder.id + indx}
+                    >
                         <td colSpan={6}
                             style={{
                                 textAlign: 'center',
@@ -64,7 +68,7 @@ const DeliveryReport = ({ productOrderList, noSalesOrder, salesOrderDate, custom
                         >TOTAL</td>
                         <td>{total_deliver}</td>
                     </tr>
-                </>
+                </React.Fragment>
             )
 
         })

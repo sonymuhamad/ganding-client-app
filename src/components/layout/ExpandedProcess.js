@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { Text, Container } from "@mantine/core";
-import DataTable from "react-data-table-component";
+import { Text, Container, Paper, Divider } from "@mantine/core";
+import { BaseTable } from "../tables";
 
 
 export default function ExpandedProcess({ data }) {
@@ -51,29 +51,46 @@ export default function ExpandedProcess({ data }) {
 
     return (
 
-        <Container p='md' >
+        <Paper m='xs' >
 
+            {data.requirementmaterial_set.length > 0 &&
 
-            <Text weight={700} >
-                Requirement material
-            </Text>
+                <Text
+                    color='dimmed'
+                    align="center"
+                    size='sm'
+                >
+                    Bill of material
+                </Text>
+            }
 
-            <DataTable
-                columns={columnReqMaterial}
+            <BaseTable
+                column={columnReqMaterial}
                 data={data.requirementmaterial_set}
-                highlightOnHover={true}
+                noData='Proses ini tidak menggunakan material'
             />
 
-            <Text mt='md' weight={700}  >
-                Requirement product
-            </Text>
+            <Divider
+                my='xs'
+                size='md'
+            />
 
-            <DataTable
-                columns={columnReqProduct}
+            {data.requirementproduct_set.length > 0 &&
+                <Text
+                    color='dimmed'
+                    align='center'
+                    size='sm'
+                >
+                    Product assembly
+                </Text>
+            }
+
+            <BaseTable
+                column={columnReqProduct}
                 data={data.requirementproduct_set}
-                highlightOnHover={true}
+                noData='Proses ini tidak menggunakan product assembly'
             />
-        </Container>
+        </Paper>
 
     )
 }
