@@ -6,14 +6,16 @@ export const AuthContext = createContext(
     {
         user: {
             name: null,
-            group: null,
-            token: null
+            division: null,
+            token: null,
+            groups: [],
         },
         signIn: () => { },
         signOut: () => { },
         loggedUser: null,
-        setLoginUser: () => { },
-        setRedirect: () => { },
+        resetToken: () => { },
+        changeDivision: () => { },
+        restrictedAccessHandler: () => { },
     }
 )
 

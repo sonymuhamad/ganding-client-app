@@ -2,10 +2,11 @@ import React, { useRef, useEffect, useContext, useState } from "react";
 import { Container, Button, Card, Text, TextInput, Title, Image, Paper, PasswordInput, LoadingOverlay } from "@mantine/core";
 import Typed from "typed.js";
 import { IconUser, IconKey, IconEyeCheck, IconEyeOff, IconLogin } from "@tabler/icons";
-import { loginpageStyle } from "../styles/loginpageStyle";
-import { AuthContext } from '../context/AuthContext'
+import { loginpageStyle } from "../styles";
+import { AuthContext } from '../context'
 import { useForm } from "@mantine/form";
 import { useNavigate } from "react-router-dom";
+import { FailedNotif } from "./notifications";
 
 const Login = () => {
 
@@ -29,6 +30,9 @@ const Login = () => {
             await auth.signIn(data)
         } catch (e) {
             form.setErrors({ ...e.message })
+            if (e.message.groups) {
+                FailedNotif(e.message.groups)
+            }
         } finally {
             setVisible(false)
         }

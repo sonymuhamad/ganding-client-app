@@ -1,30 +1,28 @@
-import React from "react";
-import { Breadcrumbs, Text, Button } from "@mantine/core";
+import React, { useMemo } from "react";
+import { Breadcrumbs, Text, Anchor } from "@mantine/core";
 import { Link } from "react-router-dom";
 
 export default function BreadCrumb({ links }) {
 
 
-    const items = links.map((link) => {
-        return (
-            <Button variant="subtle" radius='xl' component={Link} to={link.path} key={link.path} >
+    const items = useMemo(() => {
+        return links.map((link) => {
+            return (
+                <Anchor variant="subtle" radius='xl' component={Link} to={link.path} key={link.path} >
 
-                <Text transform='capitalize' color='light' size='lg'  >
-                    {link.label}
-                </Text>
+                    <Text transform='capitalize' color='blue' size='lg'  >
+                        {link.label}
+                    </Text>
 
-            </Button>
-        )
-    })
+                </Anchor>
+            )
+        })
+    }, [links])
+
     return (
 
-        <Breadcrumbs separator=
-            {
-                <Text size='lg' color='dimmed' >
-                    {'~>'}
-                </Text>
-            }
-            mb='sm'
+        <Breadcrumbs separator='/'
+            mb='lg'
         >
             {items}
         </Breadcrumbs>

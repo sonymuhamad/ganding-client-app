@@ -1,17 +1,31 @@
-import React from "react";
-import { AppShell, Navbar, Header, Footer, Group, Menu, Text, Button, Image, ScrollArea, NavLink, Aside, MediaQuery } from "@mantine/core";
-import { IconUserCircle, IconPencil, IconLogout } from "@tabler/icons";
-import { appshellStyle } from "../../styles/appshellStyle";
-import Time from "./Time";
-import { useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import React, { useCallback, useContext } from "react";
+import { AppShell, Navbar, Header, Footer, Group, Menu, Text, Button, Image, NavLink, Tooltip } from "@mantine/core";
+import { IconUserCircle, IconLogout } from "@tabler/icons";
+import { appshellStyle } from "../../styles"
+import { AuthContext } from "../../context";
+import { DivisionIcons } from "../../services";
 import { openConfirmModal } from "@mantine/modals";
 
-
-const BaseLayout = ({ outlet, navlink, asideContent }) => {
+const BaseLayout = ({ children, navlink }) => {
 
     const { classes } = appshellStyle()
     const auth = useContext(AuthContext)
+
+
+
+    const openConfirmChangeDivision = useCallback((name) => openConfirmModal({
+        title: `Switch division to ${name} `,
+        children: (
+            <Text size='sm' >
+                Are you sure?, this action will change access right to selected division
+            </Text>
+        ),
+        radius: 'md',
+        labels: { confirm: 'Yes, switch ', cancel: "No, don't switch it" },
+        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+        confirmProps: { radius: 'md' },
+        onConfirm: () => auth.changeDivision(name)
+    }), [auth])
 
     return (
         <>
@@ -26,30 +40,26 @@ const BaseLayout = ({ outlet, navlink, asideContent }) => {
                             <div className={classes.innerHeaderLeft}  >
                                 <Group position="left" >
 
-                                    <Image src="/logoganding.png" radius='xl' className={classes.image} />
+                                    <Image src="/logo.png" radius='xl' className={classes.image} />
 
                                     <Text variant="gradient"
                                         gradient={{ from: 'indigo', to: 'cyan', deg: 90 }}
                                         weight={700} >
-                                        Ganding Enterprise System
+                                        Supply Chain Management System
                                     </Text>
                                 </Group>
                             </div>
 
                             <div className={classes.innerHeaderRight} >
 
-                                <Group position="left" >
+                                <Group position="left"  >
 
-                                    <Text className={classes.responsiveText} color='dimmed' align="left" >
-                                        <Time />
-                                    </Text>
-
-                                    <Menu openDelay={50} closeDelay={400} mb='xs'   >
+                                    <Menu openDelay={50} closeDelay={400} mb='xs' position="left-start" withArrow  >
 
                                         <Menu.Target height='xl' >
 
                                             <Button
-                                                size='lg'
+                                                size='xl'
                                                 radius='xl'
                                                 color='dark.4'
                                                 variant="subtle"
@@ -60,16 +70,41 @@ const BaseLayout = ({ outlet, navlink, asideContent }) => {
                                                     },
                                                 })}
 
-                                                leftIcon={<IconUserCircle width={45} height={45} color='#101113' />}
+                                                leftIcon={<IconUserCircle width={40} height={40} color='#101113' />}
 
                                             >
 
-                                                <Text className={classes.responsiveText} transform="capitalize" >
-                                                    {auth.user.username} || {auth.user.division} Division
+                                                <Text className={classes.responsiveTitleMenu} transform="capitalize" >
+                                                    {auth.user.username} || {auth.user.division}
                                                 </Text>
 
                                             </Button>
                                         </Menu.Target>
+
+                                        <Menu.Dropdown>
+                                            <Menu.Label>
+                                                Division
+                                            </Menu.Label>
+
+                                            {auth.user.groups.filter(group => group.name !== auth.user.division).map(group => (
+                                                <Menu.Item icon={DivisionIcons[group.id]}
+                                                    onClick={() => openConfirmChangeDivision(group.name)}
+                                                    key={group.id}
+                                                >
+                                                    <Tooltip
+                                                        label={`Change to ${group.name}`}
+                                                    >
+
+                                                        <Text transform="capitalize" >
+                                                            {group.name}
+                                                        </Text>
+
+                                                    </Tooltip>
+                                                </Menu.Item>
+                                            ))}
+
+                                        </Menu.Dropdown>
+
                                     </Menu>
                                 </Group>
                             </div>
@@ -107,7 +142,7 @@ const BaseLayout = ({ outlet, navlink, asideContent }) => {
 
                     >
 
-                        <Navbar.Section className={classes.bodyNav} grow component={ScrollArea}  >
+                        <Navbar.Section className={classes.bodyNav} grow   >
 
                             {navlink}
 
@@ -115,17 +150,6 @@ const BaseLayout = ({ outlet, navlink, asideContent }) => {
 
 
                         <Navbar.Section className={classes.footerNav} >
-
-
-                            <NavLink label=
-                                {
-                                    <Text weight={600} className={classes.responsiveText}>
-                                        Edit profile
-                                    </Text>
-                                }
-                                icon={<IconPencil size={19} stroke={2} />}
-
-                                className={classes.link} />
 
                             <NavLink label=
                                 {
@@ -140,20 +164,9 @@ const BaseLayout = ({ outlet, navlink, asideContent }) => {
 
                     </Navbar>
                 }
-
-                aside={
-                    asideContent ?
-                        <MediaQuery smallerThan="sm" styles={{ display: 'none' }}>
-                            <Aside p="md" hiddenBreakpoint="sm" hidden width={{ sm: 200, lg: 300 }}>
-                                <Text>Application sidebar</Text>
-                            </Aside>
-                        </MediaQuery>
-                        : null
-                }
-
             >
 
-                {outlet}
+                {children}
 
             </AppShell >
 

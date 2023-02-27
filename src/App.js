@@ -1,15 +1,22 @@
-import './App.css'
-import { Link, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { MantineProvider } from '@mantine/core'
-import { AuthContext } from './context/AuthContext'
-import { useMemo, useEffect } from 'react'
+import { AuthContext, LoaderContext } from './context/'
+import { useMemo } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { NotificationsProvider } from '@mantine/notifications'
 import { ModalsProvider } from '@mantine/modals'
 
+
+import { Chart, registerables } from 'chart.js';
+import { useLoader } from './hooks/useLoader'
+
 function App() {
-  const { signIn, signOut, user, resetToken } = useAuth()
-  const value = useMemo(() => ({ user, signIn, signOut, resetToken }))
+  Chart.register(...registerables)
+  const props = useAuth()
+  const { Loader, changeVisibility } = useLoader()
+
+  const value = useMemo(() => ({ ...props }), [props])
+  const loaderValue = useMemo(() => ({ changeVisibility: changeVisibility }), [changeVisibility])
 
   return (
     <>
@@ -23,7 +30,7 @@ function App() {
           primaryColor: 'blue',
           defaultRadius: 0,
           headings: {
-            fontFamily: 'Monospace',
+            fontFamily: 'Arial, Helvetica, sans-serif',
             fontWeight: 1000
           },
           components: {
@@ -46,7 +53,12 @@ function App() {
 
             <ModalsProvider>
 
-              <Outlet />
+              <LoaderContext.Provider value={loaderValue} >
+
+                <Loader />
+                <Outlet />
+
+              </LoaderContext.Provider>
 
             </ModalsProvider>
 

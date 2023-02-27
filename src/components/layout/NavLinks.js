@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { NavLink, Text } from "@mantine/core";
-import { navbarStyle } from '../../styles/navbarStyle'
-import { usePath } from "../../hooks/usePath";
+import { navbarStyle } from '../../styles'
+import { usePath } from "../../hooks";
 
 
 const NavLinks = ({ links }) => {
@@ -11,69 +11,71 @@ const NavLinks = ({ links }) => {
 
     const { getCurrentPath } = usePath()
 
-    const navlink = links.map((link) => {
+    const navlink = useMemo(() => {
+        return links.map((link) => {
 
-        if (link.nested) {
+            if (link.nested) {
 
-            return (
-                <NavLink
-                    label={
-                        <Text weight={700} className={classes.responsiveText} >
+                return (
+                    <NavLink
+                        label={
+                            <Text weight={700} className={classes.responsiveText} >
 
-                            {link.label}
+                                {link.label}
 
-                        </Text>}
-                    icon={link.icon}
-                    childrenOffset={10}
-                    key={link.label}
-                >
+                            </Text>}
+                        icon={link.icon}
+                        childrenOffset={10}
+                        key={link.label}
+                    >
 
-                    {link.nested.map((nestedLink) => {
+                        {link.nested.map((nestedLink) => {
 
-                        return (
-                            <NavLink
+                            return (
+                                <NavLink
 
-                                label={
-                                    <Text weight={600} size='sm' className={classes.responsiveText} >
-                                        {nestedLink.label}
-                                    </Text>
-                                }
-                                icon={nestedLink.icon}
-                                className={cx(classes.link, {
-                                    [classes.linkActive]: getCurrentPath() === nestedLink.url
-                                })}
+                                    label={
+                                        <Text weight={600} size='sm' className={classes.responsiveText} >
+                                            {nestedLink.label}
+                                        </Text>
+                                    }
+                                    icon={nestedLink.icon}
+                                    className={cx(classes.link, {
+                                        [classes.linkActive]: getCurrentPath() === nestedLink.url
+                                    })}
 
-                                component={Link} to={nestedLink.url}
-                                key={nestedLink.label}
-                            />
-                        )
+                                    component={Link} to={nestedLink.url}
+                                    key={nestedLink.label}
+                                />
+                            )
 
-                    })}
+                        })}
 
-                </NavLink>
-            )
+                    </NavLink>
+                )
 
-        } else {
+            } else {
 
-            return (
-                <NavLink label=
-                    {
-                        <Text weight={700} className={classes.responsiveText} >
-                            {link.label}
-                        </Text>
-                    }
-                    icon={link.icon}
-                    className={cx(classes.link, {
-                        [classes.linkActive]: getCurrentPath() === link.url
-                    })}
+                return (
+                    <NavLink label=
+                        {
+                            <Text weight={700} className={classes.responsiveText} >
+                                {link.label}
+                            </Text>
+                        }
+                        icon={link.icon}
+                        className={cx(classes.link, {
+                            [classes.linkActive]: getCurrentPath() === link.url
+                        })}
 
-                    component={Link} to={link.url}
-                    key={link.label}
-                />
-            )
+                        component={Link} to={link.url}
+                        key={link.label}
+                    />
+                )
 
-        }
-    })
+            }
+        })
+    }, [getCurrentPath, classes, cx, links])
 
 
     return (

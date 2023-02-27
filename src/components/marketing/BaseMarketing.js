@@ -1,70 +1,58 @@
-import React, { useContext, useState } from 'react'
+import React, { useMemo } from 'react'
 
-import { IconLayoutDashboard, IconClipboardText, IconReportMoney, IconUsers, IconCalendarEvent, IconFileReport, } from "@tabler/icons";
-import { Outlet, useLocation, Link } from "react-router-dom";
+import { IconLayoutDashboard, IconReportMoney, IconUsers, IconTruckDelivery, IconClipboardList, } from "@tabler/icons";
+import { Outlet } from "react-router-dom";
 
-
-import { AuthContext } from '../../context/AuthContext'
-import NavLinks from '../layout/NavLinks';
-import BaseLayout from '../layout/BaseLayout';
-import { Text, Breadcrumbs } from '@mantine/core';
+import { NavLinks, BaseLayout } from '../layout'
 
 
 const BaseMarketing = () => {
 
-    const value = useContext(AuthContext)
-    const location = useLocation()
 
-    const links = [
-        {
-            label: 'Dashboard',
-            activeLabel: '',
-            icon: <IconLayoutDashboard stroke={2} size={20} />,
-            url: '/home/marketing'
-        },
-        {
-            label: 'Customers',
-            activeLabel: 'Customers',
-            icon: <IconUsers stroke={2} size={20} />,
-            url: '/home/marketing/customers'
-        },
-        {
-            label: 'Sales Order',
-            activeLabel: 'Sales Order',
-            icon: <IconReportMoney stroke={2} size={20} />,
-            url: '/home/marketing/sales-order'
-        },
-        {
-            label: 'Delivery Note',
-            activeLabel: 'Delivery Note',
-            icon: <IconClipboardText stroke={2} size={20} />,
-            url: '/home/marketing/delivery-note'
-        },
-        {
-            label: 'Report',
-            icon: <IconFileReport stroke={2} size={20} />,
-            nested: [
-                {
-
-                    label: 'Delivery Schedule',
-                    activeLabel: 'Delivery Schedule',
-                    icon: <IconCalendarEvent stroke={2} size={20} />,
-                    url: '/home/marketing/delivery-schedule'
-                }
-            ]
-        }
-
-
-    ]
+    const links = useMemo(() => {
+        return [
+            {
+                label: 'Dashboard',
+                activeLabel: '',
+                icon: <IconLayoutDashboard stroke={2} size={20} />,
+                url: '/home/marketing'
+            },
+            {
+                label: 'Customers',
+                activeLabel: 'Customers',
+                icon: <IconUsers stroke={2} size={20} />,
+                url: '/home/marketing/customers'
+            },
+            {
+                label: 'Sales Order',
+                activeLabel: 'Sales Order',
+                icon: <IconClipboardList stroke={2} size={20} />,
+                url: '/home/marketing/sales-order'
+            },
+            {
+                label: 'Delivery Note',
+                activeLabel: 'Delivery Note',
+                icon: <IconTruckDelivery stroke={2} size={20} />,
+                url: '/home/marketing/delivery-note'
+            },
+            {
+                label: 'Invoice',
+                activeLabel: 'Invoice',
+                icon: <IconReportMoney stroke={2} size={20} />,
+                url: '/home/marketing/invoice'
+            },
+        ]
+    }, [])
 
 
 
     return (
         <>
             <BaseLayout
-                outlet={<Outlet links={links} />}
                 navlink={<NavLinks links={links} />}
-            />
+            >
+                <Outlet />
+            </BaseLayout>
 
         </>
     )
