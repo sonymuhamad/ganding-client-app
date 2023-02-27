@@ -4,6 +4,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRequest } from "../../../hooks";
 import { BaseTable } from "../../tables";
 
+import { NavigationDetailButton } from '../../custom_components'
+
 const FinishedSalesOrderList = () => {
 
     const { Get } = useRequest()
@@ -29,12 +31,9 @@ const FinishedSalesOrderList = () => {
         },
         {
             name: '',
-            selector: row => <Button
-                radius='md'
-                onClick={() => console.log('clicked')}
-            >
-                Make invoice
-            </Button>
+            selector: row => <NavigationDetailButton
+                url={`/home/marketing/sales-order/${row.id}`}
+            />
         }
     ], [])
 

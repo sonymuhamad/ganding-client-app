@@ -1,34 +1,38 @@
 import React, { useState, useEffect, useMemo } from "react";
-
-import { IconPlus, IconSearch, IconDotsCircleHorizontal } from "@tabler/icons";
-import { Button, Group, TextInput, } from "@mantine/core";
-import { useRequest } from "../../../hooks";
+import { useRequest, useSearch } from "../../../hooks";
 import { BaseTable } from "../../tables";
 import { Link } from "react-router-dom";
 
+import { ButtonAdd, HeadSection, SearchTextInput, NavigationDetailButton } from "../../custom_components";
 
 
 const ProductionReport = () => {
 
     const { Get } = useRequest()
     const [reports, setReports] = useState([])
-    const [searchReport, setSearchReport] = useState('')
+    const { lowerCaseQuery, query, setValueQuery } = useSearch()
 
 
     const filteredReports = useMemo(() => {
+        return reports.filter(report => {
+            const { product, process, date } = report
+            const { name, code } = product
+            const { process_name } = process
 
-        const filteringVal = searchReport.toLowerCase()
+            return name.toLowerCase().includes(lowerCaseQuery) || process_name.toLowerCase().includes(lowerCaseQuery) || date.toLowerCase().includes(lowerCaseQuery) || code.toLowerCase().includes(lowerCaseQuery)
+        })
 
-
-        return reports.filter(report => report.product.name.toLowerCase().includes(filteringVal) || report.process.process_name.toLowerCase().includes(filteringVal) || report.created.toLowerCase().includes(filteringVal))
-
-    }, [searchReport, reports])
+    }, [lowerCaseQuery, reports])
 
 
     const ColumnProductionReport = useMemo(() => [
         {
-            name: 'Product',
+            name: 'Product name',
             selector: row => row.product.name
+        },
+        {
+            name: 'Product number',
+            selector: row => row.product.code
         },
         {
             name: 'Process',
@@ -36,15 +40,14 @@ const ProductionReport = () => {
         },
         {
             name: 'Date',
-            selector: row => new Date(row.date).toDateString()
+            selector: row => row.date,
+            sortable: true
         },
         {
             name: '',
-            selector: row => row.buttonEdit
-        },
-        {
-            name: '',
-            selector: row => row.buttonDetail
+            selector: row => <NavigationDetailButton
+                url={`/home/ppic/production/${row.id}`}
+            />
         },
     ], [])
 
@@ -54,25 +57,7 @@ const ProductionReport = () => {
         const fetchProductionReport = async () => {
             try {
                 const reports = await Get('production-report')
-                const productionReport = reports.map(report => ({
-                    ...report,
-                    buttonDetail:
-                        <Button
-                            leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                            color='teal.8'
-                            variant='subtle'
-                            radius='md'
-                            mx='xs'
-
-                            component={Link}
-                            to={`/home/ppic/production/${report.id}`}
-                        >
-                            Detail
-                        </Button>,
-
-                }))
-
-                setReports(productionReport)
+                setReports(reports)
             } catch (e) {
                 console.log(e)
             }
@@ -82,26 +67,18 @@ const ProductionReport = () => {
 
     return (
         <>
-            <Group position="right" >
-
-                <TextInput
-                    icon={<IconSearch />}
-                    radius='md'
-                    value={searchReport}
-                    onChange={e => setSearchReport(e.target.value)}
-                    placeholder="Search report"
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
-
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+                <ButtonAdd
                     component={Link}
                     to='/home/ppic/production/new'
                 >
                     Production
-                </Button>
-            </Group>
+                </ButtonAdd>
+            </HeadSection>
 
             <BaseTable
                 column={ColumnProductionReport}

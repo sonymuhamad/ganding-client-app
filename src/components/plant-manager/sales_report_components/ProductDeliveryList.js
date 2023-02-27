@@ -18,16 +18,12 @@ const ProductDeliveryList = () => {
             selector: row => row.product_order.product.name
         },
         {
-            name: 'Product number',
-            selector: row => row.product_order.product.code
-        },
-        {
             name: 'Delivery date',
             selector: row => row.delivery_note_customer.date,
             sortable: true
         },
         {
-            name: 'Quantity shipped',
+            name: 'Dikirim',
             selector: row => `${row.quantity} Unit`
         },
         {

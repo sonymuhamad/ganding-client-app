@@ -1,455 +1,103 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import useScrollSpy from 'react-use-scrollspy'
-
-import { useRequest } from "../../../hooks";
-import { sectionStyle } from "../../../styles";
-import BreadCrumb from "../../BreadCrumb";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom"
 import { SuccessNotif, FailedNotif } from "../../notifications";
-import { BaseAside, CustomSelectComponent } from '../../layout'
+import { BaseContent } from '../../layout'
+import { useRequest, useConfirmDelete } from "../../../hooks";
 
-import { Button, Group, TextInput, Text, Select, Textarea, Title, Divider, Paper, UnstyledButton, NumberInput, Center } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { DatePicker } from "@mantine/dates";
-import { closeAllModals, openConfirmModal, openModal } from "@mantine/modals";
-import { IconClipboardCheck, IconUser, IconCodeAsterix, IconPlus, IconCalendarEvent, IconDownload, IconTruckDelivery, IconUserCheck, IconTrashX, IconEdit, IconX, IconBarcode, IconRegex, IconPackgeExport, IconChecklist, IconCalendar, IconClipboard, IconPrinter } from "@tabler/icons";
-
+import { openModal } from "@mantine/modals";
 import { DeliveryNoteReport } from "../../outputs";
-
-
-
-const ModalAddProductShipped = ({ idDeliveryNote, setAction }) => {
-
-    const { Post, Get, Loading } = useRequest()
-    const [quantity, setQuantity] = useState('')
-    const [description, setDescription] = useState('')
-    const [selectedProductOrder, setSelectedProductOrder] = useState(null)
-    const [selectedSchedule, setSelectedSchedule] = useState(null)
-    const [errorProductOrder, setErrorProductOrder] = useState(false)
-
-    const [scheduleList, setScheduleList] = useState([])
-    const [productOrderList, setProductOrderList] = useState([])
-
-    const fetch = useCallback(async () => {
-        try {
-            const schedulelist = await Get('delivery-schedule')
-            const productorderList = await Get('product-order-list')
-            setScheduleList(schedulelist)
-            setProductOrderList(productorderList)
-
-        } catch (e) {
-            console.log(e)
-        }
-    }, [Get])
-
-    useEffect(() => {
-        fetch()
-    }, [fetch])
-
-
-
-
-
-    const handleAddProductShipped = useCallback(async (e) => {
-        e.preventDefault()
-        let data
-        if (selectedSchedule === null) {
-
-            data = {
-                quantity: quantity,
-                product_order: selectedProductOrder,
-                delivery_note_customer: idDeliveryNote,
-                description: description
-            }
-        } else {
-            data = {
-                quantity: quantity,
-                product_order: selectedProductOrder,
-                delivery_note_customer: idDeliveryNote,
-                schedules: selectedSchedule,
-                description: description
-            }
-        }
-
-        try {
-
-            await Post(data, 'product-delivery')
-            SuccessNotif('Add product shipped success')
-            setAction(prev => prev + 1)
-            closeAllModals()
-        } catch (e) {
-
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
-            else if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-            } else {
-                FailedNotif('Add product shipped failed')
-            }
-
-            if (e.message.data.product_order) {
-                setErrorProductOrder(e.message.data.product_order)
-            }
-        }
-    }, [Post, quantity, selectedProductOrder, selectedSchedule, idDeliveryNote, setAction, description])
-
-    const handleChangeSelectSchedule = useCallback((value) => {
-        const selectedSchedule = scheduleList.find(schedule => schedule.id === parseInt(value))
-        setSelectedSchedule(value)
-
-        if (value === null) {
-            setQuantity(undefined)
-            setSelectedSchedule(null)
-            setSelectedProductOrder(null)
-
-        } else {
-            setQuantity(selectedSchedule.quantity)
-            setSelectedProductOrder(selectedSchedule.product_order.id)
-            setSelectedSchedule(selectedSchedule.id)
-
-        }
-
-    }, [scheduleList])
-
-    return (
-        <>
-
-            <form onSubmit={handleAddProductShipped} >
-                <Loading />
-
-                <Select
-                    icon={<IconCalendarEvent />}
-                    m='xs'
-                    label='Schedule list'
-                    placeholder="Select product from schedules"
-                    radius='md'
-                    value={selectedSchedule}
-                    data={scheduleList.map(schedule => ({ value: schedule.id, label: schedule.product_order.product.name, date: schedule.date, quantity: schedule.quantity }))}
-                    itemComponent={CustomSelectComponent}
-                    clearable
-                    searchable
-                    nothingFound='Not found'
-                    onChange={handleChangeSelectSchedule}
-                />
-
-                <Divider variant="dashed" />
-
-                <Select
-                    required
-                    placeholder="Select product to send"
-                    label='Product'
-                    radius='md'
-                    error={errorProductOrder}
-                    icon={<IconBarcode />}
-                    m='xs'
-                    data={productOrderList.map(productOrder => ({ value: productOrder.id, label: productOrder.product.name }))}
-                    value={selectedProductOrder}
-                    onChange={val => {
-                        setSelectedProductOrder(val)
-
-                        if (selectedSchedule) {
-                            setSelectedSchedule(null)
-                        }
-
-                    }}
-                />
-
-                <TextInput
-                    icon={<IconRegex />}
-                    readOnly
-                    radius='md'
-                    m='xs'
-                    value={selectedProductOrder !== null ? productOrderList.find(productOrder => productOrder.id === parseInt(selectedProductOrder)).product.code : ''}
-                    label='Product number'
-                />
-
-                <Group m='xs' grow >
-
-                    <TextInput
-                        icon={<IconCodeAsterix />}
-                        readOnly
-                        radius='md'
-                        variant="filled"
-                        value={selectedProductOrder !== null ? productOrderList.find(productOrder => productOrder.id === parseInt(selectedProductOrder)).sales_order.code : ''}
-                        label='Sales order number'
-                    />
-
-                    <TextInput
-                        icon={<IconCalendar />}
-                        readOnly
-                        radius='md'
-                        variant='filled'
-                        value={selectedProductOrder !== null ? new Date(productOrderList.find(productOrder => productOrder.id === parseInt(selectedProductOrder)).sales_order.date).toDateString() : ''}
-                        label='Sales order date'
-                    />
-
-                    <NumberInput
-                        required
-                        icon={<IconPackgeExport />}
-                        placeholder="Input quantity product to send"
-                        label='Quantity product shipped'
-                        radius='md'
-                        value={quantity}
-                        onChange={val => setQuantity(val)}
-                    />
-
-                </Group>
-
-                <Textarea
-                    m='xs'
-                    placeholder="Input keterangan"
-                    label='Keterangan'
-                    radius='md'
-                    icon={<IconClipboard />}
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                />
-
-
-                <Button
-                    type='submit'
-                    fullWidth
-                    radius='md'
-                    my='lg'
-                    mx='xs'
-                    leftIcon={<IconDownload />}
-                >
-                    Save
-                </Button>
-
-            </form>
-
-        </>
-    )
-}
-
-const ModalEditProductShipped = ({ data, setAction, idDeliveryNote }) => {
-
-    const { Put, Loading } = useRequest()
-    const [quantity, setQuantity] = useState('')
-    const [description, setDescription] = useState('')
-    const [errorQuantity, setErrorQuantity] = useState(false)
-
-    useEffect(() => {
-        setQuantity(data.quantity)
-        setDescription(data.description)
-    }, [data.quantity, data.description])
-
-    const handleSubmitEditProductShipped = useCallback(async (e) => {
-
-        e.preventDefault()
-
-        const dataSubmitted = {
-            delivery_note_customer: idDeliveryNote,
-            quantity: quantity,
-            product_order: data.product_order.id,
-            description: description
-        }
-
-        try {
-            await Put(data.id, dataSubmitted, 'product-delivery')
-            SuccessNotif('Edit product shipped success')
-            setAction(prev => prev + 1)
-            closeAllModals()
-        } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            } else if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-            } else {
-                FailedNotif('Edit product shipped failed')
-            }
-            if (e.message.data.quantity) {
-                setErrorQuantity(e.message.data.quantity)
-            }
-        }
-
-    }, [Put, quantity, idDeliveryNote, data, setAction, description])
-
-    return (
-        <>
-
-            <form onSubmit={handleSubmitEditProductShipped} >
-
-                <Loading />
-
-                <TextInput
-                    label='Product name'
-                    m='xs'
-                    variant='filled'
-                    readOnly
-                    radius='md'
-                    value={data.product_order.product.name}
-                    icon={<IconBarcode />}
-                />
-
-                <TextInput
-                    icon={<IconRegex />}
-                    readOnly
-                    radius='md'
-                    m='xs'
-                    variant='filled'
-                    value={data.product_order.product.code}
-                    label='Product number'
-                />
-
-                <Group m='xs' grow >
-
-                    <TextInput
-                        icon={<IconCodeAsterix />}
-                        readOnly
-                        radius='md'
-                        variant='filled'
-                        value={data.product_order.sales_order.code}
-                        label='Sales order number'
-                    />
-
-                    <TextInput
-                        icon={<IconCalendar />}
-                        readOnly
-                        variant='filled'
-                        radius='md'
-                        value={new Date(data.product_order.sales_order.date).toDateString()}
-                        label='Sales order date'
-                    />
-
-
-                    <NumberInput
-                        required
-                        icon={<IconPackgeExport />}
-                        min={0}
-                        error={errorQuantity}
-                        placeholder='Input quantity product to send'
-                        label='Quantity product shipped'
-                        radius='md'
-                        value={quantity}
-                        onChange={val => setQuantity(val)}
-                    />
-
-                </Group>
-
-                <Textarea
-                    m='xs'
-                    radius='md'
-                    placeholder="Input keterangan"
-                    label='Keterangan'
-                    icon={<IconClipboard />}
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                />
-
-                <Button
-                    type='submit'
-                    fullWidth
-                    radius='md'
-                    my='lg'
-                    mx='xs'
-                    leftIcon={<IconDownload />}
-                >
-                    Save
-                </Button>
-            </form>
-
-
-        </>
-    )
-}
+import { generateDataWithDate, generateDataWithNote } from "../../../services";
+import { SectionProductShipped, SectionDetailDeliveryNote } from "./detail_delivery_note_customer_components";
 
 
 const DetailDeliveryNote = () => {
 
-    const params = useParams()
-    const { classes } = sectionStyle()
-    const { Retrieve, Put, Get, Delete, Loading } = useRequest()
+    const { deliveryNoteId } = useParams()
+    const { Retrieve, Put, Get, Delete } = useRequest()
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Delivery note' })
     const navigate = useNavigate()
 
     const [editAccess, setEditAccess] = useState(false)
-    const [action, setAction] = useState(0)
-    const [breadcrumb, setBreadCrumb] = useState([])
     const [driverList, setDriverList] = useState([])
     const [vehicleList, setVehicleList] = useState([])
-
+    const [productShippedList, setProductShippedList] = useState([])
+    const [customer, setCustomer] = useState({
+        id: '',
+        name: '',
+        address: '',
+        phone: '',
+        email: ''
+    })
     const [data, setData] = useState({
         id: '',
         code: '',
         note: '',
-        customer: {
-            id: '',
-            name: '',
-            address: '',
-            phone: '',
-            email: ''
-        },
         driver: null,
         vehicle: null,
         created: '',
         last_update: '',
         date: '',
-        productdelivercustomer_set: [],
+        customer: '',
     })
 
+
     const form = useForm({
-        initialValues: {
-            id: '',
-            code: '',
-            note: '',
-            customer: '',
-            driver: null,
-            vehicle: null,
-            created: '',
-            last_update: '',
-            date: '',
-        }
+        initialValues: data
     })
 
 
     const links = [
         {
             "label": 'Detail delivery note',
-            "link": '#detail',
+            "link": 'detail',
             'order': 1
         },
         {
             "label": "Products shipped",
-            "link": "#product-shipped",
+            "link": "product-shipped",
             "order": 1
         },
     ]
 
-    const sectionRefs = [
-        useRef(null),
-        useRef(null),
-    ]
-
-    const activeSection = useScrollSpy({
-        sectionElementRefs: sectionRefs,
-        offsetPx: -80
-    })
+    const breadcrumb = useMemo(() => [
+        {
+            path: '/home/ppic',
+            label: 'Ppic'
+        },
+        {
+            path: '/home/ppic/delivery',
+            label: 'Delivery'
+        },
+        {
+            path: `/home/ppic/delivery/${deliveryNoteId}`,
+            label: 'Detail delivery note'
+        }
+    ], [deliveryNoteId])
 
     const [selectedVehicle, selectedDriver] = useMemo(() => {
 
-        const { vehicle, driver } = data
+        const { vehicle, driver } = form.values
         let vehicleNumber = ''
         let driverName = ''
 
         if (vehicle) {
-            const selectedVehicle = vehicleList.find(eachVehicle => eachVehicle.id === parseInt(vehicle))
-            if (selectedVehicle) {
-                const { license_part_number } = selectedVehicle
+            const onSelectedVehicle = vehicleList.find(eachVehicle => eachVehicle.id === parseInt(vehicle))
+            if (onSelectedVehicle) {
+                const { license_part_number } = onSelectedVehicle
                 vehicleNumber = license_part_number
             }
         }
 
         if (driver) {
-            const selectedDriver = driverList.find(eachDriver => eachDriver.id === parseInt(driver))
-            if (selectedDriver) {
-                const { name } = selectedDriver
+            const onSelectedDriver = driverList.find(eachDriver => eachDriver.id === parseInt(driver))
+            if (onSelectedDriver) {
+                const { name } = onSelectedDriver
                 driverName = name
             }
         }
         return [vehicleNumber, driverName]
-    }, [data, vehicleList, driverList])
+    }, [form.values, vehicleList, driverList])
 
     const openModalPrintDeliveryNote = useCallback(() => openModal({
         size: 'auto',
@@ -458,12 +106,23 @@ const DetailDeliveryNote = () => {
             data={data}
             vehicleNumber={selectedVehicle}
             driverName={selectedDriver}
+            customer={customer}
+            productDeliveryList={productShippedList}
         />
     }), [data, selectedDriver, selectedVehicle])
 
+    const handleClickEditButton = useCallback(() => {
+        if (editAccess === true) {
+            form.setValues(data)
+            form.resetDirty()
+        }
+        setEditAccess(prev => !prev)
+
+    }, [editAccess, data])
+
     const handleDeleteDeliveryNote = useCallback(async () => {
         try {
-            await Delete(params.deliveryNoteId, 'delivery-note-management')
+            await Delete(deliveryNoteId, 'delivery-note-management')
             navigate('/home/ppic/delivery')
             SuccessNotif('Delete delivery note success')
         } catch (e) {
@@ -471,41 +130,28 @@ const DetailDeliveryNote = () => {
                 FailedNotif(e.message.data)
             }
         }
-    }, [navigate])
+    }, [navigate, deliveryNoteId])
 
-    const handleDeleteProductShipped = useCallback(async (id) => {
-        try {
-            await Delete(id, 'product-delivery')
-            setAction(prev => prev + 1)
-            SuccessNotif('Delete product shipped success')
-        } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
-        }
+    const setDataForm = useCallback((data) => {
+        form.setValues(data)
+        form.resetDirty()
     }, [])
+
+    const handleSetAfterUpdateData = useCallback((updatedData) => {
+        const { date, ...rest } = updatedData
+        setDataForm({ ...rest, date: new Date(date) })
+    }, [setDataForm])
 
     const handleSubmit = useCallback(async (value) => {
 
-        let validated_data
-        const { note, date, ...data } = value
-
-        if (note === '') {
-            // if note is empty, remove it
-            validated_data = data
-        } else {
-            validated_data = { ...data, note: note }
-        }
-
-        if (date) {
-            // if date is not empty, set input date format to YYYY-MM-DD, so that be able to inputted to django
-            validated_data = { ...validated_data, date: date.toLocaleDateString('en-CA') }
-        }
+        const generatedDataFromDataWithNote = generateDataWithNote(value)
+        const { date, ...rest } = generatedDataFromDataWithNote
+        const validated_data = generateDataWithDate(date, rest)
 
         try {
-            await Put(params.deliveryNoteId, validated_data, 'delivery-note-management')
+            const updatedData = await Put(deliveryNoteId, validated_data, 'delivery-note-management')
+            handleSetAfterUpdateData(updatedData)
             SuccessNotif('Edit delivery note success')
-            setAction(prev => prev + 1)
             setEditAccess(prev => !prev)
         } catch (e) {
             form.setErrors(e.message.data)
@@ -514,419 +160,95 @@ const DetailDeliveryNote = () => {
 
         }
 
-    }, [])
+    }, [handleSetAfterUpdateData, deliveryNoteId])
 
+    const setDataDetailDeliveryNote = useCallback((detailDeliveryNote) => {
+        const { date, customer, productdelivercustomer_set, driver, vehicle, ...restProps } = detailDeliveryNote
+        const dataForForm = { ...restProps, date: new Date(date), customer: customer.id, vehicle: vehicle.id, driver: driver.id }
 
-    const openConfirmSubmit = useCallback((data) => openConfirmModal({
-        title: `Edit delivery note`,
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be saved.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, save', cancel: "No, don't save it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleSubmit(data)
-    }), [handleSubmit])
+        setData(dataForForm)
+        setCustomer(customer)
+        setProductShippedList(productdelivercustomer_set)
+        setDataForm(dataForForm)
 
-    const openConfirmDeleteDeliveryNote = useCallback(() => openConfirmModal({
-        title: `Delete delivery note`,
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteDeliveryNote()
-    }), [handleDeleteDeliveryNote])
-
-    const openConfirmDeleteProductShipped = useCallback((id) => openConfirmModal({
-        title: `Delete product shipped`,
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteProductShipped(id)
-    }), [handleDeleteProductShipped])
-
+    }, [setDataForm])
 
     const fetch = useCallback(async () => {
         try {
-            const detailDeliveryNote = await Retrieve(params.deliveryNoteId, 'delivery-note')
+            const detailDeliveryNote = await Retrieve(deliveryNoteId, 'delivery-note')
             const driverList = await Get('driver')
             const vehicleList = await Get('vehicle')
-
-            const { date, customer, driver, vehicle, ...restProps } = detailDeliveryNote
-            setData({ ...restProps, customer: customer, date: new Date(date), vehicle: vehicle.id, driver: driver.id })
             setDriverList(driverList)
             setVehicleList(vehicleList)
 
-            form.setValues({ ...restProps, date: new Date(date), customer: customer.id, vehicle: vehicle.id, driver: driver.id })
-            form.resetDirty()
-            const breadcrumb = [
-                {
-                    path: '/home/ppic',
-                    label: 'Ppic'
-                },
-                {
-                    path: '/home/ppic/delivery',
-                    label: 'Delivery'
-                },
-                {
-                    path: `/home/ppic/delivery/${params.deliveryNoteId}`,
-                    label: 'Detail delivery note'
-                }
-            ]
-
-            setBreadCrumb(breadcrumb)
+            return setDataDetailDeliveryNote(detailDeliveryNote)
 
         } catch (e) {
             console.log(e)
         }
-    }, [])
+
+    }, [deliveryNoteId, setDataDetailDeliveryNote])
 
     useEffect(() => {
         fetch()
-    }, [fetch, action])
+    }, [fetch])
 
-    const openModalAddProductShipped = useCallback(() => openModal({
-        title: 'Add product shipped',
-        radius: 'md',
-        size: 'xl',
-        children: <ModalAddProductShipped idDeliveryNote={params.deliveryNoteId} setAction={setAction} />
-    }), [])
+    const handleAddProductShipped = useCallback((newProductShipped) => {
+        setProductShippedList(prev => {
+            return [...prev, newProductShipped]
+        })
+    }, [])
 
-    const openModalEditProductShipped = useCallback((data) => openModal({
-        title: 'Edit product shipped',
-        radius: 'md',
-        size: 'xl',
-        children: <ModalEditProductShipped data={data} setAction={setAction} idDeliveryNote={params.deliveryNoteId} />
-    }), [])
+    const handleEditProductShipped = useCallback((updatedProductShipped) => {
+        const { id, quantity, description } = updatedProductShipped
 
+        setProductShippedList(prev => prev.map((eachProductShipped) => {
+            if (eachProductShipped.id === id) {
+                return { ...eachProductShipped, quantity: quantity, description: description }
+            }
+            return eachProductShipped
+        }))
 
+    }, [])
 
+    const handleDeleteProductShipped = useCallback((idDeletedProductShipped) => {
+        setProductShippedList(prev => prev.filter(eachProductShipped => eachProductShipped.id !== idDeletedProductShipped))
 
-    const productDelivered = useMemo(() => {
+    }, [])
 
-        return data.productdelivercustomer_set.map((delivered, index) => (
-
-            <Paper key={delivered.id} radius='md' p='xs' m='xs' withBorder  >
-                <UnstyledButton>
-                    <Group>
-                        <IconBarcode />
-                        <div>
-                            <Text>Product {index + 1}</Text>
-                        </div>
-                    </Group>
-                </UnstyledButton>
-
-
-                <Group position="right" >
-
-                    <Button.Group >
-
-                        <Button
-                            radius='md'
-                            leftIcon={<IconEdit />}
-                            color='blue.6'
-                            size="xs"
-                            onClick={e => openModalEditProductShipped(delivered)}
-                        >
-                            Edit
-                        </Button>
-
-                        <Button
-                            leftIcon={<IconTrashX />}
-                            size="xs"
-                            radius='md'
-                            color='red.6'
-                            onClick={() => openConfirmDeleteProductShipped(delivered.id)}
-                            disabled={parseInt(delivered.quantity) > 0}
-                        >
-                            Delete
-                        </Button>
-                    </Button.Group>
-                </Group>
-
-                <TextInput
-                    m='xs'
-                    icon={<IconBarcode />}
-                    radius='md'
-                    readOnly
-                    value={delivered.product_order.product.name}
-                    variant='filled'
-                    label='Product name'
-
-                />
-
-                <Group grow m='xs'>
-
-
-                    <TextInput
-                        icon={<IconRegex />}
-                        radius='md'
-                        readOnly
-                        value={delivered.product_order.product.code}
-                        variant='filled'
-                        label='Product number'
-                    />
-
-                    <TextInput
-                        icon={<IconCodeAsterix />}
-                        radius='md'
-                        readOnly
-                        value={delivered.product_order.sales_order.code}
-                        variant='filled'
-                        label='Sales order number'
-                    />
-
-                </Group>
-
-                <Textarea
-                    m='xs'
-                    radius='md'
-                    icon={<IconClipboard />}
-                    label='Keterangan'
-                    variant='filled'
-                    readOnly
-                    value={delivered.description}
-                />
-
-                <Group grow m='xs' >
-
-
-                    <TextInput
-                        icon={<IconPackgeExport />}
-                        variant='unstyled'
-                        radius='md'
-                        readOnly
-                        value={delivered.quantity}
-                        label='Quantity shipped'
-                        rightSection={<Text size='sm' color='dimmed' >
-                            pcs
-                        </Text>}
-                    />
-
-                    <TextInput
-                        icon={<IconChecklist />}
-                        radius='md'
-                        readOnly
-                        variant="unstyled"
-                        value={delivered.product_order.ordered}
-                        label='Quantity order'
-                        rightSection={<Text size='sm' color='dimmed' >
-                            pcs
-                        </Text>}
-                    />
-
-                    <TextInput
-                        icon={<IconTruckDelivery />}
-                        radius='md'
-                        readOnly
-                        variant="unstyled"
-                        rightSection={<Text size='sm' color='dimmed' >
-                            pcs
-                        </Text>}
-                        value={delivered.product_order.delivered}
-                        label='Total product shipped'
-                    />
-
-
-
-                </Group>
-
-
-
-
-            </Paper>
-        ))
-    }, [openConfirmDeleteProductShipped, openModalEditProductShipped, data])
-
-
-
+    const contents = [
+        {
+            description: '',
+            component: <SectionDetailDeliveryNote
+                customerName={customer.name}
+                handleClickEditButton={handleClickEditButton}
+                handleSubmit={handleSubmit}
+                handleClickDeleteButton={() => openConfirmDeleteData(handleDeleteDeliveryNote)}
+                openModalPrintDeliveryNote={openModalPrintDeliveryNote}
+                editAccess={editAccess}
+                form={form}
+                vehicleList={vehicleList}
+                driverList={driverList}
+            />
+        },
+        {
+            description: '',
+            component: <SectionProductShipped
+                idDeliveryNote={data.id}
+                setAddProductShipped={handleAddProductShipped}
+                setDeleteProductShipped={handleDeleteProductShipped}
+                setEditProductShipped={handleEditProductShipped}
+                productShippedList={productShippedList}
+            />
+        }
+    ]
 
     return (
-        <>
-
-            <BreadCrumb links={breadcrumb} />
-            <BaseAside links={links} activeSection={activeSection} />
-
-            <Loading />
-
-            <section id='detail' className={classes.section} ref={sectionRefs[0]} >
-                <Title className={classes.title} >
-                    <a href="#detail" className={classes.a_href} >
-                        Detail delivery note
-                    </a>
-                </Title>
-
-                <Divider my='md'></Divider>
-
-                <Group position="right" mt='md' mb='md'  >
-                    <Button.Group>
-
-                        <Button
-                            size='xs'
-                            radius='md'
-                            color={editAccess ? 'red.6' : 'blue.6'}
-                            leftIcon={editAccess ? <IconX /> : <IconEdit />}
-                            onClick={e => {
-                                if (editAccess === true) {
-                                    const { customer, ...restProps } = data
-                                    form.setValues({ ...restProps, customer: customer.id })
-                                    form.resetDirty()
-                                }
-                                setEditAccess(prev => !prev)
-                            }}
-                        >
-                            {editAccess ? 'Cancel' : 'Edit'}
-                        </Button>
-
-                        <Button
-                            type="submit"
-                            form='formDetailDeliveryNote'
-                            size='xs'
-                            color='blue.6'
-                            disabled={form.isDirty() ? false : true}
-                            leftIcon={<IconDownload />} >
-                            Save Changes</Button>
-                        <Button
-                            size='xs'
-                            color='red.6'
-                            radius='md'
-                            onClick={openConfirmDeleteDeliveryNote}
-                            disabled={editAccess ? true : false}
-                            leftIcon={<IconTrashX />} >
-                            Delete</Button>
-                    </Button.Group>
-                </Group>
-
-                <form id='formDetailDeliveryNote' onSubmit={form.onSubmit(openConfirmSubmit)} >
-
-                    <TextInput
-                        variant="unstyled"
-                        icon={<IconUserCheck />}
-                        label='Customer'
-                        m='xs'
-                        radius='md'
-                        readOnly
-                        value={data.customer.name}
-                    />
-
-                    <TextInput
-                        icon={<IconCodeAsterix />}
-                        m='xs'
-                        placeholder="Input delivery number"
-                        radius='md'
-                        {...form.getInputProps('code')}
-                        label='Delivery number'
-                        required
-                        readOnly={!editAccess}
-                    />
-
-                    <DatePicker
-                        icon={<IconCalendarEvent />}
-                        required
-                        label='Delivery date'
-                        placeholder="Pick a date"
-                        disabled={!editAccess}
-                        {...form.getInputProps('date')}
-                        radius='md'
-                        m='xs'
-                    />
-
-                    <Group grow m='xs' >
-
-                        <Select
-                            icon={<IconUser />}
-                            placeholder="Select Driver"
-                            label='Driver name'
-                            radius='md'
-                            readOnly={!editAccess}
-                            data={driverList.map(driver => ({ value: driver.id, label: driver.name }))}
-                            {...form.getInputProps('driver')}
-                            required
-                        />
-
-                        <Select
-                            icon={<IconTruckDelivery />}
-                            placeholder="Select vehicle number"
-                            label='Vehicle number'
-                            radius='md'
-                            readOnly={!editAccess}
-                            data={vehicleList.map(vehicle => ({ value: vehicle.id, label: vehicle.license_part_number }))}
-                            {...form.getInputProps('vehicle')}
-                            required
-                        />
-
-                    </Group>
-
-                    <Textarea
-                        icon={<IconClipboardCheck />}
-                        m='xs'
-                        readOnly={!editAccess}
-                        placeholder="Input description notes"
-                        label='Description notes'
-                        radius='md'
-                        {...form.getInputProps('note')}
-                    />
-                </form>
-
-
-                <Button
-                    radius='md'
-                    fullWidth
-                    leftIcon={<IconPrinter />}
-                    my='lg'
-                    onClick={openModalPrintDeliveryNote}
-                >
-                    Print
-                </Button>
-
-
-            </section>
-
-            <section id='product-shipped' className={classes.section} ref={sectionRefs[1]} >
-                <Title className={classes.title} >
-                    <a href="#product-shipped" className={classes.a_href} >
-                        Products shipped
-                    </a>
-                </Title>
-
-                <Divider my='md'></Divider>
-
-                <Group
-                    m='xs'
-                    position="right"
-                >
-                    <Button
-                        radius='md'
-                        leftIcon={<IconPlus />}
-                        variant='outline'
-                        onClick={openModalAddProductShipped}
-                    >
-                        Add product shipped
-                    </Button>
-                </Group>
-
-                {productDelivered.length === 0 ? <Text color='dimmed' align="center" size='sm' >
-                    This delivery note doesn't have product shipped
-                </Text> : productDelivered}
-
-            </section>
-
-
-        </>
+        <BaseContent
+            links={links}
+            breadcrumb={breadcrumb}
+            contents={contents}
+        />
     )
 
 }

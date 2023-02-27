@@ -9,7 +9,7 @@ import { openConfirmModal } from "@mantine/modals";
 import { useNavigate } from "react-router-dom";
 import { ProductOrderList, DeliveryScheduleList, ComponentDetailSalesOrder, ReportDelivery } from "./detail_sales_order_components";
 import { BaseContent } from "../../layout";
-import { generateDataWithDate } from "../../../services";
+import { generateDataWithDate, generateDataWithDescription } from "../../../services";
 
 
 
@@ -143,14 +143,16 @@ const DetailSalesOrder = () => {
         const { id } = customer
 
         let validate_data = { ...rest, customer: id, fixed: fixed, closed: closed }
-        return generateDataWithDate(date, validate_data)
+        const validated_data = generateDataWithDate(date, validate_data)
+
+        return generateDataWithDescription(validated_data)
 
     }, [customer, fixed, closed])
 
     const handleEditSo = useCallback(async (value) => {
 
         const validate_data = generateDataBeforeUpdate(value)
-
+        console.log(validate_data)
         try {
             const updatedDataSalesOrder = await Put(salesOrderId, validate_data, 'sales-order-management')
             SuccessNotif('Sales order has been updated')
@@ -353,7 +355,7 @@ const DetailSalesOrder = () => {
             return prev.map(schedule => {
 
                 if (schedule.id === id) {
-                    return { ...changedDeliverySchedule, quantity: quantity, date: date }
+                    return { ...schedule, quantity: quantity, date: date }
                 }
                 return schedule
 

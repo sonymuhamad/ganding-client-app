@@ -1,12 +1,11 @@
 import React from "react"
-import { PriceTextInput, ModalForm, } from "../../../custom_components"
+import { PriceTextInput, ModalForm, ReadOnlyTextInput } from "../../../custom_components"
 import { useRequest } from "../../../../hooks"
 import { useForm } from "@mantine/form"
 import { FailedNotif, SuccessNotif } from "../../../notifications"
 import { closeAllModals } from "@mantine/modals"
-import { Group, TextInput, NumberInput } from "@mantine/core"
+import { Group, NumberInput } from "@mantine/core"
 import { IconClipboardList, IconClipboardCheck, IconCodeAsterix, IconAsset, IconBarcode } from "@tabler/icons"
-
 
 
 const ModalEditMaterialOrder = ({ data, setEditMaterialOrder }) => {
@@ -41,11 +40,8 @@ const ModalEditMaterialOrder = ({ data, setEditMaterialOrder }) => {
             formId='formEditMaterialOrder'
             onSubmit={form.onSubmit(handleSubmit)}  >
 
-            <TextInput
+            <ReadOnlyTextInput
                 label='Material name'
-                readOnly
-                variant="filled"
-                radius='md'
                 m='xs'
                 icon={<IconAsset />}
                 value={material.name}
@@ -56,21 +52,15 @@ const ModalEditMaterialOrder = ({ data, setEditMaterialOrder }) => {
                 m='xs'
             >
 
-                <TextInput
+                <ReadOnlyTextInput
                     label='Pesanan untuk produksi'
-                    variant='filled'
-                    readOnly
-                    radius='md'
                     icon={<IconBarcode />}
                     value={to_product ? to_product.name : ''}
                 />
 
 
-                <TextInput
+                <ReadOnlyTextInput
                     label='Product number'
-                    variant='filled'
-                    readOnly
-                    radius='md'
                     icon={<IconCodeAsterix />}
                     value={to_product ? to_product.code : ''}
                 />
@@ -88,12 +78,9 @@ const ModalEditMaterialOrder = ({ data, setEditMaterialOrder }) => {
                     {...form.getInputProps('ordered')}
                 />
 
-                <TextInput
+                <ReadOnlyTextInput
                     label='Quantity arrived'
-                    radius='md'
-                    variant="filled"
                     icon={<IconClipboardCheck />}
-                    readOnly
                     value={form.values.arrived}
                 />
 

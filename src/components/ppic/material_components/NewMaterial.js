@@ -1,15 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 import { useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
-import { TextInput, Group, NumberInput, NativeSelect, Title, Button, Center, Text, FileButton } from "@mantine/core";
+import { TextInput, Group, NativeSelect, Title, Button, Center, Text, FileButton } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 
-import { IconAsset, IconAtom2, IconDimensions, IconDownload, IconPerspective, IconRuler2, IconRulerMeasure, IconScale, IconUserCheck, IconReceipt2, IconUpload, IconTrash } from "@tabler/icons";
+import { IconAsset, IconAtom2, IconDimensions, IconDownload, IconPerspective, IconRuler2, IconRulerMeasure, IconScale, IconUserCheck, IconUpload, IconTrash } from "@tabler/icons";
 import { SuccessNotif, FailedNotif } from '../../notifications'
 import { useRequest } from "../../../hooks";
 import BreadCrumb from "../../BreadCrumb";
 import { sectionStyle } from "../../../styles";
+import { DecimalInput, PriceTextInput } from "../../custom_components";
 
 
 
@@ -18,7 +19,7 @@ const NewMaterial = () => {
     const { classes } = sectionStyle()
     const [supplierList, setSupplierList] = useState([])
     const [uomList, setUomList] = useState([])
-    const { Get, Post, Loading } = useRequest()
+    const { Get, Post } = useRequest()
     const navigate = useNavigate()
 
     const form = useForm({
@@ -37,7 +38,7 @@ const NewMaterial = () => {
         }
     })
 
-    const breadcrumb = [
+    const breadcrumb = useMemo(() => [
         {
             path: '/home/ppic',
             label: 'Ppic'
@@ -50,18 +51,16 @@ const NewMaterial = () => {
             path: `/home/ppic/material/new`,
             label: 'Add material'
         }
-    ]
+    ], [])
 
     const handleSubmit = useCallback(async (val) => {
-
-        const data = val
         let validData
 
-        if (data.image === null) {
-            const { image, ...restData } = data
+        if (val.image === null) {
+            const { image, ...restData } = val
             validData = restData
         } else {
-            validData = data
+            validData = val
         }
 
         try {
@@ -118,7 +117,6 @@ const NewMaterial = () => {
                 Add new material
             </Title>
 
-            <Loading />
             <form id='newMaterialForm' onSubmit={form.onSubmit(openSubmitMaterial)}  >
 
                 <NativeSelect
@@ -164,97 +162,57 @@ const NewMaterial = () => {
                         {...form.getInputProps('uom')}
 
                     />
-
-                    <NumberInput
+                    <DecimalInput
                         icon={<IconRuler2 />}
-                        hideControls
-                        min={0}
                         rightSection={<Text size='sm' color='dimmed'  >
                             mm
                         </Text>}
-                        decimalSeparator=','
-                        precision={2}
-                        step={0.5}
                         label='Length'
-                        radius='md'
                         {...form.getInputProps('length')}
                         placeholder="length of material"
-                        required
                     />
 
-                    <NumberInput
+                    <DecimalInput
                         icon={<IconDimensions />}
-                        hideControls
-                        min={0}
-                        rightSection={<Text size='sm' color='dimmed'  >
-                            mm
-                        </Text>}
-                        decimalSeparator=','
-                        precision={2}
-                        step={0.5}
                         label='Width'
                         {...form.getInputProps('width')}
                         placeholder="width of material"
-                        radius='md'
-                        required
+                        rightSection={<Text size='sm' color='dimmed'  >
+                            mm
+                        </Text>}
                     />
+
                 </Group>
 
                 <Group
                     grow
-                    m='xs'
                 >
 
-
-                    <NumberInput
-                        icon={<IconRulerMeasure />}
-                        hideControls
-                        min={0}
-                        decimalSeparator=','
-                        precision={2}
-                        step={0.5}
+                    <DecimalInput
                         rightSection={<Text size='sm' color='dimmed'  >
                             mm
                         </Text>}
                         label='Thickness'
                         {...form.getInputProps('thickness')}
                         placeholder="thickness of material"
-                        radius='md'
-                        required
+                        icon={<IconRulerMeasure />}
+
                     />
-                    <NumberInput
+
+                    <DecimalInput
                         icon={<IconScale />}
-                        hideControls
-                        rightSection={<Text size='sm' color='dimmed'  >
-                            mm
-                        </Text>}
-                        min={0}
-                        decimalSeparator=','
-                        precision={2}
-                        step={0.5}
+                        rightSection={<Text size='sm' color='dimmed'> mm </Text>}
                         label='Berat jenis'
                         {...form.getInputProps('weight')}
                         placeholder="Input berat jenis"
-                        radius='md'
-                        required
+
                     />
 
-
-                    <NumberInput
+                    <PriceTextInput
                         label='Harga / unit'
                         placeholder="Input harga per unit"
-                        radius='md'
                         {...form.getInputProps('price')}
-                        hideControls
                         required
-                        min={0}
-                        parser={(value) => value.replace(/\Rp\s?|(,*)/g, '')}
-                        formatter={(value) =>
-                            !Number.isNaN(parseFloat(value))
-                                ? `Rp ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-                                : 'Rp '
-                        }
-                        icon={<IconReceipt2 />}
                     />
 
                 </Group>

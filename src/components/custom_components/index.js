@@ -8,8 +8,10 @@ import PriceTextInput from "./PriceTextInput";
 import ButtonEdit from "./ButtonEdit";
 import ButtonDelete from "./ButtonDelete";
 import ModalForm from "./ModalForm";
+import DecimalInput from "./DecimalInput";
+import ReadOnlyTextInput from "./ReadOnlyTextInput";
 
 export {
     ButtonAdd, HeadSection, NavigationDetailButton, ActionButtons, ButtonSubmit, SearchTextInput,
-    PriceTextInput, ButtonDelete, ButtonEdit, ModalForm
+    PriceTextInput, ButtonDelete, ButtonEdit, ModalForm, DecimalInput, ReadOnlyTextInput
 }

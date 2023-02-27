@@ -4,20 +4,22 @@ import { useRequest } from "../../../hooks";
 
 import { DatePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
-import { TextInput, Button, NumberInput, Select, UnstyledButton, Paper, Group, Text, ThemeIcon, Title } from "@mantine/core";
+import { Button, NumberInput, Select, UnstyledButton, Paper, Group, Text, ThemeIcon, Title } from "@mantine/core";
 
-import { IconBarcode, IconAsset, IconCircleDotted, IconCircleCheck, IconXboxX, IconBuildingFactory, IconUser, IconCalendar } from "@tabler/icons";
+import { IconBarcode, IconAsset, IconCircleDotted, IconCircleCheck, IconXboxX, IconBuildingFactory, IconUser, IconCalendar, IconCodeAsterix, IconTimeline, IconFileTypography, IconSortAscending2, IconBuildingWarehouse, IconAssembly } from "@tabler/icons";
 import { SuccessNotif, FailedNotif } from "../../notifications";
 import { openConfirmModal } from "@mantine/modals";
 import { sectionStyle } from "../../../styles";
 import BreadCrumb from "../../BreadCrumb";
+import { ReadOnlyTextInput } from "../../custom_components";
+import { generateDataWithDate } from "../../../services";
 
 
 const NewProductionPriority = () => {
 
-    const params = useParams()
+    const { priorityId } = useParams()
     const navigate = useNavigate()
-    const { Get, Loading, Post } = useRequest()
+    const { Get, Post } = useRequest()
     const [operatorList, setOperatorList] = useState([])
     const [machineList, setMachineList] = useState([])
     const { classes } = sectionStyle()
@@ -68,26 +70,20 @@ const NewProductionPriority = () => {
             label: 'Production'
         },
         {
-            path: `/home/ppic/production/new/${params.priorityId}`,
+            path: `/home/ppic/production/new/${priorityId}`,
             label: 'New production'
         }
     ]
 
     const handleSubmit = useCallback(async (value) => {
-
-        let validate_data
-
-        if (value.date) {
-            validate_data = { ...value, date: value.date.toLocaleDateString('en-CA') }
-        } else {
-            validate_data = value
-        }
-
+        const { date, ...rest } = value
+        const validate_data = generateDataWithDate(date, rest)
         try {
             await Post(validate_data, 'production-report-management')
             SuccessNotif('Add new production success')
             navigate('/home/ppic/production')
         } catch (e) {
+            form.setErrors(e.message.data)
             if (e.message.data.constructor === Array) {
                 FailedNotif(e.message.data)
             } else if (e.message.data.non_field_errors) {
@@ -115,7 +111,7 @@ const NewProductionPriority = () => {
 
     const findPriority = useCallback((listPriority) => {
 
-        const priority = listPriority.find(prior => prior.id === parseInt(params.priorityId))
+        const priority = listPriority.find(prior => prior.id === parseInt(priorityId))
 
         form.setValues({
             quantity: priority.production_quantity,
@@ -128,7 +124,7 @@ const NewProductionPriority = () => {
 
         setPriority(priority)
 
-    }, [params.priorityId])
+    }, [priorityId])
 
     useEffect(() => {
 
@@ -166,47 +162,38 @@ const NewProductionPriority = () => {
                 New production
             </Title>
 
-            <Loading />
             <form onSubmit={form.onSubmit(openConfirmSubmit)} >
 
-
-
-                <TextInput
+                <ReadOnlyTextInput
+                    icon={<IconBarcode />}
                     label='Product name'
-                    readOnly
                     value={priority.product.name}
-                    radius='md'
                     m='xs'
                 />
 
-                <TextInput
+                <ReadOnlyTextInput
+                    icon={<IconCodeAsterix />}
                     label='Product number'
-                    radius='md'
                     m='xs'
-                    readOnly
                     value={priority.product.code}
                 />
 
                 <Group grow m='xs'  >
-                    <TextInput
+                    <ReadOnlyTextInput
+                        icon={<IconTimeline />}
                         label='Process name'
-
-                        radius='md'
-                        readOnly
                         value={priority.process_name}
                     />
 
-                    <TextInput
+                    <ReadOnlyTextInput
+                        icon={<IconFileTypography />}
                         label='Process type'
-                        readOnly
                         value={priority.process_type.name}
-                        radius='md'
                     />
 
-                    <TextInput
+                    <ReadOnlyTextInput
+                        icon={<IconSortAscending2 />}
                         label='Wip'
-                        readOnly
-                        radius='md'
                         value={`Wip${priority.order}`}
                     />
 
@@ -284,24 +271,21 @@ const NewProductionPriority = () => {
 
                             <Group grow >
 
-                                <TextInput
-                                    radius='md'
+                                <ReadOnlyTextInput
+                                    icon={<IconAsset />}
                                     label='Material name'
-                                    readOnly
                                     value={reqMat.material.name}
                                 />
 
-                                <TextInput
-                                    radius='md'
+                                <ReadOnlyTextInput
+                                    icon={<IconBuildingWarehouse />}
                                     label='Stock'
-                                    readOnly
                                     value={reqMat.material.warehousematerial}
                                 />
 
-                                <TextInput
-                                    radius='md'
+                                <ReadOnlyTextInput
+                                    icon={<IconAssembly />}
                                     label='Qty need'
-                                    readOnly
                                     value={form.values.quantity === null || form.values.quantity === 0 || form.values.quantity === undefined ? 0 :
                                         Math.ceil(((form.values.quantity + form.values.quantity_not_good) / reqMat.output) * reqMat.input)}
                                 />
@@ -352,25 +336,22 @@ const NewProductionPriority = () => {
 
                             <Group grow >
 
-                                <TextInput
-                                    radius='md'
+                                <ReadOnlyTextInput
+                                    icon={<IconBarcode />}
                                     label='Product name'
-                                    readOnly
                                     value={reqProduct.product.name}
                                 />
 
-                                <TextInput
-                                    radius='md'
+                                <ReadOnlyTextInput
+                                    icon={<IconBuildingWarehouse />}
                                     label='Stock'
-                                    readOnly
                                     value={reqProduct.product.ppic_warehouseproduct_related.find(wh => wh.warehouse_type.id === 1).quantity}
                                 />
 
 
-                                <TextInput
-                                    radius='md'
+                                <ReadOnlyTextInput
+                                    icon={<IconAssembly />}
                                     label='Qty need'
-                                    readOnly
                                     value={form.values.quantity === null || form.values.quantity === 0 || form.values.quantity === undefined ? 0 :
                                         Math.ceil(((form.values.quantity + (form.values.quantity_not_good === undefined ? 0 : form.values.quantity_not_good)) / reqProduct.output) * reqProduct.input)}
                                 />

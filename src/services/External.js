@@ -90,4 +90,30 @@ export function getScheduleState(schedule, actualDate) {
 }
 
 
+export const generateDataWithDescription = (data) => {
+    if (data.description === '') {
+        const { description, ...rest } = data
+        return rest
+    }
+    return data
+}
 
+
+export const generateDataWithNote = (data) => {
+    if (data.note === '') {
+        const { note, ...rest } = data
+        return rest
+    }
+    return data
+
+}
+
+export const generateDataWithImage = (data) => {
+
+    if (typeof data.image === "string") {
+        const { image, ...restData } = data
+        return restData
+    }
+
+    return data
+}

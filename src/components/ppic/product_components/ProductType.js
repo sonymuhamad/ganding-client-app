@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react"
-
-import { useRequest } from "../../../hooks"
-
-import { BaseTable } from "../../tables"
-import { Group, Button, TextInput, Text } from "@mantine/core"
-import { IconTrash, IconPlus, IconEdit, IconSignature, IconDownload } from "@tabler/icons"
-import { FailedNotif, SuccessNotif } from "../../notifications";
-import { openConfirmModal, closeAllModals, openModal } from "@mantine/modals";
+import { TextInput } from "@mantine/core"
+import { IconSignature } from "@tabler/icons"
+import { closeAllModals, openModal } from "@mantine/modals";
 import { useForm } from "@mantine/form"
 
+import { BaseTable } from "../../tables"
+import { useConfirmDelete, useRequest } from "../../../hooks"
+import { FailedNotif, SuccessNotif } from "../../notifications";
+import { ModalForm, ButtonAdd, ButtonDelete, ButtonEdit, HeadSection } from "../../custom_components"
 
 
-const AddProductType = ({ setaction }) => {
+const AddProductType = ({ setAddProductType }) => {
 
-    const { Post, Loading } = useRequest()
+    const { Post } = useRequest()
     const form = useForm({
         initialValues: {
             name: ''
@@ -22,50 +21,40 @@ const AddProductType = ({ setaction }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Post(value, 'product-type-management')
-            setaction(prev => prev + 1)
+            const newProductType = await Post(value, 'product-type-management')
+            setAddProductType(newProductType)
             closeAllModals()
             SuccessNotif('Add product type success')
         } catch (e) {
             form.setErrors(e.message.data)
             FailedNotif('Add product type failed')
         }
-    }
-        , [Post, setaction])
+
+    }, [Post, setAddProductType])
 
 
 
     return (
-        <>
-            <Loading />
-            <form onSubmit={form.onSubmit(handleSubmit)}  >
+        <ModalForm
+            formId='formAddProductType'
+            onSubmit={form.onSubmit(handleSubmit)}  >
 
-                <TextInput
-                    icon={<IconSignature />}
-                    radius='md'
-                    required
-                    label='Type name'
-                    placeholder="Input name of new type"
-                    {...form.getInputProps('name')}
-                />
+            <TextInput
+                icon={<IconSignature />}
+                radius='md'
+                required
+                label='Type name'
+                placeholder="Input name of new type"
+                {...form.getInputProps('name')}
+            />
 
-                <Button
-                    leftIcon={<IconDownload />}
-                    my='md'
-                    radius='md'
-                    fullWidth
-                    type="submit"
-                >
-                    Save
-                </Button>
+        </ModalForm>
 
-            </form>
-        </>
     )
 }
 
 
-const EditProductType = ({ setaction, data }) => {
+const EditProductType = ({ setUpdateProductType, data }) => {
 
     const form = useForm({
         initialValues: {
@@ -73,47 +62,35 @@ const EditProductType = ({ setaction, data }) => {
         }
     })
 
-    const { Put, Loading } = useRequest()
+    const { Put } = useRequest()
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Put(data.id, value, 'product-type-management')
+            const updatedProductType = await Put(data.id, value, 'product-type-management')
+            setUpdateProductType(updatedProductType)
             closeAllModals()
-            setaction(prev => prev + 1)
             SuccessNotif('Edit product type success')
         } catch (e) {
             form.setErrors(e.message.data)
             FailedNotif('Edit product type failed')
         }
-    }, [Put, setaction, data.id])
+    }, [setUpdateProductType, data.id])
 
 
     return (
-        <>
-            <Loading />
-            <form onSubmit={form.onSubmit(handleSubmit)}  >
+        <ModalForm
+            formId='formEditProductType'
+            onSubmit={form.onSubmit(handleSubmit)}  >
 
-                <TextInput
-                    icon={<IconSignature />}
-                    radius='md'
-                    label='Type'
-                    required
-                    {...form.getInputProps('name')}
-                />
+            <TextInput
+                icon={<IconSignature />}
+                radius='md'
+                label='Type'
+                required
+                {...form.getInputProps('name')}
+            />
 
-                <Button
-                    leftIcon={<IconDownload />}
-                    my='md'
-                    radius='md'
-                    type="submit"
-                    fullWidth
-                    disabled={data.name === form.values.name}
-                >
-                    Save
-                </Button>
-
-            </form>
-        </>
+        </ModalForm>
     )
 }
 
@@ -121,8 +98,73 @@ const EditProductType = ({ setaction, data }) => {
 const ProductType = () => {
 
     const [productType, setProductType] = useState([])
-    const [actionProductType, setActionProductType] = useState(0)
     const { Get, Delete } = useRequest()
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Product type' })
+
+    const setAddProductType = useCallback((newProductType) => {
+        setProductType(prev => [...prev, newProductType])
+    }, [])
+
+    const setUpdateProductType = useCallback((updatedProductType) => {
+        const { name, id } = updatedProductType
+
+        return setProductType(prev => {
+            return prev.map(productType => {
+                if (productType.id === id) {
+                    return { ...productType, name: name }
+                }
+                return productType
+            })
+        })
+
+    }, [])
+
+    const setDeleteProductType = useCallback((idDeletedProductType) => {
+        setProductType(prev => prev.filter(productType => productType.id !== idDeletedProductType))
+    }, [])
+
+    const openAddProductType = useCallback(() => openModal({
+        title: `Add product type`,
+        radius: 'md',
+        children: <AddProductType
+            setAddProductType={setAddProductType} />,
+    }), [setAddProductType])
+
+    const openEditProductType = useCallback((data) => openModal({
+        title: `Edit product type`,
+        radius: 'md',
+        children: <EditProductType
+            data={data}
+            setUpdateProductType={setUpdateProductType} />
+    }), [setUpdateProductType])
+
+    const handleDeleteProductType = useCallback(async (id) => {
+        try {
+            await Delete(id, 'product-type-management')
+            setDeleteProductType(id)
+            SuccessNotif('Delete product type success')
+        } catch (e) {
+            if (e.message.data.constructor === Array) {
+                FailedNotif(e.message.data)
+            }
+        }
+    }, [setDeleteProductType])
+
+    useEffect(() => {
+        // effect for product type
+
+        const fetchProductType = async () => {
+            try {
+                const product_type = await Get('product-type')
+                setProductType(product_type)
+            } catch (e) {
+                console.log(e)
+            }
+        }
+
+        fetchProductType()
+
+    }, [])
 
 
     const columnProductType = useMemo(() => [
@@ -132,113 +174,32 @@ const ProductType = () => {
         },
         {
             name: 'Amount of product',
-            selector: row => row.products
+            selector: row => row.products ? row.products : 0
         },
         {
             name: '',
-            selector: row => row.buttonEdit
+            selector: row => <ButtonEdit
+                onClick={() => openEditProductType(row)}
+            />
         },
         {
             name: '',
-            selector: row => row.buttonDelete
+            selector: row => <ButtonDelete
+                onClick={() => openConfirmDeleteData(() => handleDeleteProductType(row.id))}
+            />
         }
-    ], [])
-
-    const openAddProductType = useCallback(() => openModal({
-        title: `Add product type`,
-        radius: 'md',
-        children: <AddProductType setaction={setActionProductType} />,
-    }), [])
-
-
-    const openEditProductType = useCallback((data) => openModal({
-        title: `Edit product type`,
-        radius: 'md',
-        children: <EditProductType data={data} setaction={setActionProductType} />
-    }), [])
-
-    const handleDeleteProductType = useCallback(async (id) => {
-        try {
-            await Delete(id, 'product-type-management')
-            setActionProductType(prev => prev + 1)
-            SuccessNotif('Delete product type success')
-        } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
-        }
-    }, [])
-
-
-
-    const openDeleteProductTypeModal = useCallback((id) => openConfirmModal({
-        title: 'Delete product type',
-        children: (
-            <Text size="sm">
-                Are you sure?, this product type will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDeleteProductType(id)
-    }), [handleDeleteProductType])
-
-
-    useEffect(() => {
-        // effect for product type
-
-        const fetchProductType = async () => {
-            try {
-                const product_type = await Get('product-type')
-                const types = product_type.map(type => ({
-                    ...type, buttonEdit:
-
-                        <Button
-                            leftIcon={<IconEdit stroke={2} size={16} />}
-                            color='teal.8'
-                            variant='subtle'
-                            radius='md'
-                            mx='xs'
-                            onClick={() => openEditProductType(type)}
-                        >
-                            Edit
-                        </Button>,
-                    buttonDelete: <Button
-                        leftIcon={<IconTrash stroke={2} size={16} />}
-                        color='red'
-                        variant='subtle'
-                        radius='md'
-                        onClick={() => openDeleteProductTypeModal(type.id)}
-                    >
-                        Delete
-                    </Button>
-                }))
-
-                setProductType(types)
-            } catch (e) {
-                console.log(e)
-            }
-        }
-
-        fetchProductType()
-
-    }, [actionProductType, openEditProductType, openDeleteProductTypeModal])
+    ], [openEditProductType, openConfirmDeleteData, handleDeleteProductType])
 
     return (
         <>
 
-            <Group position="right" >
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+            <HeadSection>
+                <ButtonAdd
                     onClick={openAddProductType}
                 >
                     Product type
-                </Button>
-            </Group>
+                </ButtonAdd>
+            </HeadSection>
 
             <BaseTable
                 column={columnProductType}

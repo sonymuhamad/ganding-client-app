@@ -1,48 +1,41 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useRequest } from "../../../hooks";
+import { useRequest, useSearch } from "../../../hooks";
 import { BaseTableExpanded } from "../../tables";
 import { ModalEditStockProduct } from "../../layout";
 import { openModal } from "@mantine/modals";
 
 import { IconBarcode, IconCodeAsterix, IconEdit, IconTimeline, IconTypography } from "@tabler/icons";
-import { TextInput, Button, Group, Paper } from "@mantine/core";
+import { Button, Group, Paper } from "@mantine/core";
+import { HeadSection, SearchTextInput, ReadOnlyTextInput } from "../../custom_components";
 
 
 const ExpandedDetailWarehouseWip = ({ data }) => {
     return (
         <Paper p='sm'  >
             <Group grow >
-                <TextInput
+                <ReadOnlyTextInput
                     icon={<IconBarcode />}
                     label='Product name'
                     value={data.product.name}
-                    readOnly
-                    radius='md'
                 />
 
-                <TextInput
+                <ReadOnlyTextInput
                     icon={<IconCodeAsterix />}
                     label='Product number'
                     value={data.product.code}
-                    readOnly
-                    radius='md'
                 />
             </Group>
 
             <Group grow my='xs' >
-                <TextInput
+                <ReadOnlyTextInput
                     icon={<IconTypography />}
                     label='Product type'
                     value={data.product.type.name}
-                    readOnly
-                    radius='md'
                 />
-                <TextInput
+                <ReadOnlyTextInput
                     icon={<IconTimeline />}
                     label='Process name'
                     value={data.process.process_name}
-                    readOnly
-                    radius='md'
                 />
             </Group>
 
@@ -52,6 +45,18 @@ const ExpandedDetailWarehouseWip = ({ data }) => {
 
 const ExpandedWarehouseWip = ({ data }) => {
 
+    const setUpdateWarehouse = useCallback((updatedWarehouse) => {
+        data.setUpdate(data.id, updatedWarehouse)
+    }, [data])
+
+    const openEditWarehouseWip = useCallback((warehouseWip) => openModal({
+        title: `Edit stock wip ${warehouseWip.product.name}`,
+        radius: 'md',
+        children: <ModalEditStockProduct
+            whProduct={warehouseWip}
+            setUpdateWarehouse={setUpdateWarehouse} />
+    }), [setUpdateWarehouse])
+
     const columnWarehouseWip = useMemo(() => [
         {
             name: 'Customer',
@@ -60,10 +65,9 @@ const ExpandedWarehouseWip = ({ data }) => {
 
         },
         {
-            name: 'Product',
+            name: 'Product name',
             selector: row => row.product.name,
             sortable: true,
-
         },
         {
             name: 'Quantity',
@@ -72,13 +76,19 @@ const ExpandedWarehouseWip = ({ data }) => {
         },
         {
             name: '',
-            selector: row => row.buttonEdit,
-            style: {
-                padding: 0,
-                margin: 0
-            }
+            selector: row =>
+                <Button
+                    leftIcon={<IconEdit stroke={2} size={16} />}
+                    color='blue.6'
+                    variant='subtle'
+                    radius='md'
+                    mx='xs'
+                    onClick={() => openEditWarehouseWip(row)}
+                >
+                    Edit stock
+                </Button>,
         }
-    ], [])
+    ], [openEditWarehouseWip])
 
 
     return (
@@ -86,7 +96,6 @@ const ExpandedWarehouseWip = ({ data }) => {
             <BaseTableExpanded
                 column={columnWarehouseWip}
                 data={data.warehouseproduct_set}
-                dense={true}
                 expandComponent={ExpandedDetailWarehouseWip}
 
             />
@@ -98,19 +107,21 @@ const ExpandedWarehouseWip = ({ data }) => {
 
 const Wip = () => {
 
-    const [searchProductWip, setSearchProductWip] = useState('')
+    const { query, lowerCaseQuery, setValueQuery } = useSearch()
     const [warehouseWip, setWarehouseWip] = useState([])
-    const [actionWarehouseWip, setActionWarehouseWip] = useState(0)
     const { Get } = useRequest()
 
     const filteredWarehouseWip = useMemo(() => {
 
-        const valFiltered = searchProductWip.toLowerCase()
-
         return warehouseWip.reduce((prev, current) => {
-            const whProduct = current.warehouseproduct_set.filter(wh => wh.product.name.toLowerCase().includes(valFiltered) || wh.product.code.toLowerCase().includes(valFiltered) || wh.product.customer.name.toLowerCase().includes(valFiltered))
+            const whProduct = current.warehouseproduct_set.filter(wh => {
+                const { product } = wh
+                const { customer, code, name } = product
 
-            if (valFiltered === '') {
+                return name.toLowerCase().includes(lowerCaseQuery) || code.toLowerCase().includes(lowerCaseQuery) || customer.name.toLowerCase().includes(lowerCaseQuery)
+            })
+
+            if (lowerCaseQuery === '') {
                 return [...prev, current]
             }
 
@@ -122,8 +133,31 @@ const Wip = () => {
 
         }, [])
 
-    }, [searchProductWip, warehouseWip])
+    }, [lowerCaseQuery, warehouseWip])
 
+    const setUpdateWarehouseProduct = useCallback((idWip, updatedWarehouseProduct) => {
+        const { id, quantity } = updatedWarehouseProduct
+        setWarehouseWip(prev => {
+            return prev.map(wip => {
+
+                if (wip.id === idWip) {
+                    const { warehouseproduct_set } = wip
+                    const warehouseProductSet = warehouseproduct_set.map(warehouseProduct => {
+
+                        if (warehouseProduct.id === id) {
+                            return { ...warehouseProduct, quantity: quantity }
+                        }
+                        return warehouseProduct
+                    })
+
+                    return { ...wip, warehouseproduct_set: warehouseProductSet }
+                }
+
+                return wip
+            })
+        })
+
+    }, [])
 
     const columnWarehouseWip = useMemo(() => [
         {
@@ -137,63 +171,32 @@ const Wip = () => {
         }
     ], [])
 
-
-    const openEditWarehouseWip = useCallback((warehouseWip) => openModal({
-        title: `Edit stock wip ${warehouseWip.product.name}`,
-        radius: 'md',
-        children: <ModalEditStockProduct whProduct={warehouseWip} setaction={setActionWarehouseWip} />
-    }), [])
-
-
     useEffect(() => {
-        // effect for product warehouse work in process
-
         const fetchWarehouseWip = async () => {
             try {
                 const whTypeWip = await Get('warehouse-wip')
-                const whWip = whTypeWip.map(whType => ({
-                    ...whType, warehouseproduct_set: whType.warehouseproduct_set.map(wh => ({
-                        ...wh, buttonEdit:
-
-                            <Button
-                                leftIcon={<IconEdit stroke={2} size={16} />}
-                                color='blue.6'
-                                variant='subtle'
-                                radius='md'
-                                mx='xs'
-                                onClick={() => openEditWarehouseWip(wh)}
-                            >
-                                Edit
-                            </Button>
-                    }))
-                }))
-
-                setWarehouseWip(whWip)
+                setWarehouseWip(whTypeWip.map(whWip => ({ ...whWip, setUpdate: setUpdateWarehouseProduct })))
             } catch (e) {
-
+                console.log(e)
             }
         }
-
         fetchWarehouseWip()
 
-    }, [actionWarehouseWip, openEditWarehouseWip])
+    }, [setUpdateWarehouseProduct])
 
     return (
         <>
 
-            <Group position="right" >
-                <TextInput
-                    placeholder="Search product"
-                    value={searchProductWip}
-                    radius='md'
-                    onChange={e => setSearchProductWip(e.target.value)}
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
-            </Group>
+            </HeadSection>
 
             <BaseTableExpanded
                 column={columnWarehouseWip}
                 data={filteredWarehouseWip}
-                dense={true}
                 expandComponent={ExpandedWarehouseWip}
                 pagination={false}
             />

@@ -1,76 +1,61 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 
-import { useRequest } from "../../../hooks"
+import { useConfirmDelete, useRequest } from "../../../hooks"
 import { BaseTableExpanded, BaseTable } from "../../tables";
 
 
-import { Button, NumberInput, Text, TextInput, Paper } from "@mantine/core";
-import { IconPlus, IconEdit, IconTrash, IconCalendarEvent, IconPackgeExport, IconDownload, IconBarcode, IconRegex } from "@tabler/icons";
+import { NumberInput, Text, TextInput, Paper } from "@mantine/core";
+import { IconCalendarEvent, IconPackgeExport, IconBarcode, IconRegex } from "@tabler/icons";
 import { DatePicker } from "@mantine/dates";
-import { openModal, openConfirmModal, closeAllModals } from "@mantine/modals";
+import { openModal, closeAllModals } from "@mantine/modals";
 import { FailedNotif, SuccessNotif } from "../../notifications";
+import { ModalForm, ButtonAdd, ButtonDelete, ButtonEdit, HeadSection, ReadOnlyTextInput } from "../../custom_components";
+import { generateDataWithDate } from "../../../services";
 
 
-const ModalAddReceiptSubcontSchedule = ({ productSubcont, setAction }) => {
+const ModalAddReceiptSubcontSchedule = ({ productSubcont, changeAction }) => {
 
-
+    const { product, id } = productSubcont
+    const { name, code } = product
     const { Post } = useRequest()
     const [date, setDate] = useState('')
     const [quantity, setQuantity] = useState('')
 
+    const handleSubmit = useCallback(async (e) => {
+        e.preventDefault()
 
-    const handleSubmit = useCallback(async () => {
+        const validate_data = generateDataWithDate(date, { quantity: quantity, product_subcont: id })
+
         try {
-            await Post({ quantity: quantity, date: date.toLocaleDateString('en-CA'), product_subcont: productSubcont.id }, 'receipt-subcont-schedule-management')
-            setAction(prev => prev + 1)
+            await Post(validate_data, 'receipt-subcont-schedule-management')
+            changeAction()
             closeAllModals()
             SuccessNotif('Add schedule success')
         } catch (e) {
-            console.log(e)
             if (e.message.data.non_field_errors) {
                 FailedNotif(e.message.data.non_field_errors)
-            } else {
-                FailedNotif('Add schedule failed')
+                return
             }
+            FailedNotif('Add schedule failed')
+
         }
-    }, [quantity, date, productSubcont, Post, setAction])
-
-    const openConfirmSubmit = useCallback((e) => {
-        e.preventDefault()
-
-        return openConfirmModal({
-            title: `Add arrival schedule`,
-            children: (
-                <Text size="sm">
-                    Are you sure?, data will be saved.
-                </Text>
-            ),
-            radius: 'md',
-            labels: { confirm: 'Yes, save', cancel: "No, don't save it" },
-            cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-            confirmProps: { radius: 'md' },
-            onConfirm: () => handleSubmit()
-        })
-    }
-        , [handleSubmit])
+    }, [quantity, date, id,])
 
     return (
-        <form onSubmit={openConfirmSubmit} >
+        <ModalForm
+            formId='formAddSubcontReceiptSchedule'
+            onSubmit={handleSubmit} >
 
-            <TextInput
-                variant="unstyled"
+            <ReadOnlyTextInput
                 m='xs'
-                readOnly
                 icon={<IconBarcode />}
-                value={productSubcont.product.name}
+                value={name}
             />
 
-            <TextInput
-                readOnly
+            <ReadOnlyTextInput
                 m='xs'
-                variant="unstyled"
                 icon={<IconRegex />}
-                value={productSubcont.product.code}
+                value={code}
             />
 
             <NumberInput
@@ -102,85 +87,64 @@ const ModalAddReceiptSubcontSchedule = ({ productSubcont, setAction }) => {
                 required
             />
 
-            <Button
-                fullWidth
-                leftIcon={<IconDownload />}
-                type='submit'
-                radius='md'
-                disabled={quantity === '' || parseInt(quantity) === 0}
-            >
-                Save
-            </Button>
-
-        </form>
+        </ModalForm>
 
     )
 }
 
-const ModalEditReceiptSubcontSchedule = ({ dataSchedule, setAction, productSubcont }) => {
-
+const ModalEditReceiptSubcontSchedule = ({
+    dataSchedule,
+    changeAction,
+    productSubcont
+}) => {
+    const { product, id } = productSubcont
+    const { name, code } = product
     const [date, setDate] = useState(() => new Date())
     const [quantity, setQuantity] = useState('')
 
     const { Put } = useRequest()
 
     useEffect(() => {
-
         setQuantity(dataSchedule.quantity)
         setDate(new Date(dataSchedule.date))
 
     }, [dataSchedule])
 
 
-    const handleSubmit = useCallback(async () => {
-        try {
-            await Put(dataSchedule.id, { quantity: quantity, date: date.toLocaleDateString('en-CA'), product_subcont: productSubcont.id }, 'receipt-subcont-schedule-management')
-            SuccessNotif('Edit arrival schedule success')
-            setAction(prev => prev + 1)
-            closeAllModals()
-        } catch (e) {
-            console.log(e)
-            FailedNotif('Edit arrival schedule failed')
-        }
-    }, [dataSchedule, quantity, date, setAction, Put, productSubcont])
-
-    const openConfirmEditSchedule = useCallback((e) => {
+    const handleSubmit = useCallback(async (e) => {
         e.preventDefault()
 
-        return openConfirmModal({
-            title: `Edit arrival schedule`,
-            children: (
-                <Text size="sm">
-                    Are you sure?, data will be saved.
-                </Text>
-            ),
-            radius: 'md',
-            labels: { confirm: 'Yes, save', cancel: "No, don't save it" },
-            cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-            confirmProps: { radius: 'md' },
-            onConfirm: () => handleSubmit()
-        })
-    }, [handleSubmit])
+        const validate_data = generateDataWithDate(date, { quantity: quantity, product_subcont: id })
+        try {
+            await Put(dataSchedule.id, validate_data, 'receipt-subcont-schedule-management')
+            SuccessNotif('Edit arrival schedule success')
+            changeAction()
+            closeAllModals()
+        } catch (e) {
+            if (e.message.data.non_field_errors) {
+                FailedNotif(e.message.data.non_field_errors)
+                return
+            }
+            FailedNotif('Edit arrival schedule failed')
+        }
+    }, [dataSchedule, quantity, date, id])
 
     return (
 
-        <form onSubmit={openConfirmEditSchedule} >
+        <ModalForm
+            formId='formEditSubcontReceiptSchedule'
+            onSubmit={handleSubmit} >
 
-
-            <TextInput
-                variant="unstyled"
+            <ReadOnlyTextInput
                 m='xs'
-                readOnly
                 icon={<IconBarcode />}
-                value={productSubcont.product.name}
+                value={name}
             />
 
-            <TextInput
-                readOnly
+            <ReadOnlyTextInput
                 m='xs'
-                variant="unstyled"
                 icon={<IconRegex />}
-                value={productSubcont.product.code}
+                value={code}
             />
 
             <NumberInput
@@ -189,6 +153,7 @@ const ModalEditReceiptSubcontSchedule = ({ dataSchedule, setAction, productSubco
                 value={quantity}
                 onChange={value => setQuantity(value)}
                 m='xs'
+                hideControls
                 label='Quantity arrival'
                 placeholder="Input quantity arrival"
                 required
@@ -205,124 +170,97 @@ const ModalEditReceiptSubcontSchedule = ({ dataSchedule, setAction, productSubco
                 required
             />
 
-            <Button
-                fullWidth
-                leftIcon={<IconDownload />}
-                type='submit'
-                radius='md'
-                disabled={dataSchedule.quantity === parseInt(quantity) && new Date(dataSchedule.date).toLocaleDateString() === date.toLocaleDateString()}
-            >
-                Save
-            </Button>
-
-        </form>
+        </ModalForm>
     )
 }
 
 
 const ExpandedProductSubconstruction = ({ data }) => {
 
-    const [schedules, setSchedules] = useState([])
-    const [action, setAction] = useState(0)
     const { Delete } = useRequest()
-
-    const columnScheduleReceiptSubcont = useMemo(() => [
-        {
-            name: 'Date',
-            selector: row => row.date
-        },
-        {
-            name: 'Quantity',
-            selector: row => row.quantity
-        },
-        {
-            name: '',
-            selector: row => row.editButton
-        },
-        {
-            name: '',
-            selector: row => row.deleteButton
-        }
-    ], [])
-
+    const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Jadwal kedatangan product subcont' })
 
     const openEditSchedule = useCallback((schedule) => openModal({
-        title: 'Edit arrival schedule of product subconstruction',
+        title: 'Edit jadwal kedatangan product subcont',
         radius: 'md',
         size: 'lg',
-        children: <ModalEditReceiptSubcontSchedule dataSchedule={schedule} productSubcont={data} setAction={data.setAction} />
+        children: <ModalEditReceiptSubcontSchedule
+            dataSchedule={schedule}
+            productSubcont={data}
+            changeAction={data.setAction}
+        />
+    }), [data, data.setAction])
 
-    }), [data])
+    const openAddSchedule = useCallback(() => openModal({
+        title: 'Tambah jadwal kedatangan product subcont',
+        radius: 'md',
+        size: 'lg',
+        children: <ModalAddReceiptSubcontSchedule
+            changeAction={data.setAction}
+            productSubcont={data}
+        />
+    }), [data, data.setAction])
 
     const handleDelete = useCallback(async (id) => {
         try {
             await Delete(id, 'receipt-subcont-schedule-management')
-            SuccessNotif('Delete arrival schedule of product subconstruction success')
-            data.setAction(prev => prev + 1)
-            setAction(prev => prev + 1)
+            data.setAction()
+            SuccessNotif('Delete jadwal kedatangan product subcont berhasil')
         } catch (e) {
             if (e.message.data.constructor === Array) {
                 FailedNotif(e.message.data)
+                return
             }
+            FailedNotif('Delete jadwal kedatangan product subcont gagal')
         }
-    }, [data, Delete])
+    }, [data.setAction])
 
-    const openDeleteSchedule = useCallback((id) => openConfirmModal({
-        title: `Delete schedule`,
-        children: (
-            <Text size="sm">
-                Are you sure?, data will be deleted.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, delete', cancel: "No, don't delete it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleDelete(id)
-    }), [handleDelete])
-
-
-
-    useEffect(() => {
-
-        setSchedules(data.receiptsubcontschedule_set.map(schedule => ({
-            ...schedule, editButton:
-                <Button
-                    leftIcon={<IconEdit stroke={2} size={16} />}
-                    color='blue.6'
-                    variant='subtle'
-                    radius='md'
-                    mx='xs'
-                    onClick={() => openEditSchedule(schedule)}
-                >
-                    Edit
-                </Button>, deleteButton:
-                <Button
-                    leftIcon={<IconTrash stroke={2} size={16} />}
-                    color='red.6'
-                    variant='subtle'
-                    radius='md'
-                    mx='xs'
-                    onClick={() => openDeleteSchedule(schedule.id)}
-                >
-                    Edit
-                </Button>
-        })))
-
-    }, [action, data, openDeleteSchedule, openEditSchedule])
-
-
+    const columnScheduleReceiptSubcont = useMemo(() => [
+        {
+            name: 'Date',
+            selector: row => row.date,
+            sortable: true
+        },
+        {
+            name: 'Rencana',
+            selector: row => `${row.quantity} pcs`
+        },
+        {
+            name: 'Diterima',
+            selector: row => `${row.fulfilled_quantity} pcs`
+        },
+        {
+            name: '',
+            selector: row => <ButtonEdit
+                onClick={() => openEditSchedule(row)}
+            />
+        },
+        {
+            name: '',
+            selector: row => <ButtonDelete
+                onClick={() => openConfirmDeleteData(() => handleDelete(row.id))}
+            />
+        }
+    ], [openEditSchedule, openConfirmDeleteData, handleDelete])
 
     return (
-        <Paper m='xs' p='xs' radius='md' >
+        <Paper m='sm' radius='md' >
+
+            <HeadSection>
+                <ButtonAdd
+                    onClick={openAddSchedule}
+                >
+                    Schedule
+                </ButtonAdd>
+            </HeadSection>
 
             <BaseTable
+                title={`Jadwal rencana kedatangan product subcont`}
                 column={columnScheduleReceiptSubcont}
-                data={schedules}
+                data={data.receiptsubcontschedule_set}
                 pagination={false}
-                noData={" this subconstruction doesn't have arrival schedule "}
+                noData={"Product subcont ini tidak memiliki jadwal kedatangan"}
             />
-
         </Paper>
     )
 }
@@ -330,11 +268,13 @@ const ExpandedProductSubconstruction = ({ data }) => {
 
 const ProductSubconstruction = () => {
 
-
     const { Get } = useRequest()
-
-    const [action, setAction] = useState(0)
     const [productSubconstruction, setProductSubconstruction] = useState([])
+    const [action, setAction] = useState(0)
+
+    const changeAction = useCallback(() => {
+        setAction(prev => prev + 1)
+    }, [])
 
     const columnProductSubconstruction = useMemo(() => [
         {
@@ -346,52 +286,31 @@ const ProductSubconstruction = () => {
             selector: row => row.product.code
         },
         {
+            name: 'Delivery number',
+            selector: row => row.deliver_note_subcont.code
+        },
+        {
+            name: 'Delivery date',
+            selector: row => row.deliver_note_subcont.date
+        },
+        {
             name: 'Quantity',
             selector: row => row.quantity
         },
-        {
-            name: '',
-            selector: row => row.button,
-            style: {
-                margin: -10,
-                padding: -15,
-            }
-        }
     ], [])
-
-    const openAddSchedule = useCallback((product) => openModal({
-        title: 'Add arrival schedule',
-        radius: 'md',
-        size: 'lg',
-        children: <ModalAddReceiptSubcontSchedule productSubcont={product} setAction={setAction} />
-    }), [])
 
     const fetchProductSubcont = useCallback(async () => {
         try {
             const productSubcont = await Get('product-delivery-subcont')
-
-            setProductSubconstruction(productSubcont.map(product => ({
-                ...product, action: action, setAction: setAction, button:
-                    <Button
-                        leftIcon={<IconPlus />}
-                        color='blue.6'
-                        variant='subtle'
-                        radius='md'
-                        mx='xs'
-                        onClick={() => openAddSchedule(product)}
-                    >
-                        Schedule
-                    </Button>
-            })))
-
+            setProductSubconstruction(productSubcont.map(prodSubcont => ({ ...prodSubcont, setAction: changeAction })))
         } catch (e) {
             console.log(e)
         }
-    }, [openAddSchedule, action])
+    }, [])
 
     useEffect(() => {
         fetchProductSubcont()
-    }, [fetchProductSubcont])
+    }, [fetchProductSubcont, action])
 
 
 
@@ -399,9 +318,10 @@ const ProductSubconstruction = () => {
         <>
 
             <BaseTableExpanded
+                expandComponent={ExpandedProductSubconstruction}
                 column={columnProductSubconstruction}
                 data={productSubconstruction}
-                expandComponent={ExpandedProductSubconstruction}
+                noData='Tidak ada data product subcont'
             />
 
 

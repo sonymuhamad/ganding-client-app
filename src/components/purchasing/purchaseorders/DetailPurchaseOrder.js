@@ -10,7 +10,7 @@ import { FailedNotif, SuccessNotif } from "../../notifications"
 import MaterialReceiptList from "./MaterialReceiptList"
 import { PurchaseOrderReport } from "../../outputs";
 import { SectionDetailPurchaseOrder, SectionMaterialOrder, SectionReceiptSchedule } from "./detail_purchase_order_components";
-import { generateDataWithDate } from "../../../services";
+import { generateDataWithDate, generateDataWithDescription } from "../../../services";
 import { BaseContent } from "../../layout";
 
 
@@ -163,13 +163,13 @@ const DetailPurchaseOrder = () => {
         return materialOrderList.some(mo => mo.ordered > mo.arrived)
     }, [materialOrderList])
 
-
     const handleEditPurchaseOrder = useCallback(async (value) => {
         const { date, ...rest } = value
         const validate_data = generateDataWithDate(date, rest)
+        const finalGeneratedData = generateDataWithDescription(validate_data)
 
         try {
-            const editedPo = await Put(validate_data.id, validate_data, 'purchase-order-management')
+            const editedPo = await Put(purchaseOrderId, finalGeneratedData, 'purchase-order-management')
             SuccessNotif('Edit purchase order success')
             setDataPo(editedPo)
         } catch (e) {
@@ -181,7 +181,7 @@ const DetailPurchaseOrder = () => {
             FailedNotif('Edit purchase order failed')
 
         }
-    }, [setDataPo])
+    }, [setDataPo, purchaseOrderId])
 
     const handleDeletePo = async () => {
         try {

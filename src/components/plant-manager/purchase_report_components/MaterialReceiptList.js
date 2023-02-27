@@ -25,7 +25,7 @@ const MaterialReceiptList = () => {
             sortable: true
         },
         {
-            name: 'Quantity received',
+            name: 'Diterima',
             selector: row => `${row.quantity} ${row.material_order.material.uom.name}`
         },
         {

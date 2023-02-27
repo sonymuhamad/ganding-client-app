@@ -3,7 +3,7 @@ import { customTableStyle } from "../../services";
 import DataTable from "react-data-table-component";
 import { Text } from "@mantine/core";
 
-export default function BaseTable({ column, data, pagination = true, conditionalRowStyle = [], dense = false, noData = 'There are no records to display' }) {
+export default function BaseTable({ column, data, pagination = true, conditionalRowStyle = [], dense = false, noData = 'There are no records to display', title = null }) {
 
     return (
         <>
@@ -11,6 +11,7 @@ export default function BaseTable({ column, data, pagination = true, conditional
                 customStyles={customTableStyle}
                 columns={column}
                 data={data}
+                title={<Text align="center" size='sm' color='dimmed' > {title} </Text>}
                 highlightOnHover={true}
                 conditionalRowStyles={conditionalRowStyle}
                 pagination={pagination}

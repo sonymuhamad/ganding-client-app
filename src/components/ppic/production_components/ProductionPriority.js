@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 
 const ProductionPriority = () => {
 
-    const { Loading, GetAndExpiredTokenHandler } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
     const [dataPriority, setDataPriority] = useState([])
 
     const columnProductionPriority = useMemo(() => [
@@ -31,7 +31,17 @@ const ProductionPriority = () => {
         },
         {
             name: '',
-            selector: row => row.button
+            selector: row => <Button
+                leftIcon={<IconAffiliate stroke={2} size={16} />}
+                color='blue.6'
+                variant='subtle'
+                radius='md'
+                mx='xs'
+                component={Link}
+                to={`/home/ppic/production/new/${row.id}`}
+            >
+                Produksi
+            </Button>
         }
     ], [])
 
@@ -40,22 +50,7 @@ const ProductionPriority = () => {
 
             const priority = data.reduce((prev, current) => {
                 const { ppic_process_related } = current
-
-                const many_process = ppic_process_related.map(pros => ({
-                    ...pros, button: <Button
-                        leftIcon={<IconAffiliate stroke={2} size={16} />}
-                        color='blue.6'
-                        variant='subtle'
-                        radius='md'
-                        mx='xs'
-                        component={Link}
-                        to={`/home/ppic/production/new/${pros.id}`}
-                    >
-                        Produce
-                    </Button>
-                }))
-
-                return [...prev, ...many_process]
+                return [...prev, ...ppic_process_related]
             }, [])
 
             setDataPriority(priority)
@@ -64,13 +59,12 @@ const ProductionPriority = () => {
     }, [])
 
     return (
-        <>
-            <Loading />
-            <BaseTable
-                column={columnProductionPriority}
-                data={dataPriority}
-            />
-        </>
+
+        <BaseTable
+            column={columnProductionPriority}
+            data={dataPriority}
+        />
+
     )
 
 }

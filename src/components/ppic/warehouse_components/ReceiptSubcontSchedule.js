@@ -83,7 +83,7 @@ const ReceiptSubcontSchedule = () => {
         },
         {
             name: 'Date',
-            selector: row => new Date(row.date).toDateString()
+            selector: row => row.date
         },
         {
             name: 'Quantity',

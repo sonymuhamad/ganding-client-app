@@ -1,12 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo } from "react";
 
-import { RawMaterial, FinishGood, Wip, ConversionUom, BaseConversionMaterial, ConvertMaterial, MaterialReceipt, ReceiptSchedule, ReceiptNoteProductSubconstruction, ReceiptSubcontSchedule } from './warehouse_components'
+import { RawMaterial, FinishGood, Wip, MaterialReceipt, ReceiptSchedule, ReceiptNoteProductSubconstruction, ReceiptSubcontSchedule } from './warehouse_components'
 
 import { BaseContent } from "../layout";
 
 export default function Warehouse() {
 
-    const [actionConvertMaterial, setActionConvertMaterial] = useState(0)
 
     const breadcrumb = useMemo(() => [
         {
@@ -24,21 +23,6 @@ export default function Warehouse() {
             "label": "Raw materials",
             "link": "material-wh",
             "order": 1
-        },
-        {
-            "label": 'Conversion unit of material ',
-            "link": 'conversion-uom',
-            'order': 2
-        },
-        {
-            "label": 'Base conversion material',
-            "link": 'base-conversion-material',
-            'order': 2
-        },
-        {
-            "label": 'Converted materials',
-            "link": 'converted-materials',
-            'order': 2
         },
         {
             label: 'Finished goods',
@@ -74,20 +58,8 @@ export default function Warehouse() {
 
     const contents = useMemo(() => [
         {
-            description: 'This section contains information about stock of material based on its unit of material, and also access to edit stock',
-            component: <RawMaterial actions={actionConvertMaterial} />
-        },
-        {
             description: '',
-            component: <ConversionUom />
-        },
-        {
-            description: 'This section contains data of conversion material that used as the basis to convert material in <a href="#converted-materials"  >Converted material </a>section',
-            component: <BaseConversionMaterial />
-        },
-        {
-            description: 'Reports of process transforming raw materials into another material',
-            component: <ConvertMaterial actions={actionConvertMaterial} setaction={setActionConvertMaterial} />
+            component: <RawMaterial />
         },
         {
             description: 'This section contains finished good stock of each product',

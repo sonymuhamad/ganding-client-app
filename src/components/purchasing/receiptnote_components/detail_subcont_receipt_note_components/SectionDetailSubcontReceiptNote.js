@@ -1,7 +1,6 @@
-
 import { IconClipboardList, IconCalendar, IconUserCheck, IconCodeAsterix, } from "@tabler/icons"
-import { TextInput, Textarea, Group, Image, Paper } from "@mantine/core"
-
+import { Textarea, Group, Image, Paper } from "@mantine/core"
+import { ReadOnlyTextInput } from "../../../custom_components"
 
 const SectionDetailSubcontReceiptNote = (
     { supplierName, code, note, date, image }
@@ -9,32 +8,23 @@ const SectionDetailSubcontReceiptNote = (
 
     return (
         <>
-            <TextInput
+            <ReadOnlyTextInput
                 label='Supplier'
-                readOnly
-                variant='filled'
                 m='xs'
-                radius='md'
                 icon={<IconUserCheck />}
                 value={supplierName}
             />
 
-            <TextInput
+            <ReadOnlyTextInput
                 label='Receipt number'
-                readOnly
-                variant='filled'
                 m='xs'
-                radius='md'
                 icon={<IconCodeAsterix />}
                 value={code}
             />
 
-            <TextInput
+            <ReadOnlyTextInput
                 label='Receipt date'
-                readOnly
-                variant='filled'
                 m='xs'
-                radius='md'
                 icon={<IconCalendar />}
                 value={new Date(date).toDateString()}
             />

@@ -8,7 +8,7 @@ const ProductionChart = () => {
 
     const [label, setLabel] = useState([])
     const [data, setData] = useState([])
-    const { GetAndExpiredTokenHandler, Loading } = useRequest()
+    const { GetAndExpiredTokenHandler } = useRequest()
 
     useEffect(() => {
 
@@ -38,21 +38,17 @@ const ProductionChart = () => {
 
 
     return (
-        <>
 
-            <Loading />
+        <LineChart label={label} dataset={[
+            {
+                id: 1,
+                label: 'Total production',
+                data: data,
+            },
+        ]}
+            title='Monthly production volume'
+        />
 
-            <LineChart label={label} dataset={[
-                {
-                    id: 1,
-                    label: 'Total production',
-                    data: data,
-                },
-            ]}
-                title='Monthly production volume'
-            />
-
-        </>
     )
 }
 

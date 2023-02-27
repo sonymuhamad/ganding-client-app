@@ -12,20 +12,6 @@ const ExpandedGroup = ({ data }) => {
 
     const { Put } = useRequest()
 
-    const openConfirmRemoveDivision = useCallback((val) => openConfirmModal({
-        title: `Remove ${val.username} from ${val.group_name} `,
-        children: (
-            <Text size="sm">
-                Are you sure?, the user will no longer have access in this division.
-            </Text>
-        ),
-        radius: 'md',
-        labels: { confirm: 'Yes, remove', cancel: "No, don't remove it" },
-        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
-        confirmProps: { radius: 'md' },
-        onConfirm: () => handleRemove(val)
-    }), [handleRemove])
-
     const handleRemove = useCallback(async (val) => {
         const validated_data = {
             id: val.user_id,
@@ -42,6 +28,19 @@ const ExpandedGroup = ({ data }) => {
         }
     }, [data])
 
+    const openConfirmRemoveDivision = useCallback((val) => openConfirmModal({
+        title: `Remove ${val.username} from ${val.group_name} `,
+        children: (
+            <Text size="sm">
+                Are you sure?, the user will no longer have access in this division.
+            </Text>
+        ),
+        radius: 'md',
+        labels: { confirm: 'Yes, remove', cancel: "No, don't remove it" },
+        cancelProps: { color: 'red', variant: 'filled', radius: 'md' },
+        confirmProps: { radius: 'md' },
+        onConfirm: () => handleRemove(val)
+    }), [handleRemove])
 
     const dataUser = useMemo(() => {
         return data.user_set

@@ -1,26 +1,29 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useRequest } from "../../../hooks";
+import { useRequest, useSearch } from "../../../hooks";
 
 import { BaseTable } from "../../tables";
-import { Group, TextInput } from "@mantine/core";
-import { IconSearch } from "@tabler/icons";
+import { HeadSection, SearchTextInput } from "../../custom_components";
 
 
 const DeliverySchedule = () => {
 
     const { Get } = useRequest()
-
     const [deliverySchedule, setDeliverySchedule] = useState([])
-    const [searchSchedule, setSearchSchedule] = useState('')
+    const { query, lowerCaseQuery, setValueQuery } = useSearch()
 
     const filteredDeliverySchedule = useMemo(() => {
 
-        return deliverySchedule.filter(schedule => schedule.date.toLowerCase().includes(searchSchedule.toLowerCase()) ||
-            schedule.product_order.product.name.toLowerCase().includes(searchSchedule.toLowerCase()) ||
-            schedule.product_order.sales_order.customer.name.toLowerCase().includes(searchSchedule.toLowerCase()) ||
-            schedule.product_order.sales_order.code.toLowerCase().includes(searchSchedule.toLowerCase()))
+        return deliverySchedule.filter(schedule => {
+            const { date, product_order } = schedule
+            const { sales_order, product } = product_order
+            const { name } = product
+            const { code, customer } = sales_order
 
-    }, [deliverySchedule, searchSchedule])
+            return date.toLowerCase().includes(lowerCaseQuery) || name.toLowerCase().includes(lowerCaseQuery) || customer.name.toLowerCase().includes(lowerCaseQuery) || code.toLowerCase().includes(lowerCaseQuery)
+
+        })
+
+    }, [deliverySchedule, lowerCaseQuery])
 
     const columnDeliverySchedule = useMemo(() => [
         {
@@ -38,7 +41,7 @@ const DeliverySchedule = () => {
 
         {
             name: 'Date',
-            selector: row => new Date(row.date).toDateString()
+            selector: row => row.date
         },
         {
             name: 'Delivery quantity',
@@ -57,15 +60,12 @@ const DeliverySchedule = () => {
     return (
         <>
 
-            <Group position="right" m='xs' >
-                <TextInput
-                    icon={<IconSearch />}
-                    placeholder='Search schedule'
-                    value={searchSchedule}
-                    onChange={e => setSearchSchedule(e.target.value)}
-                    radius='md'
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
-            </Group>
+            </HeadSection>
 
             <BaseTable
 

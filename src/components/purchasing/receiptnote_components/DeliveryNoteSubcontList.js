@@ -37,10 +37,6 @@ const DeliveryNoteSubcontList = () => {
             sortable: true
         },
         {
-            name: 'Total product sent',
-            selector: row => row.productdeliversubcont_set.length,
-        },
-        {
             name: '',
             selector: row => <NavigationDetailButton
                 url={`/home/purchasing/shipments-and-receipts/shipment-subcont/${row.id}`}

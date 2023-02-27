@@ -24,11 +24,11 @@ const ProductOrderList = () => {
             selector: row => `${row.ordered} Unit`
         },
         {
-            name: 'Shipped',
+            name: 'Dikirim',
             selector: row => `${row.delivered} Unit`
         },
         {
-            name: 'Remaining orders',
+            name: 'Sisa order',
             selector: row => `${row.ordered > row.delivered ? row.ordered - row.delivered : 0} Unit`
         }
     ], [])

@@ -1,75 +1,21 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
-
-import { useRequest } from "../../../hooks";
-import { BaseTableExpanded } from "../../tables";
-
-
-import { TextInput, Text, Textarea, Group, Button, Paper, Select, FileButton } from "@mantine/core";
-import { IconClipboardCheck, IconBarcode, IconRegex, IconPackgeImport, IconPlus, IconSearch, IconDotsCircleHorizontal, IconUserCheck, IconCodeAsterix, IconCalendarEvent, IconUpload, IconTrash, IconDownload } from "@tabler/icons";
-
+import { useNavigate } from "react-router-dom";
 import { openModal, closeAllModals } from "@mantine/modals";
 import { useForm } from "@mantine/form";
 import { DatePicker } from "@mantine/dates";
+import { TextInput, Text, Textarea, Group, Button, Select, FileButton } from "@mantine/core";
+import { IconUserCheck, IconCodeAsterix, IconCalendarEvent, IconUpload, IconTrash } from "@tabler/icons";
+
+import { useRequest, useSearch } from "../../../hooks";
+import { BaseTable } from "../../tables";
 import { FailedNotif, SuccessNotif } from "../../notifications";
+import { generateDataWithDate } from "../../../services";
+import { ModalForm, NavigationDetailButton, SearchTextInput, HeadSection, ButtonAdd } from "../../custom_components";
 
-
-const ExpandedReceiptNoteSubconstruction = ({ data }) => {
-
-    const productReceivedSet = useMemo(() => {
-        return data.subcontreceipt_set.map(subcont => (
-            <Group key={subcont.id} p='xs' >
-                <TextInput
-                    label='Product'
-                    readOnly
-                    radius='md'
-                    icon={<IconBarcode />}
-                    value={subcont.product_subcont.product.name}
-                />
-
-                <TextInput
-                    label='Product number'
-                    readOnly
-                    radius='md'
-                    icon={<IconRegex />}
-                    value={subcont.product_subcont.product.code}
-                />
-
-                <TextInput
-                    label='Product number'
-                    readOnly
-                    radius='md'
-                    icon={<IconPackgeImport />}
-                    value={subcont.quantity}
-                />
-
-            </Group>
-        ))
-    }, [data])
-
-    return (
-        <Paper m='xs' p='xs' >
-            <Textarea
-                label='Receipt description'
-                readOnly
-                radius='md'
-                value={data.note}
-                icon={<IconClipboardCheck />}
-            />
-
-            {productReceivedSet.length === 0 ?
-                <Text align="center" size='sm' color='dimmed' my='md' >
-                    This receipt note doesn't have product received
-                </Text>
-                : productReceivedSet}
-
-        </Paper>
-    )
-}
 
 const ModalAddReceiptNoteSubcont = () => {
 
-    const { Get, Post, Loading } = useRequest()
+    const { Get, Post } = useRequest()
     const navigate = useNavigate()
 
     const [supplierList, setSupplierList] = useState([])
@@ -90,7 +36,7 @@ const ModalAddReceiptNoteSubcont = () => {
         } catch (e) {
             console.log(e)
         }
-    }, [Get])
+    }, [])
 
     useEffect(() => {
         fetch()
@@ -98,15 +44,9 @@ const ModalAddReceiptNoteSubcont = () => {
 
 
     const handleSubmit = useCallback(async (value) => {
-        let validate_data
 
-        if (value.date) {
-            validate_data = { ...value, date: value.date.toLocaleDateString('en-CA') }
-        } else {
-            validate_data = value
-        }
-
-
+        const { date, ...rest } = value
+        const validate_data = generateDataWithDate(date, rest)
         try {
             const newReceiptNote = await Post(validate_data, 'receipt-note-subcont-management', 'multipart/form-data')
             SuccessNotif('Add receipt note product subconstruction success')
@@ -118,13 +58,11 @@ const ModalAddReceiptNoteSubcont = () => {
         }
     }, [navigate, Post])
 
-
-
     return (
 
-        <form onSubmit={form.onSubmit(handleSubmit)} >
-
-            <Loading />
+        <ModalForm
+            formId='formAddReceiptNoteSubcont'
+            onSubmit={form.onSubmit(handleSubmit)} >
 
             <Select
                 {...form.getInputProps('supplier')}
@@ -201,19 +139,7 @@ const ModalAddReceiptNoteSubcont = () => {
                 )}
             </Group>
 
-            <Button
-                m='xs'
-                radius='md'
-                leftIcon={<IconDownload />}
-                type='submit'
-            >
-
-                Save
-
-            </Button>
-
-
-        </form>
+        </ModalForm>
     )
 }
 
@@ -221,17 +147,17 @@ const ModalAddReceiptNoteSubcont = () => {
 const ReceiptNoteProductSubconstruction = () => {
 
     const { Get } = useRequest()
-
     const [receiptNoteSubcont, setReceiptNoteSubcont] = useState([])
-    const [searchVal, setSearchVal] = useState('')
+    const { query, lowerCaseQuery, setValueQuery } = useSearch()
 
     const filteredReceiptNoteSubcont = useMemo(() => {
+        return receiptNoteSubcont.filter(dn => {
+            const { supplier, code, date } = dn
+            const { name } = supplier
+            return name.toLowerCase().includes(lowerCaseQuery) || code.toLowerCase().includes(lowerCaseQuery) || date.toLowerCase().includes(lowerCaseQuery)
+        })
 
-        const filteredVal = searchVal.toLowerCase()
-
-        return receiptNoteSubcont.filter(dn => dn.supplier.name.toLowerCase().includes(filteredVal) || dn.code.toLowerCase().includes(filteredVal) || dn.date.toLowerCase().includes(filteredVal))
-
-    }, [searchVal, receiptNoteSubcont])
+    }, [lowerCaseQuery, receiptNoteSubcont])
 
     const columnReceiptNoteProductSubcont = useMemo(() => [
         {
@@ -244,34 +170,20 @@ const ReceiptNoteProductSubconstruction = () => {
         },
         {
             name: 'Date',
-            selector: row => new Date(row.date).toDateString()
-        },
-        {
-            name: 'Amount of product received',
-            selector: row => row.subcontreceipt_set.length,
+            selector: row => row.date
         },
         {
             name: '',
-            selector: row => row.buttonDetail,
-
+            selector: row => <NavigationDetailButton
+                url={`/home/ppic/warehouse/subcont-receipt/${row.id}`}
+            />,
         }
     ], [])
 
     const fetch = useCallback(async () => {
         try {
             const receiptNoteSubcont = await Get('receipt-note-subcont')
-            setReceiptNoteSubcont(receiptNoteSubcont.map(note => ({
-                ...note, buttonDetail: <Button
-                    leftIcon={<IconDotsCircleHorizontal stroke={2} size={16} />}
-                    color='teal.6'
-                    variant='subtle'
-                    radius='md'
-                    component={Link}
-                    to={`/home/ppic/warehouse/subcont-receipt/${note.id}`}
-                >
-                    Detail
-                </Button>
-            })))
+            setReceiptNoteSubcont(receiptNoteSubcont)
         } catch (e) {
             console.log(e)
         }
@@ -289,31 +201,25 @@ const ReceiptNoteProductSubconstruction = () => {
         children: <ModalAddReceiptNoteSubcont />
     }), [])
 
-
     return (
         <>
-            <Group position="right" >
-                <TextInput
-                    icon={<IconSearch />}
-                    placeholder='Search receipt note'
-                    onChange={e => setSearchVal(e.target.value)}
-                    value={searchVal}
-                    radius='md'
+
+            <HeadSection>
+                <SearchTextInput
+                    query={query}
+                    setValueQuery={setValueQuery}
                 />
-                <Button
-                    leftIcon={<IconPlus />}
-                    radius='md'
-                    variant='outline'
+                <ButtonAdd
                     onClick={openAddReceiptNoteSubcont}
                 >
-                    Receipt note subconstruction
-                </Button>
-            </Group>
+                    Receipt note subcont
+                </ButtonAdd>
+            </HeadSection>
 
-            <BaseTableExpanded
-                expandComponent={ExpandedReceiptNoteSubconstruction}
+            <BaseTable
                 data={filteredReceiptNoteSubcont}
                 column={columnReceiptNoteProductSubcont}
+                noData='Tidak ada penerimaan product subcont'
             />
 
         </>
