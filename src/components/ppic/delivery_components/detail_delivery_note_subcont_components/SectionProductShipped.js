@@ -174,13 +174,14 @@ const SectionProductShipped = (
         size: 'xl',
         children: <ModalEditProductSubcont
             setUpdateProductShipped={setUpdateProductShipped}
+            deliveryNoteSubcontId={deliveryNoteSubcontId}
             data={data} />
 
-    }), [setUpdateProductShipped])
+    }), [setUpdateProductShipped, deliveryNoteSubcontId])
 
     const handleDeleteProductSubcont = useCallback(async (id) => {
         try {
-            await Delete(id, 'product-delivery-subcont-management')
+            await Delete(id, 'deliveries/products-shipped/subcont')
             SuccessNotif('Delete delivery product subconstruction success')
             setDeleteProductShipped(id)
         } catch (e) {
@@ -230,8 +231,6 @@ const SectionProductShipped = (
                 expandComponent={ExpandedDeliveryNoteSubcont}
                 noData="This delivery note subconstruction doesn't have any product shipped "
             />
-
-
 
         </>
     )

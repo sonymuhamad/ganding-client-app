@@ -2,16 +2,16 @@ import React, { useCallback } from "react";
 import { Text, Group, TextInput, NumberInput } from "@mantine/core";
 import { IconBarcode, IconTimeline, IconSortAscending2, IconPackgeImport, IconAssemblyOff, IconRegex } from "@tabler/icons";
 import { closeAllModals } from "@mantine/modals";
-import { useRequest } from "../../../../hooks";
+import { useRequest, useNotification } from "../../../../hooks";
 import { ModalForm } from "../../../custom_components";
 import { useForm } from "@mantine/form";
+import { FailedNotif } from "../../../notifications";
 
-import { SuccessNotif, FailedNotif } from "../../../notifications";
 
 const ModalEditProductReceived = ({ setUpdateProductReceived, data }) => {
 
     const { Put } = useRequest()
-
+    const { successNotif, failedNotif } = useNotification()
     const form = useForm({
         initialValues: {
             id: data.id,
@@ -25,23 +25,21 @@ const ModalEditProductReceived = ({ setUpdateProductReceived, data }) => {
 
     const handlesubmitEditProductReceived = useCallback(async (data) => {
         try {
-            const updatedProductReceived = await Put(data.id, data, 'product-subcont-receipt-management')
+            const updatedProductReceived = await Put(data.id, data, 'receipts/products-received')
             setUpdateProductReceived(updatedProductReceived)
-            SuccessNotif('Edit product received success')
+            successNotif('Edit product received success')
             closeAllModals()
         } catch (e) {
-            form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            } else if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-            } else if (e.message.data.product_subcont) {
-                FailedNotif(e.message.data.product_subcont)
-            } else {
-                FailedNotif('Edit product received failed')
+            const { message } = e
+            const { data } = message
+            const { product_subcont } = data
+            form.setErrors(data)
+            if (product_subcont) {
+                FailedNotif(product_subcont)
             }
+            failedNotif(e, 'Edit product received failed')
         }
-    }, [Put, setUpdateProductReceived])
+    }, [Put, setUpdateProductReceived, successNotif, failedNotif])
 
     const { product_subcont } = data
     const { product, process } = product_subcont

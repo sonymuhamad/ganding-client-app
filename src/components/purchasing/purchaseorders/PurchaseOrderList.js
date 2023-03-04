@@ -48,7 +48,7 @@ const ModalAddPurchaseOrder = () => {
     }
 
     useEffect(() => {
-        Get('supplier').then(data => {
+        Get('suppliers').then(data => {
             setSupplierList(data)
         })
     }, [])

@@ -39,7 +39,7 @@ const MaterialRequest = () => {
 
     useEffect(() => {
 
-        Get('mrp').then(data => {
+        Get('mrps').then(data => {
             setMrpList(data)
         })
 

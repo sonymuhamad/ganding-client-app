@@ -1,13 +1,12 @@
-import React, { useCallback, useMemo } from "react";
-import { openModal } from "@mantine/modals";
+import React, { useCallback, useMemo } from "react"
+import { openModal } from "@mantine/modals"
 
-import { BaseTableExpanded } from "../../../tables";
+import { BaseTableExpanded } from "../../../tables"
 import ModalAddProductReceived from './ModalAddProductReceived'
 import ModalEditProductReceived from './ModalEditProductReceived'
-import { ExpandedProductSubcontReceived } from "../../../layout";
-import { ButtonAdd, ButtonDelete, ButtonEdit, HeadSection } from "../../../custom_components";
-import { useRequest, useConfirmDelete } from "../../../../hooks";
-import { SuccessNotif, FailedNotif } from "../../../notifications";
+import { ExpandedProductSubcontReceived } from "../../../layout"
+import { ButtonAdd, ButtonDelete, ButtonEdit, HeadSection } from "../../../custom_components"
+import { useRequest, useConfirmDelete, useNotification } from "../../../../hooks"
 
 
 const SectionProductSubcontReceived = (
@@ -23,16 +22,17 @@ const SectionProductSubcontReceived = (
 
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Product subcont received' })
     const { Delete } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
 
     const handleDeleteProductReceived = useCallback(async (id) => {
         try {
-            await Delete(id, 'product-subcont-receipt-management')
+            await Delete(id, 'receipts/products-received')
             setDeleteProductReceived(id)
-            SuccessNotif('Delete product received success')
+            successNotif('Delete product received success')
         } catch (e) {
-            FailedNotif(e.message.data)
+            failedNotif(e, 'Delete product received failed')
         }
-    }, [setDeleteProductReceived])
+    }, [setDeleteProductReceived, successNotif, failedNotif])
 
     const openEditProductReceived = useCallback((data) => openModal({
         title: 'Edit product received',

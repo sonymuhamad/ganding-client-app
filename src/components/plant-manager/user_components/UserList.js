@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react"
 import { BaseTable } from "../../tables"
-import { useRequest } from "../../../hooks"
+import { useRequest, useNotification } from "../../../hooks"
 
-import { TextInput } from "@mantine/core";
-import { IconAt, IconUserCircle } from "@tabler/icons";
-import { closeAllModals, openModal } from "@mantine/modals";
-import { useForm } from "@mantine/form";
-import { FailedNotif, SuccessNotif } from "../../notifications";
+import { TextInput } from "@mantine/core"
+import { IconAt, IconUserCircle } from "@tabler/icons"
+import { closeAllModals, openModal } from "@mantine/modals"
+import { useForm } from "@mantine/form"
 import { ModalForm, ButtonAdd, NavigationDetailButton, HeadSection } from '../../custom_components'
 
 const ModalAddUser = ({ setAddUser }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Post } = useRequest()
     const form = useForm({
         initialValues: {
@@ -24,15 +24,11 @@ const ModalAddUser = ({ setAddUser }) => {
         try {
             const newUser = await Post(value, 'user-management')
             setAddUser(newUser)
-            SuccessNotif('Add user success')
+            successNotif('Add user success')
             closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Add user failed')
+            failedNotif(e, 'Add user failed')
         }
     }
 

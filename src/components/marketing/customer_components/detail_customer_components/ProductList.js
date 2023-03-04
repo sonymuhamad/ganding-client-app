@@ -177,7 +177,7 @@ const ProductList = () => {
 
     useEffect(() => {
 
-        RetrieveWithoutExpiredTokenHandler(customerId, 'product-customer').then(data => {
+        RetrieveWithoutExpiredTokenHandler(customerId, 'customer/products').then(data => {
             setProductList(data)
         })
 

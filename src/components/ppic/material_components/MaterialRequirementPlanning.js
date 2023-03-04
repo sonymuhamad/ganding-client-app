@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react"
 
-import { useRequest, useConfirmDelete } from "../../../hooks"
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks"
 import { CustomSelectComponentDetailMrp } from "../../layout"
 
 import { BaseTableExpanded, BaseTable } from "../../tables"
-import { SuccessNotif, FailedNotif } from "../../notifications"
 
 import { Paper, TextInput, Group, NumberInput, Divider, Text, Button, ActionIcon, Select, NativeSelect, Badge } from "@mantine/core"
 
@@ -66,7 +65,7 @@ const ExpandedMrp = ({ data }) => {
                     readOnly
                     icon={<IconBuildingWarehouse />}
                     variant='filled'
-                    value={data.material.warehousematerial}
+                    value={data.material.warehousematerial.quantity}
                     rightSection={<Text size='sm' color='dimmed' >
                         {data.material.uom.name}
                     </Text>}
@@ -101,6 +100,7 @@ const ExpandedMrp = ({ data }) => {
 
 const AddMaterialRequest = ({ setAction }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Post, Get } = useRequest()
     const [materialList, setMaterialList] = useState([])
 
@@ -120,7 +120,7 @@ const AddMaterialRequest = ({ setAction }) => {
 
     const fetch = useCallback(async () => {
         try {
-            const material = await Get('material-lists')
+            const material = await Get('material-detail')
             setMaterialList(material)
 
         } catch (e) {
@@ -134,19 +134,14 @@ const AddMaterialRequest = ({ setAction }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            await Post(value, 'mrp-management')
+            await Post(value, 'mrps-management')
             setAction()
-            SuccessNotif('Add request material success')
+            successNotif('Add material request success')
             closeAllModals()
         } catch (e) {
-            console.log(e)
-            if (e.message.data.detailmrp_set) {
-                FailedNotif(e.message.data.detailmrp_set)
-            } else {
-                FailedNotif('Add request material failed')
-            }
+            failedNotif(e, 'Add material request failed')
         }
-    }, [setAction])
+    }, [setAction, successNotif, failedNotif])
 
     const dataProduct = useMemo(() => {
         if (form.values.material !== null) {
@@ -283,6 +278,7 @@ const AddMaterialRequest = ({ setAction }) => {
 
 const EditMaterialRequest = ({ mrp, setAction }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Put, Get } = useRequest()
     const [materialList, setMaterialList] = useState([])
 
@@ -303,7 +299,7 @@ const EditMaterialRequest = ({ mrp, setAction }) => {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const materialList = await Get('material-lists')
+                const materialList = await Get('material-detail')
                 setMaterialList(materialList)
 
                 const { material, ...rest } = mrp
@@ -319,18 +315,14 @@ const EditMaterialRequest = ({ mrp, setAction }) => {
     const handleSubmit = useCallback(async (value) => {
 
         try {
-            await Put(value.id, value, 'mrp-management')
+            await Put(value.id, value, 'mrps-management')
             setAction()
-            SuccessNotif('Edit material request success')
+            successNotif('Edit material request success')
             closeAllModals()
         } catch (e) {
-            if (e.message.data.detailmrp_set) {
-                FailedNotif(e.message.data.detailmrp_set)
-                return
-            }
-            FailedNotif('Edit material request failed')
+            failedNotif(e, 'Edit material request failed')
         }
-    }, [setAction])
+    }, [setAction, successNotif, failedNotif])
 
     const detailmrp = useMemo(() => {
 
@@ -461,7 +453,7 @@ const EditMaterialRequest = ({ mrp, setAction }) => {
 const MaterialRequirementPlanning = () => {
 
     const { Get, Delete } = useRequest()
-
+    const { successNotif, failedNotif } = useNotification()
     const [mrpAction, setMrpAction] = useState(0)
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Mrp' })
     const [mrp, setMrp] = useState([])
@@ -472,13 +464,13 @@ const MaterialRequirementPlanning = () => {
 
     const handleDeleteMrp = useCallback(async (id) => {
         try {
-            await Delete(id, 'mrp-management')
+            await Delete(id, 'mrps-management')
             setAction()
-            SuccessNotif('Delete mrp success')
+            successNotif('Delete material request success')
         } catch (e) {
-            FailedNotif('Delete mrp failed')
+            failedNotif(e, 'Delete material request failed')
         }
-    }, [setAction])
+    }, [setAction, successNotif, failedNotif])
 
     const openEditMrpModal = useCallback((mrp) => openModal({
         title: 'Edit material request',
@@ -497,7 +489,7 @@ const MaterialRequirementPlanning = () => {
     const fetchMrp = useCallback(async () => {
         try {
 
-            const mrpList = await Get('mrp-details')
+            const mrpList = await Get('mrps')
             setMrp(mrpList)
         } catch (e) {
             console.log(e)

@@ -5,8 +5,7 @@ import { useForm } from "@mantine/form";
 import { openConfirmModal, openModal } from "@mantine/modals";
 import { IconUserCheck, IconCornerDownRightDouble } from "@tabler/icons";
 
-import { useRequest, useConfirmDelete } from "../../../hooks";
-import { FailedNotif, SuccessNotif } from "../../notifications"
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks"
 import MaterialReceiptList from "./MaterialReceiptList"
 import { PurchaseOrderReport } from "../../outputs";
 import { SectionDetailPurchaseOrder, SectionMaterialOrder, SectionReceiptSchedule } from "./detail_purchase_order_components";
@@ -72,7 +71,7 @@ const ModalInputAdditionalInformationBeforePrint = ({
 
 const DetailPurchaseOrder = () => {
 
-
+    const { successNotif, failedNotif } = useNotification()
     const { purchaseOrderId } = useParams()
     const [editAccess, setEditAccess] = useState(false)
     const navigate = useNavigate()
@@ -170,28 +169,22 @@ const DetailPurchaseOrder = () => {
 
         try {
             const editedPo = await Put(purchaseOrderId, finalGeneratedData, 'purchase-order-management')
-            SuccessNotif('Edit purchase order success')
+            successNotif('Edit purchase order success')
             setDataPo(editedPo)
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Edit purchase order failed')
+            failedNotif(e, 'Edit purchase order failed')
 
         }
-    }, [setDataPo, purchaseOrderId])
+    }, [setDataPo, purchaseOrderId, successNotif, failedNotif])
 
     const handleDeletePo = async () => {
         try {
             await Delete(purchaseOrderId, 'purchase-order-management')
-            navigate('/home/purchasing/purchase-order')
-            SuccessNotif('Delete purcase order material success')
+            navigate('/home/purchasing/purchase-order', { replace: true })
+            successNotif('Delete purchase order success')
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete purchase order failed')
         }
     }
 
@@ -200,11 +193,10 @@ const DetailPurchaseOrder = () => {
     const handleClosedPo = async (data) => {
         try {
             await Put(purchaseOrderId, data, 'close-purchase-order-management')
-            SuccessNotif('Status purchase order is closed ')
+            successNotif('Update status purchase order success')
             setStatus(true, true)
         } catch (e) {
-            console.log(e)
-            FailedNotif(e.message.data)
+            failedNotif(e, 'Update status purchase order failed')
         }
     }
 
@@ -212,11 +204,10 @@ const DetailPurchaseOrder = () => {
         const { done } = data
         try {
             await Put(purchaseOrderId, data, 'status-purchase-order-management')
-            SuccessNotif('Status purchase order material is changed ')
+            successNotif('Update status purchase order success')
             setStatus(done, false)
         } catch (e) {
-            console.log(e)
-            FailedNotif(e.message.data)
+            failedNotif(e, 'Update status purchase order failed')
         }
     }
 

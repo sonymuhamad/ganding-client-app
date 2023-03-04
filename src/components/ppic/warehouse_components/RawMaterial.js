@@ -3,9 +3,8 @@ import { IconEdit, IconBuildingWarehouse } from "@tabler/icons";
 import { openModal, closeAllModals, openConfirmModal } from "@mantine/modals";
 import { Paper, Button, Text } from "@mantine/core";
 
-import { SuccessNotif, FailedNotif } from "../../notifications";
-import { useRequest, useSearch } from "../../../hooks";
-import { BaseTableExpanded } from "../../tables";
+import { useRequest, useSearch, useNotification } from "../../../hooks";
+import { BaseTableExpanded, BaseTableDefaultExpanded } from "../../tables";
 import { HeadSection, SearchTextInput, ModalForm, DecimalInput } from "../../custom_components";
 import { ExpandedMaterial } from '../../layout'
 
@@ -13,19 +12,20 @@ import { ExpandedMaterial } from '../../layout'
 
 const ModalEditStockMaterial = ({ material, setUpdateWarehouseMaterial }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const [quantity, setQuantity] = useState('')
     const { Put } = useRequest()
 
     const handleSubmit = useCallback(async () => {
         try {
-            const updatedWarehouseMaterial = await Put(material.warehousematerial.id, { quantity: quantity }, 'warehouse-management-material')
+            const updatedWarehouseMaterial = await Put(material.warehousematerial.id, { quantity: quantity }, 'warehouse/material-management')
             setUpdateWarehouseMaterial(updatedWarehouseMaterial)
             closeAllModals()
-            SuccessNotif('Edit stock material success')
+            successNotif('Edit stock material success')
         } catch (e) {
-            FailedNotif('Edit stock material failed')
+            failedNotif(e, 'Edit stock material failed')
         }
-    }, [setUpdateWarehouseMaterial, quantity, material.warehousematerial.id])
+    }, [setUpdateWarehouseMaterial, quantity, material.warehousematerial.id, successNotif, failedNotif])
 
 
     const openConfirmSubmit = useCallback(() => openConfirmModal({
@@ -212,7 +212,7 @@ const RawMaterial = () => {
 
         const fetchUomMaterial = async () => {
             try {
-                const uomMaterial = await GetAndExpiredTokenHandler('warehouse-material')
+                const uomMaterial = await GetAndExpiredTokenHandler('warehouse/material')
                 setUom(uomMaterial.map(uom => ({ ...uom, setUpdate: setUpdateWarehouseMaterial })))
             } catch (e) {
                 console.log(e)
@@ -232,10 +232,10 @@ const RawMaterial = () => {
                 />
             </HeadSection>
 
-            <BaseTableExpanded
+            <BaseTableDefaultExpanded
                 column={columnUoms}
                 data={filteredUom}
-                condition
+                condition={row => row.amount_of_material > 0}
                 expandComponent={ExpandedMaterialWarehouse}
                 pagination={false}
             />

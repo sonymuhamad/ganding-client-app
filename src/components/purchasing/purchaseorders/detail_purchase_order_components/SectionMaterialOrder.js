@@ -1,21 +1,20 @@
 import React, { useCallback, useMemo } from "react"
 
 import { HeadSection, ButtonAdd, ButtonDelete, ButtonEdit } from "../../../custom_components"
-import { useConfirmDelete, useRequest } from "../../../../hooks"
+import { useConfirmDelete, useRequest, useNotification } from "../../../../hooks"
 import { openModal } from "@mantine/modals"
 import ModalAddMaterialOrder from "./ModalAddMaterialOrder"
 import ModalEditMaterialOrder from "./ModalEditMaterialOrder"
 
 import { BaseTableExpanded } from "../../../tables"
 import { ExpandedMaterialOrderList } from "../../../layout"
-import { SuccessNotif, FailedNotif } from "../../../notifications"
-
 
 
 const SectionMaterialOrder = (
     { materialOrderList, setDeleteMaterialOrder, setAddMaterialOrder, setEditMaterialOrder, supplierId, purchaseOrderId }
 ) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Material order' })
     const { Delete } = useRequest()
 
@@ -38,14 +37,12 @@ const SectionMaterialOrder = (
     const handleDeleteMaterialOrder = useCallback(async (id) => {
         try {
             await Delete(id, 'material-order-management')
-            SuccessNotif('Delete material order success')
+            successNotif('Delete material order success')
             setDeleteMaterialOrder(id)
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete material order failed')
         }
-    }, [setDeleteMaterialOrder])
+    }, [setDeleteMaterialOrder, successNotif, failedNotif])
 
     const columnMaterialOrderList = useMemo(() => [
         {

@@ -112,8 +112,8 @@ const SectionDetailDeliveryNoteSubcont = (
                     icon={<IconClipboardCheck />}
                     m='xs'
                     readOnly={!editAccess}
-                    placeholder="Input delivery information"
-                    label='Delivery descriptions'
+                    placeholder="Input description"
+                    label='Description'
                     radius='md'
                     {...form.getInputProps('note')}
                 />

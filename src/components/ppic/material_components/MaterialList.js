@@ -49,7 +49,7 @@ const MaterialList = () => {
 
     useEffect(() => {
 
-        GetAndExpiredTokenHandler('material-list').then(materialList => {
+        GetAndExpiredTokenHandler('materials').then(materialList => {
             setMaterialList(materialList)
         })
 

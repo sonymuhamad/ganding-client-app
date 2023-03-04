@@ -4,6 +4,7 @@ import { useSection } from "./useSection";
 import { useRequest } from "./useRequest";
 import { useConfirmDelete } from "./useConfirmDelete";
 import { useSearch } from "./useSearch";
+import { useNotification } from "./useNotification";
 
 
-export { useAuth, usePath, useRequest, useSection, useConfirmDelete, useSearch }
+export { useAuth, usePath, useRequest, useSection, useConfirmDelete, useSearch, useNotification }

@@ -7,16 +7,16 @@ import { openModal, closeAllModals } from "@mantine/modals";
 import { useNavigate } from "react-router-dom";
 
 import { BaseTable } from "../../tables";
-import { FailedNotif, SuccessNotif } from "../../notifications";
 import { ModalForm, NavigationDetailButton, SearchTextInput, ButtonAdd, HeadSection } from "../../custom_components";
 import { generateDataWithDate } from "../../../services";
-import { useRequest, useSearch } from "../../../hooks";
+import { useRequest, useSearch, useNotification } from "../../../hooks";
 
 
 const ModalAddDeliveryNoteSubcont = () => {
 
     const navigate = useNavigate()
     const { Post, Get } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
     const [driverList, setDriverList] = useState([])
     const [vehicleList, setVehicleList] = useState([])
     const [supplierList, setSupplierList] = useState([])
@@ -39,7 +39,7 @@ const ModalAddDeliveryNoteSubcont = () => {
             date: null
         },
         validate: {
-            supplier: value => validate(value, 'Sustomer'),
+            supplier: value => validate(value, 'Supplier'),
             driver: value => validate(value, 'Driver'),
             vehicle: value => validate(value, 'Vehicle'),
             date: value => validate(value, 'Date')
@@ -50,7 +50,7 @@ const ModalAddDeliveryNoteSubcont = () => {
         try {
             const driver = await Get('driver')
             const vehicle = await Get('vehicle')
-            const supplier = await Get('supplier-list')
+            const supplier = await Get('suppliers')
 
             setDriverList(driver)
             setVehicleList(vehicle)
@@ -65,32 +65,20 @@ const ModalAddDeliveryNoteSubcont = () => {
         fetch()
     }, [fetch])
 
-    const validateNote = useCallback((data) => {
-        if (data.note === '') {
-            const { note, ...rest } = data
-            return rest
-        }
-        return data
-
-    }, [])
-
-
     const handleSubmit = useCallback(async (data) => {
-
-        const validateDataWithNote = validateNote(data)
-        const { date, ...rest } = validateDataWithNote
+        const { date, ...rest } = data
         const validate_data = generateDataWithDate(date, rest)
 
         try {
-            const newDeliverySubcont = await Post(validate_data, 'delivery-note-subcont-management')
+            const newDeliverySubcont = await Post(validate_data, 'deliveries/subcont-management')
             closeAllModals()
-            SuccessNotif('Add delivery subconstruction success')
+            successNotif('Add delivery note subcont success')
             navigate(`/home/ppic/delivery/subcont/${newDeliverySubcont.id}`)
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Add delivery subcontstruction failed')
+            failedNotif(e, 'Add delivery note subcont failed')
         }
-    }, [navigate, validateNote])
+    }, [navigate, successNotif, failedNotif])
 
 
     return (
@@ -220,7 +208,7 @@ const DeliveryNoteSubcont = () => {
 
     useEffect(() => {
 
-        Get('delivery-note-subcont').then(data => {
+        Get('deliveries/subcont').then(data => {
             setDnSubcont(data)
         })
 

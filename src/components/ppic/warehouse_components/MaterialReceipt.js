@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { useRequest, useSearch } from "../../../hooks";
+import { useRequest, useSearch, useNotification } from "../../../hooks";
 import { BaseTable } from "../../tables";
 import { Button, Textarea, TextInput, Group, NativeSelect, Text, FileButton } from "@mantine/core";
 import { IconUpload, IconTrash, IconCodeAsterix, IconUserCheck, IconClipboardCheck, IconCalendar } from "@tabler/icons";
 import { openModal, closeAllModals } from "@mantine/modals";
 import { useForm } from "@mantine/form";
-import { FailedNotif, SuccessNotif } from "../../notifications";
 import { useNavigate } from "react-router-dom";
 import { DatePicker } from "@mantine/dates";
 
@@ -15,6 +14,7 @@ import { generateDataWithDate } from "../../../services";
 
 const ModalAddDeliveryNoteMaterial = () => {
 
+    const { successNotif, failedNotif } = useNotification()
     const [supplierList, setSupplierList] = useState([])
     const navigate = useNavigate()
     const { Get, Post } = useRequest()
@@ -33,7 +33,7 @@ const ModalAddDeliveryNoteMaterial = () => {
     })
 
     useEffect(() => {
-        Get('supplier-list').then(data => {
+        Get('suppliers').then(data => {
             setSupplierList(data)
         })
     }, [])
@@ -42,15 +42,15 @@ const ModalAddDeliveryNoteMaterial = () => {
         const { date, ...rest } = value
         const validate_data = generateDataWithDate(date, rest)
         try {
-            const newDnMaterial = await Post(validate_data, 'deliverynote-material-management', 'multipart/form-data')
-            SuccessNotif('Add material delivery note success')
+            const newDnMaterial = await Post(validate_data, 'receipts/material-management', 'multipart/form-data')
+            successNotif('Add receipt note material success')
             closeAllModals()
             navigate(`/home/ppic/warehouse/material-receipt/${newDnMaterial.id}`)
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Add material delivery note failed')
+            failedNotif(e, 'Add receipt note material failed')
         }
-    }, [Post, navigate])
+    }, [Post, navigate, successNotif, failedNotif])
 
 
     return (
@@ -183,7 +183,7 @@ const MaterialReceipt = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const data = await Get('deliverynote-material')
+                const data = await Get('receipts/material')
                 setData(data)
             } catch (e) {
                 console.log(e)

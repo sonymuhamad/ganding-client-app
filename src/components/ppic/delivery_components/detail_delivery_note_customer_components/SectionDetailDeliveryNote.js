@@ -110,8 +110,8 @@ export default function SectionDetailDeliveryNote(
                     icon={<IconClipboardCheck />}
                     m='xs'
                     readOnly={!editAccess}
-                    placeholder="Input description notes"
-                    label='Description notes'
+                    placeholder="Input description"
+                    label='Description'
                     radius='md'
                     {...form.getInputProps('note')}
                 />

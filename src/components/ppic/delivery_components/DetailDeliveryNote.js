@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom"
-import { SuccessNotif, FailedNotif } from "../../notifications";
 import { BaseContent } from '../../layout'
-import { useRequest, useConfirmDelete } from "../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks";
 
 import { useForm } from "@mantine/form";
 import { openModal } from "@mantine/modals";
 import { DeliveryNoteReport } from "../../outputs";
-import { generateDataWithDate, generateDataWithNote } from "../../../services";
+import { generateDataWithDate } from "../../../services";
 import { SectionProductShipped, SectionDetailDeliveryNote } from "./detail_delivery_note_customer_components";
 
 
 const DetailDeliveryNote = () => {
 
     const { deliveryNoteId } = useParams()
+    const { successNotif, failedNotif } = useNotification()
     const { Retrieve, Put, Get, Delete } = useRequest()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Delivery note' })
     const navigate = useNavigate()
@@ -122,15 +122,13 @@ const DetailDeliveryNote = () => {
 
     const handleDeleteDeliveryNote = useCallback(async () => {
         try {
-            await Delete(deliveryNoteId, 'delivery-note-management')
-            navigate('/home/ppic/delivery')
-            SuccessNotif('Delete delivery note success')
+            await Delete(deliveryNoteId, 'deliveries/customer-management')
+            navigate('/home/ppic/delivery', { replace: true })
+            successNotif('Delete delivery note success')
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete delivery note failed')
         }
-    }, [navigate, deliveryNoteId])
+    }, [navigate, deliveryNoteId, successNotif, failedNotif])
 
     const setDataForm = useCallback((data) => {
         form.setValues(data)
@@ -144,23 +142,19 @@ const DetailDeliveryNote = () => {
 
     const handleSubmit = useCallback(async (value) => {
 
-        const generatedDataFromDataWithNote = generateDataWithNote(value)
-        const { date, ...rest } = generatedDataFromDataWithNote
+        const { date, ...rest } = value
         const validated_data = generateDataWithDate(date, rest)
 
         try {
-            const updatedData = await Put(deliveryNoteId, validated_data, 'delivery-note-management')
+            const updatedData = await Put(deliveryNoteId, validated_data, 'deliveries/customer-management')
             handleSetAfterUpdateData(updatedData)
-            SuccessNotif('Edit delivery note success')
+            successNotif('Edit delivery note success')
             setEditAccess(prev => !prev)
         } catch (e) {
-            form.setErrors(e.message.data)
-            FailedNotif('Edit delivery note failed')
-            console.log(e)
-
+            failedNotif(e, 'Edit delivery note failed')
         }
 
-    }, [handleSetAfterUpdateData, deliveryNoteId])
+    }, [handleSetAfterUpdateData, deliveryNoteId, successNotif, failedNotif])
 
     const setDataDetailDeliveryNote = useCallback((detailDeliveryNote) => {
         const { date, customer, productdelivercustomer_set, driver, vehicle, ...restProps } = detailDeliveryNote
@@ -175,7 +169,7 @@ const DetailDeliveryNote = () => {
 
     const fetch = useCallback(async () => {
         try {
-            const detailDeliveryNote = await Retrieve(deliveryNoteId, 'delivery-note')
+            const detailDeliveryNote = await Retrieve(deliveryNoteId, 'deliveries/customer')
             const driverList = await Get('driver')
             const vehicleList = await Get('vehicle')
             setDriverList(driverList)

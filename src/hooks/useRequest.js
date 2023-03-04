@@ -11,13 +11,13 @@ export const useRequest = () => {
     const navigate = useNavigate()
     const { changeVisibility } = useContext(LoaderContext)
 
-    const [token, division] = useMemo(() => {
+    const token = useMemo(() => {
         const { user } = auth
         if (user) {
-            const { token, division } = user
-            return [token, division]
+            const { token } = user
+            return token
         }
-        return [null, null]
+        return null
     }, [auth])
 
     const RaiseError = useCallback(err => {
@@ -60,7 +60,7 @@ export const useRequest = () => {
     }, [NotFoundHandler, ExpiredHandler, RestrictedAccessHandler])
 
     const Post = useCallback(async (data, endpoint, content_type = 'application/json') => {
-        const url = `${Url}/${division}/${endpoint}/`
+        const url = `${Url}/${endpoint}/`
         changeVisibility()
         try {
             const res = await axios.post(url, data, {
@@ -78,11 +78,11 @@ export const useRequest = () => {
             changeVisibility()
         }
 
-    }, [division, token, ErrorHandler, RaiseError])
+    }, [token, ErrorHandler, RaiseError, changeVisibility])
 
     const Put = useCallback(async (id, data, endpoint, content_type = 'application/json') => {
 
-        const url = `${Url}/${division}/${endpoint}/${id}/`
+        const url = `${Url}/${endpoint}/${id}/`
         changeVisibility()
         try {
             const res = await axios.put(url, data, {
@@ -99,11 +99,11 @@ export const useRequest = () => {
         } finally {
             changeVisibility()
         }
-    }, [division, token, ErrorHandler, RaiseError])
+    }, [changeVisibility, token, ErrorHandler, RaiseError])
 
     const Patch = useCallback(async (id, data, endpoint, content_type = 'application/json') => {
 
-        const url = `${Url}/${division}/${endpoint}/${id}/`
+        const url = `${Url}/${endpoint}/${id}/`
         changeVisibility()
         try {
             const res = await axios.patch(url, data, {
@@ -121,12 +121,12 @@ export const useRequest = () => {
             changeVisibility()
         }
 
-    }, [division, token, ErrorHandler, RaiseError])
+    }, [changeVisibility, token, ErrorHandler, RaiseError])
 
     const Get = useCallback(async (endpoint) => {
         // this action doesn't show error expired token when it comes
 
-        const url = `${Url}/${division}/${endpoint}/`
+        const url = `${Url}/${endpoint}/`
         changeVisibility()
 
         try {
@@ -144,11 +144,11 @@ export const useRequest = () => {
             changeVisibility()
         }
 
-    }, [division, token, NotFoundHandler, RaiseError])
+    }, [changeVisibility, token, NotFoundHandler, RaiseError])
 
     const GetAndExpiredTokenHandler = useCallback(async (endpoint) => {
 
-        const url = `${Url}/${division}/${endpoint}/`
+        const url = `${Url}/${endpoint}/`
         changeVisibility()
 
         try {
@@ -166,15 +166,12 @@ export const useRequest = () => {
             changeVisibility()
         }
 
-    }, [division, token, ErrorHandler, RaiseError, changeVisibility])
-
-
-
+    }, [token, ErrorHandler, RaiseError, changeVisibility])
 
     const Delete = useCallback(async (id, endpoint) => {
         // this action show error expired token
 
-        const url = `${Url}/${division}/${endpoint}/${id}/`
+        const url = `${Url}/${endpoint}/${id}/`
         changeVisibility()
         try {
             const res = await axios.delete(url, {
@@ -190,12 +187,12 @@ export const useRequest = () => {
         } finally {
             changeVisibility()
         }
-    }, [division, token, ErrorHandler, RaiseError])
+    }, [changeVisibility, token, ErrorHandler, RaiseError])
 
     const Retrieve = useCallback(async (id, endpoint) => {
         // this action show error expired token
 
-        const url = `${Url}/${division}/${endpoint}/${id}/`
+        const url = `${Url}/${endpoint}/${id}/`
         changeVisibility()
 
         try {
@@ -211,12 +208,12 @@ export const useRequest = () => {
         } finally {
             changeVisibility()
         }
-    }, [division, token, ErrorHandler, RaiseError, changeVisibility])
+    }, [token, ErrorHandler, RaiseError, changeVisibility])
 
     const RetrieveWithoutExpiredTokenHandler = useCallback(async (id, endpoint) => {
         // This action doesn't show token expired error when it comes
 
-        const url = `${Url}/${division}/${endpoint}/${id}/`
+        const url = `${Url}/${endpoint}/${id}/`
         changeVisibility()
 
         try {
@@ -232,7 +229,7 @@ export const useRequest = () => {
         } finally {
             changeVisibility()
         }
-    }, [division, token, NotFoundHandler, RaiseError, changeVisibility])
+    }, [token, NotFoundHandler, RaiseError, changeVisibility])
 
 
     return {

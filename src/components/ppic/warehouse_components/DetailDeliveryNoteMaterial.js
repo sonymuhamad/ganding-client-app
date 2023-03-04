@@ -2,9 +2,8 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom"
 import { useForm } from "@mantine/form";
 
-import { useRequest, useConfirmDelete } from "../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks";
 import { BaseContent } from "../../layout";
-import { FailedNotif, SuccessNotif } from "../../notifications"
 import { generateDataWithDate, generateDataWithImage } from "../../../services";
 import {
     SectionDetailReceiptNoteMaterial,
@@ -15,6 +14,7 @@ import {
 const DetailDeliveryNoteMaterial = () => {
 
     const navigate = useNavigate()
+    const { successNotif, failedNotif } = useNotification()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Receipt note material' })
     const { deliveryNoteMaterialId } = useParams()
     const { Retrieve, Delete, Put } = useRequest()
@@ -55,15 +55,13 @@ const DetailDeliveryNoteMaterial = () => {
 
     const handleDeleteDeliveryNoteMaterial = useCallback(async () => {
         try {
-            await Delete(deliveryNoteMaterialId, 'deliverynote-material-management')
-            SuccessNotif('Delete delivery note success')
-            navigate('/home/ppic/warehouse')
+            await Delete(deliveryNoteMaterialId, 'receipts/material-management')
+            successNotif('Delete receipt note material success')
+            navigate('/home/ppic/warehouse', { replace: true })
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete receipt note material failed')
         }
-    }, [navigate, deliveryNoteMaterialId])
+    }, [navigate, deliveryNoteMaterialId, successNotif, failedNotif])
 
     const setDataAfterUpdate = useCallback((updatedDeliveryNote) => {
         const { date, ...rest } = updatedDeliveryNote
@@ -76,24 +74,20 @@ const DetailDeliveryNoteMaterial = () => {
         const validated_data = generateDataWithDate(date, rest)
 
         try {
-            const updatedDataDeliveryNoteMaterial = await Put(value.id, validated_data, 'deliverynote-material-management', 'multipart/form-data')
+            const updatedDataDeliveryNoteMaterial = await Put(value.id, validated_data, 'receipts/material-management', 'multipart/form-data')
             setDataAfterUpdate(updatedDataDeliveryNoteMaterial)
-            SuccessNotif('Edit material receipt note success')
+            successNotif('Edit receipt note material success')
             setEditAccess(e => !e)
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Edit material receipt note failed')
+            failedNotif(e, 'Edit receipt note material failed')
         }
 
-    }, [setDataAfterUpdate])
+    }, [setDataAfterUpdate, successNotif, failedNotif])
 
     useEffect(() => {
 
-        Retrieve(deliveryNoteMaterialId, 'deliverynote-material').then(data => {
+        Retrieve(deliveryNoteMaterialId, 'receipts/material').then(data => {
             const { materialreceipt_set, supplier, date, ...restProps } = data
             setMaterialReceiptList(materialreceipt_set)
             setSupplier(supplier)

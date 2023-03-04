@@ -4,9 +4,9 @@ import { useForm } from "@mantine/form"
 import { IconAsset, IconCodeAsterix, IconArchive, IconShoppingCart, IconPackgeImport } from "@tabler/icons";
 import { closeAllModals } from "@mantine/modals"
 
-import { useRequest } from "../../../../hooks"
-import { FailedNotif, SuccessNotif } from "../../../notifications"
+import { useRequest, useNotification } from "../../../../hooks"
 import { ModalForm } from "../../../custom_components"
+import { FailedNotif } from "../../../notifications";
 
 
 const ModalEditMaterialReceived = ({ data, setUpdateMaterialReceived, idDn }) => {
@@ -20,23 +20,23 @@ const ModalEditMaterialReceived = ({ data, setUpdateMaterialReceived, idDn }) =>
             quantity: data.quantity
         }
     })
+    const { successNotif, failedNotif } = useNotification()
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            const updatedMaterialReceived = await Put(value.id, value, 'material-receipt-management')
+            const updatedMaterialReceived = await Put(value.id, value, 'receipts/materials-received')
             setUpdateMaterialReceived(updatedMaterialReceived)
-            SuccessNotif('Edit quantity material receipt succes')
+            successNotif('Edit material received success')
             closeAllModals()
 
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
+            if (e.message.data.material_order) {
+                FailedNotif(e.message.data.material_order)
             }
-            FailedNotif('Edit quantity material receipt failed')
+            failedNotif(e, 'Edit material received failed')
         }
-    }, [setUpdateMaterialReceived])
+    }, [setUpdateMaterialReceived, successNotif, failedNotif])
 
     return (
         <ModalForm
@@ -49,6 +49,7 @@ const ModalEditMaterialReceived = ({ data, setUpdateMaterialReceived, idDn }) =>
                     label='Material'
                     radius='md'
                     variant='filled'
+                    {...form.getInputProps('material_order')}
                     value={data.material_order.material.name}
                     readOnly
                 />

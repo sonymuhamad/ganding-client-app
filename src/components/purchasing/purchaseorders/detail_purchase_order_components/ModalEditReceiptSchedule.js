@@ -4,15 +4,16 @@ import { DatePicker } from "@mantine/dates"
 import { TextInput, NumberInput } from "@mantine/core"
 import { closeAllModals } from "@mantine/modals"
 import { useForm } from "@mantine/form"
-import { useRequest } from "../../../../hooks"
+import { useRequest, useNotification } from "../../../../hooks"
 import { generateDataWithDate } from "../../../../services"
 import { ModalForm, ReadOnlyTextInput } from "../../../custom_components"
-import { SuccessNotif, FailedNotif } from "../../../notifications"
 import { Group } from "@mantine/core"
 
 
 
 const ModalEditReceiptSchedule = ({ data, setUpdateSchedule }) => {
+
+    const { successNotif, failedNotif } = useNotification()
     const { Put } = useRequest()
     const form = useForm({
         initialValues: {
@@ -31,17 +32,11 @@ const ModalEditReceiptSchedule = ({ data, setUpdateSchedule }) => {
         try {
             const updatedSchedule = await Put(validate_data.id, validate_data, 'material-receipt-schedule-management')
             setUpdateSchedule(updatedSchedule)
-            SuccessNotif('Edit schedule success')
+            successNotif('Edit material receipt schedule success')
             closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            } else if (e.message.data.material_order) {
-                FailedNotif(e.message.data.material_order)
-            } else {
-                FailedNotif('Update schedule failed')
-            }
+            failedNotif(e, 'Edit material receipt schedule failed')
         }
     }
 

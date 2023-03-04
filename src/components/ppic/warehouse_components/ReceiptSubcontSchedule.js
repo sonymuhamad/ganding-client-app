@@ -95,7 +95,7 @@ const ReceiptSubcontSchedule = () => {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const schedules = await Get('receipt-subcont-schedule-list')
+                const schedules = await Get('schedules/subcont-incomplete')
                 setScheduleList(schedules)
 
             } catch (e) {

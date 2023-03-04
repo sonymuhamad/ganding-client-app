@@ -47,7 +47,7 @@ const SubcontReceiptNoteList = () => {
 
     useEffect(() => {
 
-        Get('receipt-note-subcont').then(data => {
+        Get('receipts/subcont').then(data => {
             setReceiptNoteList(data)
         })
 

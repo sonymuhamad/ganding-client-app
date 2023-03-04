@@ -4,16 +4,16 @@ import { IconSortAscending2, IconBarcode, IconFileTypography, IconBuildingFactor
 import { useNavigate } from "react-router-dom"
 import { openConfirmModal } from "@mantine/modals"
 import { DatePicker } from "@mantine/dates"
-import { useRequest } from "../../../hooks"
+import { useRequest, useNotification } from "../../../hooks"
 import { sectionStyle } from "../../../styles"
 import BreadCrumb from "../../BreadCrumb"
-import { SuccessNotif, FailedNotif } from "../../notifications"
 import { CustomSelectComponentProcess } from "../../layout"
 
 import { generateDataWithDate } from "../../../services"
 
 const NewProduction = () => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Get, Post, GetAndExpiredTokenHandler } = useRequest()
     const { classes } = sectionStyle()
     const [machineList, setMachineList] = useState([])
@@ -52,17 +52,10 @@ const NewProduction = () => {
 
         try {
             await Post(validate_data, 'production-report-management')
-            SuccessNotif('Add production success')
+            successNotif('Add production success')
             navigate('/home/ppic/production')
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            } else if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-            } else {
-                FailedNotif('Add production failed')
-            }
-            console.log(e)
+            failedNotif(e, 'Add production failed')
         }
 
     }
@@ -101,7 +94,7 @@ const NewProduction = () => {
             setOperatorList(data)
         })
 
-    }, [Get])
+    }, [])
 
 
     return (
@@ -281,7 +274,7 @@ const NewProduction = () => {
                                         radius='md'
                                         label='Stock'
                                         readOnly
-                                        value={reqMat.material.warehousematerial}
+                                        value={reqMat.material.warehousematerial.quantity}
                                     />
 
                                     <TextInput
@@ -300,11 +293,11 @@ const NewProduction = () => {
                                     radius='xl'
                                     mt='md'
                                     color={quantity === null || quantity === 0 || quantity === undefined ? 'blue' :
-                                        Math.ceil(((quantity + quantityNotGood) / reqMat.output) * reqMat.input) > parseInt(reqMat.material.warehousematerial) ? 'red' : 'blue'}
+                                        Math.ceil(((quantity + quantityNotGood) / reqMat.output) * reqMat.input) > parseInt(reqMat.material.warehousematerial.quantity) ? 'red' : 'blue'}
                                 >
 
                                     {quantity === null || quantity === 0 || quantity === undefined ? <IconCircleDotted /> :
-                                        Math.ceil(((quantity + quantityNotGood) / reqMat.output) * reqMat.input) > parseInt(reqMat.material.warehousematerial) ? <IconXboxX /> : <IconCircleCheck />
+                                        Math.ceil(((quantity + quantityNotGood) / reqMat.output) * reqMat.input) > parseInt(reqMat.material.warehousematerial.quantity) ? <IconXboxX /> : <IconCircleCheck />
                                     }
 
                                 </ThemeIcon>

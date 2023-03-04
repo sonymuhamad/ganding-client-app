@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useRequest } from "../../../../hooks";
+import { useRequest, useNotification } from "../../../../hooks";
 import { useForm } from "@mantine/form";
 import { ModalForm } from "../../../custom_components";
 import { IconFileTypography, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconLayoutKanban, IconArrowsSort } from "@tabler/icons"
 import { TextInput, Group, Paper, Button, Text, Divider, NumberInput, Select, Center } from "@mantine/core"
-import { FailedNotif, SuccessNotif } from "../../../notifications";
 import { closeAllModals } from "@mantine/modals";
 
 
@@ -12,6 +11,7 @@ const ModalAddProcess = (
     { productId, generateDataProcess, setAddProcess }
 ) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Post, Get } = useRequest()
     const [productList, setProductList] = useState([])
     const [materialList, setMaterialList] = useState([])
@@ -30,15 +30,15 @@ const ModalAddProcess = (
 
 
     useEffect(() => {
-        Get('material-lists').then(materialList => {
+        Get('materials').then(materialList => {
             setMaterialList(materialList)
         })
 
-        Get('product-lists').then(productList => {
+        Get('products').then(productList => {
             setProductList(productList)
         })
 
-        Get('process-type').then(processType => {
+        Get('type/process').then(processType => {
             setProcessTypeList(processType)
         })
 
@@ -47,17 +47,17 @@ const ModalAddProcess = (
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            const newProcess = await Post(value, 'process-management')
+            const newProcess = await Post(value, 'process/management')
             const generatedProcess = generateDataProcess(newProcess, productList, materialList, processTypeList)
             setAddProcess(generatedProcess)
             closeAllModals()
-            SuccessNotif('Add process success')
+            successNotif('Add process success')
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Add process failed')
+            failedNotif(e, 'Add process failed')
         }
 
-    }, [generateDataProcess, productList, materialList, setAddProcess, processTypeList])
+    }, [generateDataProcess, productList, materialList, setAddProcess, processTypeList, successNotif, failedNotif])
 
 
     return (

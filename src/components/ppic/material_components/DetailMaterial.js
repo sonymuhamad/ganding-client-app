@@ -1,17 +1,18 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useRequest, useConfirmDelete } from "../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks";
 import { useForm } from "@mantine/form";
-import { FailedNotif, SuccessNotif } from "../../notifications";
 
 import { generateDataWithImage } from "../../../services";
 import { SectionDetailMaterial, SectionProductionRequirement } from "./detail_material_components";
 import { BaseContent } from "../../layout";
 
 
+
 const DetailMaterial = () => {
 
     const { materialId } = useParams() // materialId
+    const { successNotif, failedNotif } = useNotification()
     const { Retrieve, Get, Put, Delete } = useRequest()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Material' })
     const [uom, setUom] = useState([])
@@ -58,8 +59,8 @@ const DetailMaterial = () => {
 
         const fetch = async () => {
             try {
-                const material = await Retrieve(materialId, 'material-list')
-                const uomList = await Get('uom-list')
+                const material = await Retrieve(materialId, 'materials-detail')
+                const uomList = await Get('uoms')
                 const { warehousematerial, supplier, uom, ppic_requirementmaterial_related, ...restDataMaterial } = material
 
                 setUom(uomList)
@@ -87,15 +88,13 @@ const DetailMaterial = () => {
 
     const handleDelete = useCallback(async () => {
         try {
-            await Delete(materialId, 'material-management')
-            SuccessNotif('Delete material success')
-            navigate('/home/ppic/material')
+            await Delete(materialId, 'materials-management')
+            successNotif('Delete material success')
+            navigate('/home/ppic/material', { replace: true })
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete material failed')
         }
-    }, [navigate, materialId])
+    }, [navigate, materialId, successNotif, failedNotif])
 
     const handleClickDeleteButton = useCallback(() => openConfirmDeleteData(handleDelete), [openConfirmDeleteData, handleDelete])
 
@@ -103,20 +102,16 @@ const DetailMaterial = () => {
         const validate_data = generateDataWithImage(val)
 
         try {
-            const updatedMaterial = await Put(materialId, validate_data, 'material-management', 'multipart/form-data')
-            SuccessNotif('Edit data material success')
+            const updatedMaterial = await Put(materialId, validate_data, 'materials-management', 'multipart/form-data')
+            successNotif('Edit material success')
             setEditAccess(prev => !prev)
             setDataMaterial(updatedMaterial)
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Edit material failed')
+            failedNotif(e, 'Edit material failed')
         }
 
-    }, [materialId, setDataMaterial])
+    }, [materialId, setDataMaterial, successNotif, failedNotif])
 
 
     const links = useMemo(() => [

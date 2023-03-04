@@ -51,7 +51,7 @@ const DeliverySchedule = () => {
     ], [])
 
     useEffect(() => {
-        Get('delivery-schedule').then(data => {
+        Get('schedules/product-incomplete').then(data => {
             setDeliverySchedule(data)
         })
 

@@ -47,7 +47,7 @@ const MaterialReceiptNoteList = () => {
 
     useEffect(() => {
 
-        GetAndExpiredTokenHandler('delivery-note-material').then(data => {
+        GetAndExpiredTokenHandler('receipts/material').then(data => {
             setReceiptNoteList(data)
         })
 

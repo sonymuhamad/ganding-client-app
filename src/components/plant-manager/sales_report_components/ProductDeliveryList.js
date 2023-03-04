@@ -43,7 +43,7 @@ const ProductDeliveryList = () => {
 
     useEffect(() => {
 
-        Get('product-delivery-list').then(data => {
+        Get('product-delivery').then(data => {
             setProductDeliveryList(data)
         })
 

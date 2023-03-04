@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { useRequest, useConfirmDelete } from "../../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../../hooks";
 import { BaseTable } from "../../../tables";
 import { useParams } from "react-router-dom";
 import { ButtonEdit, ButtonAdd, ButtonDelete, HeadSection } from '../../../custom_components'
@@ -7,13 +7,13 @@ import { ButtonEdit, ButtonAdd, ButtonDelete, HeadSection } from '../../../custo
 import { openModal } from "@mantine/modals";
 import ModalAddReceiptSchedule from "./ModalAddReceiptSchedule";
 import ModalEditReceiptSchedule from "./ModalEditReceiptSchedule";
-import { SuccessNotif, FailedNotif } from "../../../notifications";
 
 
 export default function SectionReceiptSchedule(
     { materialOrderList }
 ) {
 
+    const { successNotif, failedNotif } = useNotification()
     const { purchaseOrderId } = useParams()
     const [scheduleList, setScheduleList] = useState([])
     const { RetrieveWithoutExpiredTokenHandler, Delete } = useRequest()
@@ -69,13 +69,13 @@ export default function SectionReceiptSchedule(
     const handleDeleteSchedule = useCallback(async (id) => {
         try {
             await Delete(id, 'material-receipt-schedule-management')
-            SuccessNotif('Delete schedule success')
+            successNotif('Delete material receipt schedule success')
             setDeleteSchedule(id)
         } catch (e) {
-            FailedNotif(e.message.data)
+            failedNotif(e, 'Delete material receipt schedule failed')
         }
 
-    }, [setDeleteSchedule])
+    }, [setDeleteSchedule, successNotif, failedNotif])
 
     const columnScheduleList = useMemo(() => [
         {

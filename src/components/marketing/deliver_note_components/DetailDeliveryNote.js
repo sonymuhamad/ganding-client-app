@@ -70,7 +70,7 @@ const DetailDeliveryNote = () => {
         const fetch = async () => {
 
             try {
-                const { productdelivercustomer_set, ...dn } = await Retrieve(deliveryNoteId, 'delivery-notes')
+                const { productdelivercustomer_set, ...dn } = await Retrieve(deliveryNoteId, 'deliveries/customer')
 
                 setProductDeliver(productdelivercustomer_set)
                 setDetailDeliveryNote(dn)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useRequest, useSearch } from "../../../hooks";
-import { BaseTableExpanded } from "../../tables";
+import { BaseTableExpanded, BaseTableDefaultExpanded } from "../../tables";
 import { ModalEditStockProduct } from "../../layout";
 import { openModal } from "@mantine/modals";
 
@@ -59,15 +59,13 @@ const ExpandedWarehouseWip = ({ data }) => {
 
     const columnWarehouseWip = useMemo(() => [
         {
-            name: 'Customer',
-            selector: row => row.product.customer.name,
-            sortable: true,
-
-        },
-        {
             name: 'Product name',
             selector: row => row.product.name,
             sortable: true,
+        },
+        {
+            name: 'Product number',
+            selector: row => row.product.code,
         },
         {
             name: 'Quantity',
@@ -174,7 +172,7 @@ const Wip = () => {
     useEffect(() => {
         const fetchWarehouseWip = async () => {
             try {
-                const whTypeWip = await Get('warehouse-wip')
+                const whTypeWip = await Get('warehouse/wip')
                 setWarehouseWip(whTypeWip.map(whWip => ({ ...whWip, setUpdate: setUpdateWarehouseProduct })))
             } catch (e) {
                 console.log(e)
@@ -194,7 +192,8 @@ const Wip = () => {
                 />
             </HeadSection>
 
-            <BaseTableExpanded
+            <BaseTableDefaultExpanded
+                condition={row => row.warehouseproduct_set.length > 0}
                 column={columnWarehouseWip}
                 data={filteredWarehouseWip}
                 expandComponent={ExpandedWarehouseWip}

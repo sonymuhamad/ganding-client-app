@@ -4,14 +4,14 @@ import { useNavigate } from "react-router-dom"
 import { useForm } from "@mantine/form"
 
 import { BaseContent } from "../../layout"
-import { useRequest, useConfirmDelete } from '../../../hooks'
-import { SuccessNotif, FailedNotif } from '../../notifications'
+import { useRequest, useConfirmDelete, useNotification } from '../../../hooks'
 import { SectionManufacuringProcess, SectionDetailProduct, SectionOrderRelated, SectionWarehouseProduct } from "./detail_product_components"
 
 const DetailProduct = () => {
 
     const { productId } = useParams()
     const { Retrieve, Get, Put, Delete } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Product' })
     const [productType, setProductType] = useState([])
     const [editAccess, setEditAcces] = useState(false)
@@ -113,30 +113,27 @@ const DetailProduct = () => {
         const dataProduct = checkDataProduct(val)
 
         try {
-            const updatedProduct = await Put(val.id, dataProduct, 'product-management', 'multipart/form-data')
+            const updatedProduct = await Put(val.id, dataProduct, 'products-management', 'multipart/form-data')
             const { ppic_process_related, ...rest } = updatedProduct
             setData(rest)
             setEditAcces(prev => !prev)
-            SuccessNotif('Product updated')
+            successNotif('Edit product success')
         } catch (e) {
-            console.log(e)
-            FailedNotif('Update product failed')
             form.setErrors(e.message.data)
+            failedNotif(e, 'Edit product failed')
         }
 
-    }, [checkDataProduct, setData])
+    }, [checkDataProduct, setData, successNotif, failedNotif])
 
     const handleDeleteProduct = useCallback(async () => {
         try {
-            await Delete(productId, 'product-management')
-            SuccessNotif('Delete product success')
-            navigate('/home/ppic/product')
+            await Delete(productId, 'products-management')
+            successNotif('Delete product success')
+            navigate('/home/ppic/product', { replace: true })
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete product failed')
         }
-    }, [navigate, productId])
+    }, [navigate, productId, successNotif, failedNotif])
 
     const totalStock = useMemo(() => {
         return processList.reduce((prev, current) => {
@@ -154,8 +151,8 @@ const DetailProduct = () => {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const product = await Retrieve(productId, 'product-detail')
-                const productType = await Get('product-type')
+                const product = await Retrieve(productId, 'products-detail')
+                const productType = await Get('type/product')
 
                 const { customer, type, ppic_process_related, ppic_productorder_related, ...rest } = product
                 const dataForm = { ...rest, customer: customer.id, type: type.id }

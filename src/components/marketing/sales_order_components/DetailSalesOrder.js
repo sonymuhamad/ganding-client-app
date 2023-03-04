@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 import { useParams } from "react-router-dom";
-import { useRequest, useConfirmDelete } from "../../../hooks"
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks"
 import { Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { FailedNotif, SuccessNotif } from "../../notifications";
 import { openConfirmModal } from "@mantine/modals";
 import { useNavigate } from "react-router-dom";
 import { ProductOrderList, DeliveryScheduleList, ComponentDetailSalesOrder, ReportDelivery } from "./detail_sales_order_components";
@@ -17,6 +16,7 @@ const DetailSalesOrder = () => {
 
     const { salesOrderId } = useParams() // salesOrderId
     const navigate = useNavigate()
+    const { successNotif, failedNotif } = useNotification()
     const { Retrieve, Delete, Put } = useRequest()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Sales order' })
 
@@ -152,21 +152,17 @@ const DetailSalesOrder = () => {
     const handleEditSo = useCallback(async (value) => {
 
         const validate_data = generateDataBeforeUpdate(value)
-        console.log(validate_data)
+
         try {
             const updatedDataSalesOrder = await Put(salesOrderId, validate_data, 'sales-order-management')
-            SuccessNotif('Sales order has been updated')
+            successNotif('Edit sales order success')
             changedDataSalesOrderAfterEdit(updatedDataSalesOrder)
             setEditAccess(prev => !prev)
         } catch (e) {
-            form.setErrors({ ...e.message.data })
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Edit sales order failed')
+            form.setErrors(e.message.data)
+            failedNotif(e, 'Edit sales order failed')
         }
-    }, [salesOrderId, changedDataSalesOrderAfterEdit, generateDataBeforeUpdate])
+    }, [salesOrderId, changedDataSalesOrderAfterEdit, generateDataBeforeUpdate, successNotif, failedNotif])
 
     const generateStatus = useCallback((status) => {
         // generate data before changing status of sales order
@@ -197,18 +193,13 @@ const DetailSalesOrder = () => {
 
         try {
             const newData = await Put(salesOrderId, data, 'sales-order-management')
-            SuccessNotif('Status updated')
+            successNotif('Update status success')
             changedDataSalesOrderAfterEdit(newData)
         } catch (e) {
-            console.log(e)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Update status failed')
+            failedNotif(e, 'Update status success')
         }
 
-    }, [changedDataSalesOrderAfterEdit, generateStatus, salesOrderId])
+    }, [changedDataSalesOrderAfterEdit, generateStatus, salesOrderId, successNotif, failedNotif])
 
     const getWarningMessage = useCallback((value) => {
         // return a warning message while changing status of sales order
@@ -245,15 +236,13 @@ const DetailSalesOrder = () => {
     const handleDeleteSo = useCallback(async () => {
         try {
             await Delete(salesOrderId, 'sales-order-management')
-            SuccessNotif('Sales order has been deleted')
-            navigate('/home/marketing/sales-order')
+            successNotif('Delete sales order success')
+            navigate('/home/marketing/sales-order', { replace: true })
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete sales order failed')
         }
 
-    }, [salesOrderId, navigate])
+    }, [salesOrderId, navigate, successNotif, failedNotif])
 
 
     const handleClickDeleteButton = () => openConfirmDeleteData(handleDeleteSo)
@@ -262,8 +251,8 @@ const DetailSalesOrder = () => {
         const fetch = async () => {
 
             try {
-                const salesorder = await Retrieve(salesOrderId, 'sales-order-list')
-                const deliveryScheduleList = await Retrieve(salesOrderId, 'delivery-schedule')
+                const salesorder = await Retrieve(salesOrderId, 'sales-orders')
+                const deliveryScheduleList = await Retrieve(salesOrderId, 'schedules/delivery')
                 const productDeliverList = await Retrieve(salesOrderId, 'product-delivery')
 
                 const { customer, date, productordered, fixed, closed, productdelivered, productorder_set, ...rest } = salesorder

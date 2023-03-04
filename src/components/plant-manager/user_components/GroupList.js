@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react"
 
-import { useRequest } from "../../../hooks";
-import { BaseTableExpanded, BaseTable } from "../../tables";
+import { useRequest, useNotification } from "../../../hooks"
+import { BaseTableExpanded, BaseTable } from "../../tables"
 import { Paper, Text } from "@mantine/core"
-import { openConfirmModal } from "@mantine/modals";
-import { FailedNotif, SuccessNotif } from "../../notifications";
+import { openConfirmModal } from "@mantine/modals"
 import { NavigationDetailButton, ButtonDelete } from '../../custom_components'
 
 
 const ExpandedGroup = ({ data }) => {
 
     const { Put } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
 
     const handleRemove = useCallback(async (val) => {
         const validated_data = {
@@ -20,13 +20,12 @@ const ExpandedGroup = ({ data }) => {
         }
         try {
             await Put(val.user_id, validated_data, 'user-remove-group')
-            SuccessNotif(`Remove ${val.username} from ${val.group_name} success `)
+            successNotif(`Remove ${val.username} from ${val.group_name} success `)
             data.handleRemove(val.group_id, val.user_id)
         } catch (e) {
-            console.log(e)
-            FailedNotif('Remove user from division failed')
+            failedNotif('Remove user from division failed')
         }
-    }, [data])
+    }, [data, successNotif, failedNotif])
 
     const openConfirmRemoveDivision = useCallback((val) => openConfirmModal({
         title: `Remove ${val.username} from ${val.group_name} `,

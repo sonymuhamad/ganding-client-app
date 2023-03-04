@@ -37,7 +37,7 @@ const PendingInvoice = () => {
 
     useEffect(() => {
 
-        RetrieveWithoutExpiredTokenHandler(customerId, 'customer-pending-invoice').then(data => {
+        RetrieveWithoutExpiredTokenHandler(customerId, 'customer/pending-invoice').then(data => {
             setInvoiceList(data)
         })
 

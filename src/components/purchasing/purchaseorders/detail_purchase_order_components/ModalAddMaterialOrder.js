@@ -1,10 +1,9 @@
 import React, { useCallback, useState, useEffect } from "react"
 
-import { useRequest } from "../../../../hooks"
+import { useRequest, useNotification } from "../../../../hooks"
 import { ModalForm, PriceTextInput } from "../../../custom_components"
 import { Select, NumberInput, Group, Divider, Text } from "@mantine/core"
 import { IconClipboardList, IconAsset, IconBarcode } from "@tabler/icons"
-import { SuccessNotif, FailedNotif } from "../../../notifications"
 import { closeAllModals } from "@mantine/modals"
 import { CustomSelectComponentMrp, CustomSelectComponentProduct } from "../../../layout"
 
@@ -13,7 +12,7 @@ import { CustomSelectComponentMrp, CustomSelectComponentProduct } from "../../..
 const ModalAddMaterialOrder = ({ idSupplier, idPurchaseOrder, setAddMaterialOrder }) => {
 
     const { Retrieve, Post, RetrieveWithoutExpiredTokenHandler } = useRequest()
-
+    const { successNotif, failedNotif } = useNotification()
     const [materialList, setMaterialList] = useState([])
     const [dataToProductList, setDataToProductList] = useState([])
 
@@ -28,7 +27,7 @@ const ModalAddMaterialOrder = ({ idSupplier, idPurchaseOrder, setAddMaterialOrde
         Retrieve(idSupplier, 'supplier-material-list').then(data => {
             setMaterialList(data)
         })
-        RetrieveWithoutExpiredTokenHandler(idSupplier, 'mrp').then(data => {
+        RetrieveWithoutExpiredTokenHandler(idSupplier, 'supplier-mrps').then(data => {
             setMrpList(data)
         })
     }, [idSupplier])
@@ -59,15 +58,9 @@ const ModalAddMaterialOrder = ({ idSupplier, idPurchaseOrder, setAddMaterialOrde
             setAddMaterialOrder(onSelectedMaterial, onSelectedToProduct, addedMaterialOrder)
 
             closeAllModals()
-            SuccessNotif('Add material order success')
+            successNotif('Add material order success')
         } catch (e) {
-
-            if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-                return
-            }
-            FailedNotif('Add material order failed')
-
+            failedNotif(e, 'Add material order failed')
         }
     }
 

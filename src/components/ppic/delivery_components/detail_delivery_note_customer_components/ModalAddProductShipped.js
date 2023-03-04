@@ -3,16 +3,16 @@ import { closeAllModals } from "@mantine/modals"
 import { Select, TextInput, Textarea, NumberInput, Group, Divider } from "@mantine/core"
 import { IconCodeAsterix, IconBarcode, IconCalendar, IconClipboard, IconPackgeExport, IconRegex, IconCalendarEvent } from "@tabler/icons"
 
-import { useRequest } from "../../../../hooks"
+import { useRequest, useNotification } from "../../../../hooks"
 import { CustomSelectComponent } from "../../../layout"
 import { ModalForm } from "../../../custom_components"
-import { SuccessNotif, FailedNotif } from "../../../notifications"
-
 
 
 const ModalAddProductShipped = ({ idDeliveryNote, setAddProductShipped }) => {
 
     const { Post, Get } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
+
     const [quantity, setQuantity] = useState('')
     const [description, setDescription] = useState('')
     const [selectedProductOrder, setSelectedProductOrder] = useState(null)
@@ -24,8 +24,8 @@ const ModalAddProductShipped = ({ idDeliveryNote, setAddProductShipped }) => {
 
     const fetch = useCallback(async () => {
         try {
-            const schedulelist = await Get('delivery-schedule')
-            const productorderList = await Get('product-order-list')
+            const schedulelist = await Get('schedules/product-incomplete')
+            const productorderList = await Get('order/product-incomplete')
             setScheduleList(schedulelist)
             setProductOrderList(productorderList)
 
@@ -82,27 +82,18 @@ const ModalAddProductShipped = ({ idDeliveryNote, setAddProductShipped }) => {
         const validated_data = generateDataWithSchedule()
 
         try {
-            const newProductShipped = await Post(validated_data, 'product-delivery')
+            const newProductShipped = await Post(validated_data, 'deliveries/products-shipped/customer')
             setDataProductShippedAfterInsert(newProductShipped)
-            SuccessNotif('Add product shipped success')
+            successNotif('Add product shipped success')
             closeAllModals()
         } catch (e) {
-
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
-            else if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-            } else {
-                FailedNotif('Add product shipped failed')
-            }
-
             if (e.message.data.product_order) {
                 setErrorProductOrder(e.message.data.product_order)
             }
+            failedNotif(e, 'Add product shipped failed')
         }
 
-    }, [generateDataWithSchedule, setDataProductShippedAfterInsert])
+    }, [generateDataWithSchedule, setDataProductShippedAfterInsert, successNotif, failedNotif])
 
     const handleChangeSelectSchedule = useCallback((value) => {
         const selectedSchedule = scheduleList.find(schedule => schedule.id === parseInt(value))

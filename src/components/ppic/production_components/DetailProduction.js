@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Group, TextInput, Text, NumberInput, Paper, Divider, Title, Select, UnstyledButton } from "@mantine/core";
+import { Group, Text, NumberInput, Paper, Divider, Title, Select, UnstyledButton } from "@mantine/core";
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
 import { IconBarcode, IconCodeAsterix, IconTimeline, IconFileTypography, IconSortAscending2, IconBuildingFactory, IconUser, IconArchive, IconAsset, IconSum, IconPerspective, IconScale, IconRuler2, IconDimensions, IconRulerMeasure, IconAtom2, IconCalendar, } from "@tabler/icons";
 import { openConfirmModal } from "@mantine/modals"
 import { DatePicker } from "@mantine/dates";
 
-import { useRequest, useConfirmDelete } from "../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks";
 import BreadCrumb from "../../BreadCrumb";
 import { sectionStyle } from "../../../styles";
-import { FailedNotif, SuccessNotif } from "../../notifications";
 import { ActionButtons, ReadOnlyTextInput } from "../../custom_components";
 import { generateDataWithDate } from "../../../services";
 
 const DetailProduction = () => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { productionId } = useParams()
     const [action, setAction] = useState(0)
     const { Retrieve, Get, Put, Delete } = useRequest()
@@ -105,14 +106,12 @@ const DetailProduction = () => {
     const handleDeleteProduction = useCallback(async () => {
         try {
             await Delete(productionId, 'production-report-management')
-            SuccessNotif('Delete production report success')
-            navigate('/home/ppic/production')
+            successNotif('Delete production success')
+            navigate('/home/ppic/production', { replace: true })
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete production failed')
         }
-    }, [navigate, productionId])
+    }, [navigate, productionId, successNotif, failedNotif])
 
     const handleSubmit = async (data) => {
 
@@ -124,19 +123,14 @@ const DetailProduction = () => {
         try {
             await Put(productionId, validate_data, 'production-report-management')
             setAction(prev => prev + 1)
-            SuccessNotif('Edit data production success')
+            successNotif('Edit production success')
             setDetailProduction(prev => ({ ...prev, machine: data.machine, operator: data.operator, quantity: data.quantity, quantity_not_good: data.quantity_not_good }))
             form.resetDirty()
             setEditAccess(prev => !prev)
 
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            } else if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-            } else {
-                FailedNotif('Edit production failed')
-            }
+            form.setErrors(e.message.data)
+            failedNotif(e, 'Edit production failed')
             handleClickEditButton()
         }
 

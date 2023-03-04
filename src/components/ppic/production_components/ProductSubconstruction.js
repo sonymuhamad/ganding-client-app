@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 
-import { useConfirmDelete, useRequest } from "../../../hooks"
+import { useConfirmDelete, useRequest, useNotification } from "../../../hooks"
 import { BaseTableExpanded, BaseTable } from "../../tables";
 
 
-import { NumberInput, Text, TextInput, Paper } from "@mantine/core";
+import { NumberInput, Text, Paper } from "@mantine/core";
 import { IconCalendarEvent, IconPackgeExport, IconBarcode, IconRegex } from "@tabler/icons";
 import { DatePicker } from "@mantine/dates";
 import { openModal, closeAllModals } from "@mantine/modals";
@@ -18,6 +18,7 @@ const ModalAddReceiptSubcontSchedule = ({ productSubcont, changeAction }) => {
     const { product, id } = productSubcont
     const { name, code } = product
     const { Post } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
     const [date, setDate] = useState('')
     const [quantity, setQuantity] = useState('')
 
@@ -30,16 +31,11 @@ const ModalAddReceiptSubcontSchedule = ({ productSubcont, changeAction }) => {
             await Post(validate_data, 'receipt-subcont-schedule-management')
             changeAction()
             closeAllModals()
-            SuccessNotif('Add schedule success')
+            successNotif('Add receipt schedule success')
         } catch (e) {
-            if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-                return
-            }
-            FailedNotif('Add schedule failed')
-
+            failedNotif(e, 'Add receipt schedule failed')
         }
-    }, [quantity, date, id,])
+    }, [quantity, date, id, successNotif, failedNotif])
 
     return (
         <ModalForm
@@ -101,7 +97,7 @@ const ModalEditReceiptSubcontSchedule = ({
     const { name, code } = product
     const [date, setDate] = useState(() => new Date())
     const [quantity, setQuantity] = useState('')
-
+    const { successNotif, failedNotif } = useNotification()
     const { Put } = useRequest()
 
     useEffect(() => {
@@ -117,17 +113,13 @@ const ModalEditReceiptSubcontSchedule = ({
         const validate_data = generateDataWithDate(date, { quantity: quantity, product_subcont: id })
         try {
             await Put(dataSchedule.id, validate_data, 'receipt-subcont-schedule-management')
-            SuccessNotif('Edit arrival schedule success')
+            successNotif('Edit receipt schedule success')
             changeAction()
             closeAllModals()
         } catch (e) {
-            if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-                return
-            }
-            FailedNotif('Edit arrival schedule failed')
+            failedNotif(e, 'Edit receipt schedule failed')
         }
-    }, [dataSchedule, quantity, date, id])
+    }, [dataSchedule, quantity, date, id, successNotif, failedNotif])
 
     return (
 
@@ -179,6 +171,7 @@ const ExpandedProductSubconstruction = ({ data }) => {
 
     const { Delete } = useRequest()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Jadwal kedatangan product subcont' })
+    const { successNotif, failedNotif } = useNotification()
 
     const openEditSchedule = useCallback((schedule) => openModal({
         title: 'Edit jadwal kedatangan product subcont',
@@ -205,15 +198,11 @@ const ExpandedProductSubconstruction = ({ data }) => {
         try {
             await Delete(id, 'receipt-subcont-schedule-management')
             data.setAction()
-            SuccessNotif('Delete jadwal kedatangan product subcont berhasil')
+            successNotif('Delete receipt schedule success')
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Delete jadwal kedatangan product subcont gagal')
+            failedNotif(e, 'Delete receipt schedule failed')
         }
-    }, [data.setAction])
+    }, [data.setAction, successNotif, failedNotif])
 
     const columnScheduleReceiptSubcont = useMemo(() => [
         {
@@ -280,10 +269,6 @@ const ProductSubconstruction = () => {
         {
             name: 'Product',
             selector: row => row.product.name
-        },
-        {
-            name: 'Product number',
-            selector: row => row.product.code
         },
         {
             name: 'Delivery number',

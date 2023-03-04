@@ -5,9 +5,8 @@ import { useForm } from "@mantine/form";
 import { TextInput, Group, NativeSelect, Title, Button, Center, Text, FileButton } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 
-import { IconAsset, IconAtom2, IconDimensions, IconDownload, IconPerspective, IconRuler2, IconRulerMeasure, IconScale, IconUserCheck, IconUpload, IconTrash } from "@tabler/icons";
-import { SuccessNotif, FailedNotif } from '../../notifications'
-import { useRequest } from "../../../hooks";
+import { IconAsset, IconAtom2, IconDimensions, IconDownload, IconPerspective, IconRuler2, IconRulerMeasure, IconScale, IconUserCheck, IconUpload, IconTrash, IconHourglassEmpty } from "@tabler/icons"
+import { useRequest, useNotification } from "../../../hooks";
 import BreadCrumb from "../../BreadCrumb";
 import { sectionStyle } from "../../../styles";
 import { DecimalInput, PriceTextInput } from "../../custom_components";
@@ -21,6 +20,7 @@ const NewMaterial = () => {
     const [uomList, setUomList] = useState([])
     const { Get, Post } = useRequest()
     const navigate = useNavigate()
+    const { successNotif, failedNotif } = useNotification()
 
     const form = useForm({
         initialValues: {
@@ -32,6 +32,7 @@ const NewMaterial = () => {
             spec: '',
             uom: '',
             weight: '',
+            berat_jenis: '',
             width: '',
             thickness: '',
             price: 0
@@ -64,15 +65,14 @@ const NewMaterial = () => {
         }
 
         try {
-            await Post(validData, 'material-management', 'multipart/form-data')
-
-            SuccessNotif('New material added successfully')
+            await Post(validData, 'materials-management', 'multipart/form-data')
+            successNotif('Add material success')
             navigate('/home/ppic/material')
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Failed to add new new material')
+            failedNotif(e, 'Add material failed')
         }
-    }, [navigate])
+    }, [navigate, successNotif, failedNotif])
 
     const openSubmitMaterial = useCallback((val) => openConfirmModal({
         title: `Save new material`,
@@ -93,8 +93,8 @@ const NewMaterial = () => {
         const fetch = async () => {
 
             try {
-                const uoms = await Get('uom-list')
-                const suppliers = await Get('supplier-list')
+                const uoms = await Get('uoms')
+                const suppliers = await Get('suppliers')
                 setUomList(uoms)
                 setSupplierList(suppliers)
 
@@ -129,29 +129,33 @@ const NewMaterial = () => {
                     {...form.getInputProps('supplier')}
                 />
 
-                <TextInput
-                    icon={<IconAsset />}
-                    label='Material name'
+                <Group
+                    grow
                     my='xs'
-                    required
-                    placeholder="Input material name"
-                    radius='md'
-                    {...form.getInputProps('name')}
-                />
+                >
+
+                    <TextInput
+                        icon={<IconAsset />}
+                        label='Material name'
+                        required
+                        placeholder="Input material name"
+                        radius='md'
+                        {...form.getInputProps('name')}
+                    />
 
 
-                <TextInput
-                    icon={<IconPerspective />}
-                    label='Material specification'
-                    radius='md'
-                    required
-                    {...form.getInputProps('spec')}
-                    placeholder="Input material specification"
-                />
+                    <TextInput
+                        icon={<IconPerspective />}
+                        label='Material specification'
+                        radius='md'
+                        required
+                        {...form.getInputProps('spec')}
+                        placeholder="Input material specification"
+                    />
 
-                <Group my='xs' grow >
+                </Group>
 
-
+                <Group grow >
                     <NativeSelect
                         label='Unit of material'
                         icon={<IconAtom2 />}
@@ -186,6 +190,7 @@ const NewMaterial = () => {
 
                 <Group
                     grow
+                    my='xs'
                 >
 
                     <DecimalInput
@@ -200,12 +205,18 @@ const NewMaterial = () => {
                     />
 
                     <DecimalInput
-                        icon={<IconScale />}
-                        rightSection={<Text size='sm' color='dimmed'> mm </Text>}
+                        icon={<IconHourglassEmpty />}
                         label='Berat jenis'
-                        {...form.getInputProps('weight')}
+                        {...form.getInputProps('berat_jenis')}
                         placeholder="Input berat jenis"
+                    />
 
+                    <DecimalInput
+                        icon={<IconScale />}
+                        rightSection={<Text size='sm' color='dimmed'> kg </Text>}
+                        label='Weight'
+                        {...form.getInputProps('weight')}
+                        placeholder="Input berat material"
                     />
 
                     <PriceTextInput

@@ -5,13 +5,13 @@ import { closeAllModals, openModal } from "@mantine/modals";
 import { useForm } from "@mantine/form"
 
 import { BaseTable } from "../../tables"
-import { useConfirmDelete, useRequest } from "../../../hooks"
-import { FailedNotif, SuccessNotif } from "../../notifications";
+import { useConfirmDelete, useRequest, useNotification } from "../../../hooks"
 import { ModalForm, ButtonAdd, ButtonDelete, ButtonEdit, HeadSection } from "../../custom_components"
 
 
 const AddProductType = ({ setAddProductType }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Post } = useRequest()
     const form = useForm({
         initialValues: {
@@ -21,16 +21,16 @@ const AddProductType = ({ setAddProductType }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            const newProductType = await Post(value, 'product-type-management')
+            const newProductType = await Post(value, 'type/product-management')
             setAddProductType(newProductType)
             closeAllModals()
-            SuccessNotif('Add product type success')
+            successNotif('Add product type success')
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Add product type failed')
+            failedNotif(e, 'Add product type failed')
         }
 
-    }, [Post, setAddProductType])
+    }, [Post, setAddProductType, successNotif, failedNotif])
 
 
 
@@ -56,6 +56,7 @@ const AddProductType = ({ setAddProductType }) => {
 
 const EditProductType = ({ setUpdateProductType, data }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const form = useForm({
         initialValues: {
             name: data.name
@@ -66,15 +67,15 @@ const EditProductType = ({ setUpdateProductType, data }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            const updatedProductType = await Put(data.id, value, 'product-type-management')
+            const updatedProductType = await Put(data.id, value, 'type/product-management')
             setUpdateProductType(updatedProductType)
             closeAllModals()
-            SuccessNotif('Edit product type success')
+            successNotif('Edit product type success')
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Edit product type failed')
+            failedNotif(e, 'Edit product type failed')
         }
-    }, [setUpdateProductType, data.id])
+    }, [setUpdateProductType, data.id, failedNotif, successNotif])
 
 
     return (
@@ -97,6 +98,7 @@ const EditProductType = ({ setUpdateProductType, data }) => {
 
 const ProductType = () => {
 
+    const { successNotif, failedNotif } = useNotification()
     const [productType, setProductType] = useState([])
     const { Get, Delete } = useRequest()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Product type' })
@@ -140,22 +142,20 @@ const ProductType = () => {
 
     const handleDeleteProductType = useCallback(async (id) => {
         try {
-            await Delete(id, 'product-type-management')
+            await Delete(id, 'type/product-management')
             setDeleteProductType(id)
-            SuccessNotif('Delete product type success')
+            successNotif('Delete product type success')
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete product type failed')
         }
-    }, [setDeleteProductType])
+    }, [setDeleteProductType, successNotif, failedNotif])
 
     useEffect(() => {
         // effect for product type
 
         const fetchProductType = async () => {
             try {
-                const product_type = await Get('product-type')
+                const product_type = await Get('type/product')
                 setProductType(product_type)
             } catch (e) {
                 console.log(e)

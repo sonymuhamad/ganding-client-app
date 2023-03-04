@@ -2,9 +2,8 @@ import { ButtonDelete, ButtonAdd, HeadSection, ModalForm } from "../../../custom
 import { useForm } from "@mantine/form"
 import { Select } from "@mantine/core"
 import React, { useState, useEffect, useCallback, useMemo } from "react"
-import { SuccessNotif, FailedNotif } from "../../../notifications"
 
-import { useRequest, useConfirmDelete } from "../../../../hooks"
+import { useRequest, useConfirmDelete, useNotification } from "../../../../hooks"
 import { BaseTable } from "../../../tables"
 import { IconBuildingCommunity } from "@tabler/icons"
 import { openModal, closeAllModals } from "@mantine/modals"
@@ -13,6 +12,7 @@ import { openModal, closeAllModals } from "@mantine/modals"
 
 const ModalAddGroup = ({ userId, setAddGroup }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Put, GetAndExpiredTokenHandler } = useRequest()
     const [groupList, setGroupList] = useState([])
     const form = useForm({
@@ -31,10 +31,10 @@ const ModalAddGroup = ({ userId, setAddGroup }) => {
         try {
             const addedGroup = await Put(userId, value, 'user-add-group')
             setAddGroup(addedGroup)
-            SuccessNotif('Division added success')
+            successNotif('Add division success')
             closeAllModals()
         } catch (e) {
-            FailedNotif('Add division failed')
+            failedNotif(e, 'Add division failed')
         }
     }
 

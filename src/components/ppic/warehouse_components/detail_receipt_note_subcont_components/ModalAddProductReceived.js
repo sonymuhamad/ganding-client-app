@@ -2,16 +2,15 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Divider, Text, Group, TextInput, Select, NumberInput } from "@mantine/core";
 import { IconCalendarEvent, IconBarcode, IconTimeline, IconSortAscending2, IconPackgeImport, IconAssemblyOff } from "@tabler/icons";
 import { closeAllModals } from "@mantine/modals";
-import { useRequest } from "../../../../hooks";
+import { useRequest, useNotification } from "../../../../hooks";
 import { ModalForm } from "../../../custom_components"
-import { SuccessNotif, FailedNotif } from "../../../notifications";
 import { CustomSelectComponent, CustomSelectComponentReceiptSubcont } from "../../../layout";
 
 
 const ModalAddProductReceived = ({ idReceiptNoteSubcont, setAddProductReceived }) => {
 
     const { Get, Post } = useRequest()
-
+    const { successNotif, failedNotif } = useNotification()
     const [scheduleList, setScheduleList] = useState([])
     const [productSubcontList, setProductSubcontList] = useState([])
 
@@ -55,8 +54,8 @@ const ModalAddProductReceived = ({ idReceiptNoteSubcont, setAddProductReceived }
 
     const fetch = useCallback(async () => {
         try {
-            const productSubcontList = await Get('product-subcont-list')
-            const schedules = await Get('receipt-subcont-schedule-list')
+            const productSubcontList = await Get('order/subcont-incomplete')
+            const schedules = await Get('schedule/subcont-incomplete')
 
             setProductSubcontList(productSubcontList)
             setScheduleList(schedules)
@@ -95,23 +94,15 @@ const ModalAddProductReceived = ({ idReceiptNoteSubcont, setAddProductReceived }
         }
 
         try {
-            const newProductReceived = await Post(validated_data, 'product-subcont-receipt-management')
+            const newProductReceived = await Post(validated_data, 'receipts/products-received')
             generateProductReceivedAfterInsert(newProductReceived)
-            SuccessNotif('Add product received from subconstruction success')
+            successNotif('Add product received success')
             closeAllModals()
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            } else if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-            } else if (e.message.data.product_subcont) {
-                FailedNotif(e.message.data.product_subcont)
-            } else {
-                FailedNotif('Edit product received failed')
-            }
+            failedNotif(e, 'Add product received failed')
         }
 
-    }, [Post, quantity, quantityNotGood, selectedProduct, selectedSchedule, idReceiptNoteSubcont, generateProductReceivedAfterInsert])
+    }, [Post, quantity, quantityNotGood, selectedProduct, selectedSchedule, idReceiptNoteSubcont, generateProductReceivedAfterInsert, successNotif, failedNotif])
 
 
 

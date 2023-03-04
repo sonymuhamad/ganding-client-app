@@ -48,7 +48,7 @@ const FinishGood = () => {
         // effect for fetch finished goods
         const fetchFg = async () => {
             try {
-                const whTypeFg = await Get('warehouse-fg')
+                const whTypeFg = await Get('warehouse/fg')
                 setWarehouseFg(whTypeFg[0].warehouseproduct_set)
             } catch (e) {
                 console.log(e)

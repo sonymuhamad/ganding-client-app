@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-import { useRequest, useConfirmDelete } from "../../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../../hooks";
 import { TextInput, NumberInput, Textarea } from "@mantine/core";
 
 import { IconAt, IconMapPin, IconDeviceMobile, IconUserPlus } from "@tabler/icons";
 
 import { useForm } from "@mantine/form";
-import { FailedNotif, SuccessNotif } from "../../../notifications";
 import { ActionButtons } from "../../../custom_components";
 
 
 const ComponentDetailCustomer = () => {
 
+    const { successNotif, failedNotif } = useNotification()
     const [editAccess, setEditAccess] = useState(false)
     const navigate = useNavigate()
     const { Retrieve, Put, Delete } = useRequest()
@@ -52,33 +52,29 @@ const ComponentDetailCustomer = () => {
     const handleSubmit = async (value) => {
         try {
             const updatedCustomer = await Put(customerId, value, 'customer-management')
-            SuccessNotif('Edit customer success')
+            successNotif('Edit customer success')
             handleChangeDetailCustomer(updatedCustomer)
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Edit customer failed')
+            failedNotif(e, 'Edit customer failed')
         }
     }
 
     const handleDeleteCustomer = useCallback(async () => {
         try {
             await Delete(customerId, 'customer-management')
-            SuccessNotif('Delete customer success')
-            navigate('/home/marketing/customers')
+            successNotif('Delete customer success')
+            navigate('/home/marketing/customers', { replace: true })
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Delete customer failed')
+            failedNotif(e, 'Delete customer failed')
         }
-    }, [navigate, customerId])
+    }, [navigate, customerId, successNotif, failedNotif])
 
     const handleClickDeleteButton = () => openConfirmDeleteData(handleDeleteCustomer)
 
     useEffect(() => {
 
-        Retrieve(customerId, 'customer').then(data => {
+        Retrieve(customerId, 'customers').then(data => {
             setDetailCustomer(data)
             form.setValues(data)
             form.resetDirty()

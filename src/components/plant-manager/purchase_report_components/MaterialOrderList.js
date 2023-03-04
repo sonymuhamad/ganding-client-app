@@ -38,7 +38,7 @@ const MaterialOrderList = () => {
 
     useEffect(() => {
 
-        Get('material-order-list').then(data => {
+        Get('order/material-incomplete').then(data => {
             setMaterialOrderList(data)
         })
 

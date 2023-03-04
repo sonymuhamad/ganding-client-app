@@ -75,6 +75,63 @@ const SectionDetailMaterial = (
                         {...form.getInputProps('price')}
                         readOnly={!editAccess}
                     />
+                </Group>
+
+
+
+                <Group
+                    grow
+                    mb='xs'
+                >
+
+                    <DecimalInput
+                        icon={<IconRuler2 />}
+                        label='Length'
+                        rightSection={<Text size='sm' color='dimmed'> mm </Text>}
+                        disabled={!editAccess}
+                        {...form.getInputProps('length')}
+                        placeholder="length of material"
+                    />
+
+                    <DecimalInput
+                        icon={<IconDimensions />}
+                        rightSection={<Text size='sm' color='dimmed'> mm </Text>}
+                        placeholder="width of material"
+                        disabled={!editAccess}
+                        label='Width'
+                        {...form.getInputProps('width')}
+                    />
+
+                    <DecimalInput
+                        icon={<IconRulerMeasure />}
+                        rightSection={<Text size='sm' color='dimmed'> mm </Text>}
+                        placeholder="thickness of material"
+                        label='Thickness'
+                        {...form.getInputProps('thickness')}
+                        disabled={!editAccess}
+                    />
+
+                </Group>
+
+                <Group
+                    grow
+                >
+
+                    <DecimalInput
+                        icon={<IconScale />}
+                        disabled={!editAccess}
+                        rightSection={<Text size='sm' color='dimmed'> kg </Text>}
+                        label='Kg/pcs'
+                        {...form.getInputProps('weight')}
+                        placeholder="weight of material"
+                    />
+                    <DecimalInput
+                        icon={<IconScale />}
+                        label='Berat jenis'
+                        disabled={!editAccess}
+                        {...form.getInputProps('berat_jenis')}
+                        placeholder="Input berat jenis"
+                    />
 
                     <ReadOnlyTextInput
                         icon={<IconBuildingWarehouse />}
@@ -84,42 +141,6 @@ const SectionDetailMaterial = (
 
                 </Group>
 
-                <Group grow >
-
-                    <DecimalInput
-                        icon={<IconRuler2 />}
-                        label='Length'
-                        disabled={!editAccess}
-                        {...form.getInputProps('length')}
-                        placeholder="length of material"
-                    />
-
-                    <DecimalInput
-                        icon={<IconDimensions />}
-                        placeholder="width of material"
-                        disabled={!editAccess}
-                        label='Width'
-                        {...form.getInputProps('width')}
-                    />
-
-                    <DecimalInput
-                        icon={<IconRulerMeasure />}
-                        placeholder="thickness of material"
-                        label='Thickness'
-                        {...form.getInputProps('thickness')}
-                        disabled={!editAccess}
-                    />
-
-                    <DecimalInput
-                        icon={<IconScale />}
-                        disabled={!editAccess}
-                        label='Kg/pcs'
-                        {...form.getInputProps('weight')}
-                        placeholder="weight of material"
-                    />
-
-
-                </Group>
 
             </form>
 
