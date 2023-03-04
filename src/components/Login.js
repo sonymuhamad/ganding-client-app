@@ -67,7 +67,7 @@ const Login = () => {
 
                 <Paper p='xl' heigth='xl' radius='sm' className={classes.contentRight} >
                     <Card p='sm' radius='sm'>
-                        <Image src='/logoganding.png' radius='xl' className={classes.image} />
+                        <Image src='/logo.png' radius='xl' className={classes.image} />
 
                         <Text weight={700} color='dimmed' className={classes.textRight} ref={el} size='xl'></Text>
 
