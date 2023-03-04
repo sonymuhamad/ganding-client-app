@@ -7,9 +7,8 @@ import { openConfirmModal } from "@mantine/modals";
 import { IconWriting, IconFileTypography, IconCodeAsterix, IconScale, IconTrashX, IconDownload, IconUser, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconTimeline, IconLayoutKanban, IconUpload } from "@tabler/icons";
 
 import BreadCrumb from "../../BreadCrumb";
-import { useRequest } from "../../../hooks";
+import { useRequest, useNotification } from "../../../hooks";
 import { sectionStyle } from "../../../styles";
-import { FailedNotif, SuccessNotif } from "../../notifications";
 import { DecimalInput, PriceTextInput } from '../../custom_components'
 
 
@@ -23,6 +22,7 @@ const NewProduct = () => {
     const [materialList, setMaterialList] = useState([])
     const [customerList, setCustomerList] = useState([])
     const navigate = useNavigate()
+    const { successNotif, failedNotif } = useNotification()
 
     const form = useForm({
         initialValues: {
@@ -54,11 +54,11 @@ const NewProduct = () => {
 
     useEffect(() => {
         const fetch = async () => {
-            const productType = await Get('product-type')
-            const processType = await Get('process-type')
-            const productLists = await Get('product-lists')
-            const materialLists = await Get('material-lists')
-            const customerLists = await Get('customer-lists')
+            const productType = await Get('type/product')
+            const processType = await Get('type/process')
+            const productLists = await Get('products')
+            const materialLists = await Get('materials')
+            const customerLists = await Get('customers')
 
             setProcessType(processType)
             setProductType(productType)
@@ -82,18 +82,14 @@ const NewProduct = () => {
         }
 
         try {
-            await Post(dataProduct, 'product-management', 'multipart/form-data')
+            await Post(dataProduct, 'products-management', 'multipart/form-data')
             navigate('/home/ppic/product')
-
-            SuccessNotif('New product added successfully')
+            successNotif('Add new product success')
         } catch (e) {
-            if (e.message.data.ppic_process_related) {
-                FailedNotif(e.message.data.ppic_process_related)
-            }
-            console.log(e)
-
+            form.setErrors(e.message.data)
+            failedNotif(e, 'Add new product failed')
         }
-    }, [navigate])
+    }, [navigate, failedNotif, successNotif])
 
     const openSubmitModal = useCallback((val) => openConfirmModal({
         title: `Add new product`,

@@ -1,7 +1,8 @@
 import React from "react";
-import { TextInput, Group, Image, Paper } from "@mantine/core";
+import { Group, Image, Paper } from "@mantine/core";
 import { IconUserCheck, IconAsset, IconPerspective, IconAtom2, IconRuler2, IconRulerMeasure, IconDimensions, IconBuildingWarehouse, IconScale } from "@tabler/icons";
 
+import { ReadOnlyTextInput } from "../../../custom_components";
 
 const SectionDetailMaterial = (
     { detailMaterial }
@@ -13,55 +14,40 @@ const SectionDetailMaterial = (
     return (
         <>
 
-            <TextInput
-                variant='filled'
+            <ReadOnlyTextInput
                 icon={<IconUserCheck />}
                 label='Supplier'
-                radius='md'
-                readOnly
                 value={supplier.name}
             />
 
-            <TextInput
-                variant='filled'
+            <ReadOnlyTextInput
                 icon={<IconAsset />}
                 label='Material name'
                 my='xs'
-                readOnly
                 placeholder="Input material name"
-                radius='md'
                 value={name}
             />
 
             <Group mb='xs' grow >
-                <TextInput
-                    variant='filled'
+                <ReadOnlyTextInput
                     icon={<IconPerspective />}
-                    readOnly
                     label='Material specification'
-                    radius='md'
                     value={spec}
                     placeholder="Input material specification"
                 />
 
 
-                <TextInput
-                    variant='filled'
+                <ReadOnlyTextInput
                     icon={<IconAtom2 />}
                     label='Unit of material'
-                    readOnly
-                    radius='md'
                     placeholder="select an unit of material"
                     value={uom.name}
                 />
 
-                <TextInput
-                    variant='filled'
+                <ReadOnlyTextInput
                     icon={<IconBuildingWarehouse />}
                     label='Stock in warehouse'
-                    radius='md'
                     value={warehousematerial.quantity}
-                    readOnly
                 />
 
 
@@ -69,43 +55,31 @@ const SectionDetailMaterial = (
 
             <Group grow >
 
-                <TextInput
-                    variant='filled'
+                <ReadOnlyTextInput
                     icon={<IconRuler2 />}
                     value={length}
                     label='Length'
-                    readOnly
-                    radius='md'
                     placeholder="length of material"
                 />
 
-                <TextInput
-                    variant='filled'
+                <ReadOnlyTextInput
                     icon={<IconDimensions />}
                     label='Width'
-                    readOnly
                     value={width}
                     placeholder="width of material"
-                    radius='md'
                 />
 
-                <TextInput
-                    variant='filled'
+                <ReadOnlyTextInput
                     icon={<IconRulerMeasure />}
                     label='Thickness'
-                    readOnly
                     value={thickness}
                     placeholder="thickness of material"
-                    radius='md'
                 />
-                <TextInput
-                    variant='filled'
+                <ReadOnlyTextInput
                     icon={<IconScale />}
                     label='Kg/pcs'
-                    readOnly
                     value={weight}
                     placeholder="weight of material"
-                    radius='md'
                 />
             </Group>
 

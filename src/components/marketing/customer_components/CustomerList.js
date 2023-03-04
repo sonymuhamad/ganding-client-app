@@ -1,19 +1,17 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react"
 
-import { useRequest } from "../../../hooks";
-import { BaseTableExpanded } from "../../tables";
-import { TextInput, Textarea, NumberInput } from "@mantine/core";
-import { closeAllModals, openModal } from "@mantine/modals";
-import { IconAt, IconMapPin, IconDeviceMobile, IconUserPlus } from "@tabler/icons";
-import { useForm } from "@mantine/form";
-import { FailedNotif, SuccessNotif } from "../../notifications";
-import { ExpandedCustomerList } from "../../layout";
-
+import { useRequest, useNotification } from "../../../hooks"
+import { BaseTable } from "../../tables"
+import { TextInput, Textarea, NumberInput } from "@mantine/core"
+import { closeAllModals, openModal } from "@mantine/modals"
+import { IconAt, IconMapPin, IconDeviceMobile, IconUserPlus } from "@tabler/icons"
+import { useForm } from "@mantine/form"
 import { ButtonAdd, HeadSection, NavigationDetailButton, ModalForm } from '../../custom_components'
 
 
 const ModalAddCustomer = ({ handleAddCustomer }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Post } = useRequest()
     const form = useForm({
         initialValues: {
@@ -28,11 +26,11 @@ const ModalAddCustomer = ({ handleAddCustomer }) => {
         try {
             const newCustomer = await Post(value, 'customer-management')
             handleAddCustomer(newCustomer)
-            SuccessNotif('Add customer success')
+            successNotif('Add customer success')
             closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Add customer failed')
+            failedNotif(e, 'Add customer failed')
         }
     }
 
@@ -125,7 +123,7 @@ const CustomerList = () => {
     ], [])
 
     useEffect(() => {
-        GetAndExpiredTokenHandler('customer').then(data => {
+        GetAndExpiredTokenHandler('customers').then(data => {
             setCustomerList(data)
         })
     }, [])
@@ -159,11 +157,10 @@ const CustomerList = () => {
 
             </HeadSection>
 
-            <BaseTableExpanded
+            <BaseTable
                 noData="No data customer"
                 column={column}
                 data={customerList}
-                expandComponent={ExpandedCustomerList}
             />
         </>
     )

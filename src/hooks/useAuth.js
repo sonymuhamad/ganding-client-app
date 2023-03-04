@@ -6,8 +6,8 @@ import { IconCheck, IconAccessPointOff, IconChecks } from "@tabler/icons";
 import { AuthException, Url } from "../services"
 import { closeAllModals } from "@mantine/modals"
 
-const sign_in_url = `${Url}/plant-manager/sign-in/`
-const sign_out_url = `${Url}/plant-manager/sign-out/`
+const sign_in_url = `${Url}/sign-in/`
+const sign_out_url = `${Url}/sign-out/`
 
 
 export const useAuth = () => {
@@ -156,7 +156,7 @@ export const useAuth = () => {
             throw new AuthException(err.response.data.error)
         }
 
-    }, [navigate, performSignOut])
+    }, [navigate, performSignOut, pathname])
 
     const restrictedAccessHandler = useCallback(async () => {
         try {
@@ -173,7 +173,7 @@ export const useAuth = () => {
         } catch (err) {
             throw new AuthException(err.response.data.error)
         }
-    }, [navigate, performSignOut])
+    }, [navigate, performSignOut, pathname])
 
     return {
         signIn,

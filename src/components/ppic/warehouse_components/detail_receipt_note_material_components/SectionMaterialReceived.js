@@ -1,13 +1,12 @@
-import React, { useMemo, useCallback } from "react";
-import { openModal } from "@mantine/modals";
+import React, { useMemo, useCallback } from "react"
+import { openModal } from "@mantine/modals"
 
-import { ButtonDelete, ButtonEdit, ButtonAdd, HeadSection } from "../../../custom_components";
-import { useRequest, useConfirmDelete } from "../../../../hooks";
-import { BaseTableExpanded } from "../../../tables";
+import { ButtonDelete, ButtonEdit, ButtonAdd, HeadSection } from "../../../custom_components"
+import { useRequest, useConfirmDelete, useNotification } from "../../../../hooks"
+import { BaseTableExpanded } from "../../../tables"
 import ModalAddMaterialReceived from './ModalAddMaterialReceived'
 import ModalEditMaterialReceived from './ModalEditMaterialReceived'
-import { FailedNotif, SuccessNotif } from "../../../notifications";
-import { ExpandedMaterialReceiptList } from "../../../layout";
+import { ExpandedMaterialReceiptList } from "../../../layout"
 
 
 const SectionMaterialReceived = (
@@ -23,6 +22,7 @@ const SectionMaterialReceived = (
 ) => {
 
     const { Delete } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Material received' })
 
     const openAddMaterialReceipt = useCallback(() => openModal({
@@ -50,17 +50,13 @@ const SectionMaterialReceived = (
 
     const handleDeleteMaterialReceipt = useCallback(async (id) => {
         try {
-            await Delete(id, 'material-receipt-management')
-            SuccessNotif('Delete material received success')
+            await Delete(id, 'receipts/materials-received')
+            successNotif('Delete material received success')
             setDeleteMaterialReceived(id)
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Delete material received failed')
+            failedNotif(e, 'Delete material received failed')
         }
-    }, [setDeleteMaterialReceived])
+    }, [setDeleteMaterialReceived, successNotif, failedNotif])
 
     const columnMaterialReceived = useMemo(() => [
         {

@@ -25,7 +25,7 @@ const SectionDetailReceiptNoteMaterial = (
                 formId='formDeliveryNoteMaterial'
                 formState={form.isDirty()}
                 handleClickEditButton={handleClickEditButton}
-                handleClickDeletebutton={handleClickDeletebutton}
+                handleClickDeleteButton={handleClickDeletebutton}
             />
 
 

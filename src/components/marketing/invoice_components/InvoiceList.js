@@ -1,18 +1,17 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react"
 
-import { BaseTable } from "../../tables";
-import { useRequest, useSearch } from "../../../hooks";
+import { BaseTable } from "../../tables"
+import { useRequest, useSearch, useNotification } from "../../../hooks"
 
-import { Badge, Group, TextInput, Select, NumberInput, Text } from "@mantine/core";
-import { IconClipboardCheck, IconCodeAsterix, IconDiscount2, IconReceiptTax, IconCalendar } from "@tabler/icons";
-import { openModal, closeAllModals } from "@mantine/modals";
-import { CustomSelectComponentSalesOrder } from "../../layout";
+import { Badge, Group, TextInput, Select, NumberInput, Text } from "@mantine/core"
+import { IconClipboardCheck, IconCodeAsterix, IconDiscount2, IconReceiptTax, IconCalendar } from "@tabler/icons"
+import { openModal, closeAllModals } from "@mantine/modals"
+import { CustomSelectComponentSalesOrder } from "../../layout"
 
-import { useForm } from "@mantine/form";
-import { DatePicker } from "@mantine/dates";
-import { FailedNotif, SuccessNotif } from "../../notifications";
-import { ButtonAdd, SearchTextInput, NavigationDetailButton, HeadSection, ModalForm } from "../../custom_components";
-import { generateDataWithDate } from "../../../services";
+import { useForm } from "@mantine/form"
+import { DatePicker } from "@mantine/dates"
+import { ButtonAdd, SearchTextInput, NavigationDetailButton, HeadSection, ModalForm } from "../../custom_components"
+import { generateDataWithDate } from "../../../services"
 
 
 
@@ -29,6 +28,7 @@ const ModalAddInvoice = ({ handleAddInvoice }) => {
     })
     const { GetAndExpiredTokenHandler, Post } = useRequest()
     const [closedSalesOrder, setClosedSalesOrder] = useState([])
+    const { successNotif, failedNotif } = useNotification()
 
     useEffect(() => {
         GetAndExpiredTokenHandler('closed-sales-order-list').then(data => {
@@ -59,15 +59,11 @@ const ModalAddInvoice = ({ handleAddInvoice }) => {
         try {
             const newInvoice = await Post(validate_data, 'invoice-management')
             handleAddInvoice({ ...newInvoice, sales_order: selectedSalesOrder })
-            SuccessNotif('Add invoice success')
+            successNotif('Add invoice success')
             closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Add invoice failed')
+            failedNotif(e, 'Add invoice failed')
         }
     }
 

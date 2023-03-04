@@ -91,7 +91,7 @@ const ProductDeliverList = () => {
 
     useEffect(() => {
 
-        RetrieveWithoutExpiredTokenHandler(customerId, 'customer-product-delivery').then(data => {
+        RetrieveWithoutExpiredTokenHandler(customerId, 'customer/product-deliveries').then(data => {
             setProductDeliverList(data)
         })
 

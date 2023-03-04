@@ -2,11 +2,10 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
 
-import { useRequest, useConfirmDelete } from "../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks";
 import { BaseContent } from "../../layout";
-import { SuccessNotif, FailedNotif } from "../../notifications"
 import { SectionProductShipped, SectionDetailDeliveryNoteSubcont } from "./detail_delivery_note_subcont_components";
-import { generateDataWithNote, generateDataWithDate } from "../../../services";
+import { generateDataWithDate } from "../../../services";
 import { openModal } from "@mantine/modals";
 
 import { DeliveryNoteSubcontReport } from "../../outputs/";
@@ -14,6 +13,7 @@ import { DeliveryNoteSubcontReport } from "../../outputs/";
 const DetailDeliveryNoteSubcont = () => {
 
     const { deliveryNoteSubcontId } = useParams()
+    const { successNotif, failedNotif } = useNotification()
     const { Get, Retrieve, Put, Delete } = useRequest()
     const navigate = useNavigate()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Delivery note subcont' })
@@ -106,7 +106,7 @@ const DetailDeliveryNoteSubcont = () => {
             supplier={dataSupplier}
             productDeliveryList={productSubconts}
         />
-    }), [data, selectedDriver, selectedVehicle])
+    }), [data, selectedDriver, selectedVehicle, dataSupplier, productSubconts])
 
     const setDataForForm = useCallback((dataForm) => {
         setData(dataForm)
@@ -120,33 +120,31 @@ const DetailDeliveryNoteSubcont = () => {
     }, [setDataForForm])
 
     const handleSubmit = useCallback(async (value) => {
-        const generatedDataWithNote = generateDataWithNote(value)
-        const { date, ...rest } = generatedDataWithNote
+
+        const { date, ...rest } = value
         const validated_data = generateDataWithDate(date, rest)
 
         try {
-            const updatedData = await Put(deliveryNoteSubcontId, validated_data, 'delivery-note-subcont-management')
+            const updatedData = await Put(deliveryNoteSubcontId, validated_data, 'deliveries/subcont-management')
             setDataAfterUpdate(updatedData)
-            SuccessNotif('Edit delivery note success')
+            successNotif('Edit delivery note subcont success')
             setEditAccess(prev => !prev)
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Edit delivery note failed')
+            failedNotif(e, 'Edit delivery note subcont failed')
         }
 
-    }, [deliveryNoteSubcontId, setDataAfterUpdate])
+    }, [deliveryNoteSubcontId, setDataAfterUpdate, successNotif, failedNotif])
 
     const handleDeleteDeliveryNote = useCallback(async () => {
         try {
-            await Delete(deliveryNoteSubcontId, 'delivery-note-subcont-management')
-            navigate('/home/ppic/delivery')
-            SuccessNotif('Delete delivery note success')
+            await Delete(deliveryNoteSubcontId, 'deliveries/subcont-management')
+            navigate('/home/ppic/delivery', { replace: true })
+            successNotif('Delete delivery note subcont success')
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete delivery note subcont failed')
         }
-    }, [navigate, deliveryNoteSubcontId])
+    }, [navigate, deliveryNoteSubcontId, successNotif, failedNotif])
 
     const handleClickEditAccess = useCallback(() => {
         form.setValues(data)
@@ -168,7 +166,7 @@ const DetailDeliveryNoteSubcont = () => {
     const fetch = useCallback(async () => {
 
         try {
-            const detailDeliveryNoteSubcont = await Retrieve(deliveryNoteSubcontId, 'delivery-note-subcont')
+            const detailDeliveryNoteSubcont = await Retrieve(deliveryNoteSubcontId, 'deliveries/subcont')
             const driverList = await Get('driver')
             const vehcileList = await Get('vehicle')
 

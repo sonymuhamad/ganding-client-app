@@ -179,21 +179,20 @@ const DetailComponentInvoice = ({
                     icon={<IconCodeAsterix />}
                 />
 
-
-                <DatePicker
-                    label='Date'
-                    m='xs'
-                    placeholder="Pick invoice date"
-                    radius='md'
-                    disabled={!editAccess}
-                    icon={<IconCalendar />}
-                    {...form.getInputProps('date')}
-                />
-
                 <Group
                     grow
                     m='xs'
                 >
+
+                    <DatePicker
+                        label='Invoice date'
+                        placeholder="Pick invoice date"
+                        radius='md'
+                        disabled={!editAccess}
+                        icon={<IconCalendar />}
+                        {...form.getInputProps('date')}
+                    />
+
 
                     <NumberInput
                         label='Ppn'

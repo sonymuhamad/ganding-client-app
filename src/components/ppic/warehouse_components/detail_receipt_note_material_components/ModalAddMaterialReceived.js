@@ -1,18 +1,17 @@
 import React, { useState, useCallback, useEffect } from "react"
-import { TextInput, Group, Select, NumberInput, Divider } from "@mantine/core";
+import { TextInput, Group, Select, NumberInput, Divider } from "@mantine/core"
 import { useForm } from "@mantine/form"
-import { IconAsset, IconCalendarEvent, IconCodeAsterix, IconArchive, IconShoppingCart, IconSortAscending2 } from "@tabler/icons";
+import { IconAsset, IconCalendarEvent, IconCodeAsterix, IconArchive, IconShoppingCart, IconSortAscending2 } from "@tabler/icons"
 import { closeAllModals } from "@mantine/modals"
 
-import { useRequest } from "../../../../hooks"
+import { useRequest, useNotification } from "../../../../hooks"
 import { CustomSelectComponent } from "../../../layout"
-import { FailedNotif, SuccessNotif } from "../../../notifications"
 import { ModalForm } from "../../../custom_components"
-
 
 
 const ModalAddMaterialReceived = ({ setAddMaterialReceived, idDn, idSupplier }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Get, Post } = useRequest()
     const [materialOrderList, setMaterialOrderList] = useState([])
     const [scheduleMaterialReceipt, setScheduleMaterialReceipt] = useState([])
@@ -56,33 +55,24 @@ const ModalAddMaterialReceived = ({ setAddMaterialReceived, idDn, idSupplier }) 
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            const newMaterialReceived = await Post(value, 'material-receipt-management')
+            const newMaterialReceived = await Post(value, 'receipts/materials-received')
             generateDataAfterInsert(newMaterialReceived)
-            SuccessNotif('Add material received success')
+            successNotif('Add material received success')
             closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
-            console.log(e)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-                return
-            }
-            FailedNotif('Add material received failed')
+            failedNotif(e, 'Add material received failed')
         }
 
-    }, [generateDataAfterInsert])
+    }, [generateDataAfterInsert, successNotif, failedNotif])
 
     useEffect(() => {
-        Get('material-order-list').then(data => {
+        Get('order/material-incomplete').then(data => {
             const material_order_list = data.filter(mo => mo.material.supplier.id === parseInt(idSupplier) && mo.purchase_order_material.supplier.id === parseInt(idSupplier))
             setMaterialOrderList(material_order_list)
         })
 
-        Get('material-receipt-schedule').then(data => {
+        Get('schedules/material-incomplete').then(data => {
             const scheduleMr = data.filter(schedule => schedule.material_order.material.supplier.id === parseInt(idSupplier) && schedule.material_order.purchase_order_material.supplier.id === parseInt(idSupplier))
             setScheduleMaterialReceipt(scheduleMr)
         })

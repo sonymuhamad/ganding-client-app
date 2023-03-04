@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 
-import { useRequest, useConfirmDelete } from "../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks";
 import { TextInput, } from "@mantine/core";
 
 import { BaseTable } from "../../tables";
 import { IconSignature } from "@tabler/icons";
-import { FailedNotif, SuccessNotif } from "../../notifications";
 import { closeAllModals, openModal } from "@mantine/modals";
 import { useForm } from "@mantine/form";
 import { ModalForm, ButtonAdd, ButtonDelete, ButtonEdit, HeadSection } from "../../custom_components";
@@ -14,6 +13,7 @@ import { ModalForm, ButtonAdd, ButtonDelete, ButtonEdit, HeadSection } from "../
 const AddProcessType = ({ setAddProcessType }) => {
 
     const { Post } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
     const form = useForm({
         initialValues: {
             name: ''
@@ -22,15 +22,15 @@ const AddProcessType = ({ setAddProcessType }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            const newProcessType = await Post(value, 'process-type-management')
+            const newProcessType = await Post(value, 'type/process-management')
             setAddProcessType(newProcessType)
-            SuccessNotif('Add process type success')
+            successNotif('Add process type success')
             closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Add process type failed')
+            failedNotif(e, 'Add process type failed')
         }
-    }, [Post, setAddProcessType])
+    }, [Post, setAddProcessType, failedNotif, successNotif])
 
     return (
         <ModalForm
@@ -54,7 +54,7 @@ const AddProcessType = ({ setAddProcessType }) => {
 
 const EditProcessType = ({ setUpdateProcessType, data }) => {
 
-
+    const { successNotif, failedNotif } = useNotification()
     const { Put } = useRequest()
     const form = useForm({
         initialValues: {
@@ -65,15 +65,15 @@ const EditProcessType = ({ setUpdateProcessType, data }) => {
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            const updatedProcessType = await Put(data.id, value, 'process-type-management')
+            const updatedProcessType = await Put(data.id, value, 'type/process-management')
             closeAllModals()
             setUpdateProcessType(updatedProcessType)
-            SuccessNotif('Edit process type success')
+            successNotif('Edit process type success')
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Edit process type failed')
+            failedNotif(e, 'Edit process type failed')
         }
-    }, [setUpdateProcessType, data.id])
+    }, [setUpdateProcessType, data.id, failedNotif, successNotif])
 
     return (
         <ModalForm
@@ -98,6 +98,7 @@ const EditProcessType = ({ setUpdateProcessType, data }) => {
 
 const ProcessType = () => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Get, Delete } = useRequest()
     const [processType, setProcessType] = useState([])
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Process type' })
@@ -138,22 +139,18 @@ const ProcessType = () => {
 
     const handleDeleteProcessType = useCallback(async (id) => {
         try {
-            await Delete(id, 'process-type-management')
+            await Delete(id, 'type/process-management')
             setDeleteProcessType(id)
-            SuccessNotif('Delete process type success')
+            successNotif('Delete process type success')
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Delete process type failed')
+            failedNotif(e, 'Delete process type failed')
         }
-    }, [setDeleteProcessType])
+    }, [setDeleteProcessType, successNotif, failedNotif])
 
     useEffect(() => {
         const fetchProcessType = async () => {
             try {
-                const process_type = await Get('process-type')
+                const process_type = await Get('type/process')
                 setProcessType(process_type)
             } catch (e) {
                 console.log(e)

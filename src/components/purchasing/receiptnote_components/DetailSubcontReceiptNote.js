@@ -35,7 +35,7 @@ const DetailSubcontReceiptNote = () => {
 
     useEffect(() => {
 
-        Retrieve(receiptSubcontId, 'receipt-note-subcont').then(data => {
+        Retrieve(receiptSubcontId, 'receipts/subcont').then(data => {
             const { supplier, subcontreceipt_set, ...rest } = data
             setSupplier(supplier)
             setProductSubcontList(subcontreceipt_set)

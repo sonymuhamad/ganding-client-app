@@ -34,7 +34,7 @@ const DetailMaterial = () => {
     })
 
     useEffect(() => {
-        Retrieve(materialId, 'material-list').then(data => {
+        Retrieve(materialId, 'materials-detail').then(data => {
             const { ppic_requirementmaterial_related, ...rest } = data
             setRequirementMaterialList(ppic_requirementmaterial_related)
             setDetailMaterial(rest)

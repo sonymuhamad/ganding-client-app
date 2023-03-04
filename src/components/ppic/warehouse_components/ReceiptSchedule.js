@@ -42,14 +42,14 @@ const ReceiptSchedule = () => {
             selector: row => row.date
         },
         {
-            name: 'Arrival quantity',
+            name: 'Quantity',
             selector: row => row.quantity
         },
     ], [])
 
 
     useEffect(() => {
-        Get('material-receipt-schedule').then(data => {
+        Get('schedules/material-incomplete').then(data => {
             setSchedule(data)
         })
     }, [])

@@ -42,7 +42,7 @@ const ProductList = () => {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const productList = await GetAndExpiredTokenHandler('product-list')
+                const productList = await GetAndExpiredTokenHandler('products')
                 setProductList(productList)
             } catch (e) {
                 console.log(e)

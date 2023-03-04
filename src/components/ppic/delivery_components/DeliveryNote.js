@@ -4,11 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { BaseTable } from "../../tables";
 import { IconClipboardCheck, IconUser, IconCodeAsterix, IconCalendarEvent, IconTruckDelivery, IconUserCheck } from "@tabler/icons";
 
-import { useRequest, useSearch } from "../../../hooks";
+import { useRequest, useSearch, useNotification } from "../../../hooks";
 import { openModal, closeAllModals } from "@mantine/modals";
 
-import { TextInput, Group, Textarea, Select } from "@mantine/core";
-import { SuccessNotif, FailedNotif } from '../../notifications'
+import { TextInput, Group, Textarea, Select } from "@mantine/core"
 import { useForm } from "@mantine/form";
 import { DatePicker } from "@mantine/dates";
 import { generateDataWithDate } from "../../../services";
@@ -20,7 +19,7 @@ const ModalAddDeliveryNote = () => {
 
     const { Get, Post } = useRequest()
     const navigate = useNavigate()
-
+    const { successNotif, failedNotif } = useNotification()
     const [customerList, setCustomerList] = useState([])
     const [driverList, setDriverList] = useState([])
     const [vehicleList, setVehicleList] = useState([])
@@ -52,7 +51,7 @@ const ModalAddDeliveryNote = () => {
     const fetchData = useCallback(async () => {
 
         try {
-            const customerList = await Get('customer-lists')
+            const customerList = await Get('customers')
             const driverList = await Get('driver')
             const vehicleList = await Get('vehicle')
 
@@ -66,34 +65,22 @@ const ModalAddDeliveryNote = () => {
 
     }, [])
 
-    const validateNote = useCallback((data) => {
-        if (data.note === '') {
-            const { note, ...rest } = data
-            return rest
-        }
-        return data
-
-    }, [])
-
-
     const handleSubmit = useCallback(async (data) => {
 
-        const validateDataWithNote = validateNote(data)
-        const { date, ...rest } = validateDataWithNote
-
+        const { date, ...rest } = data
         const validate_data = generateDataWithDate(date, rest)
 
         try {
-            const newDeliveryNote = await Post(validate_data, 'delivery-note-management')
-            SuccessNotif('Add delivery note success')
+            const newDeliveryNote = await Post(validate_data, 'deliveries/customer-management')
+            successNotif('Add delivery note success')
             navigate(`/home/ppic/delivery/${newDeliveryNote.id}`)
             closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Add delivery note failed')
+            failedNotif(e, 'Add delivery note failed')
         }
 
-    }, [navigate, validateNote])
+    }, [navigate, successNotif, failedNotif])
 
     useEffect(() => {
         fetchData()
@@ -166,8 +153,8 @@ const ModalAddDeliveryNote = () => {
                 <Textarea
                     icon={<IconClipboardCheck />}
                     m='xs'
-                    placeholder="Input description notes"
-                    label='Description notes'
+                    placeholder="Input description "
+                    label='Description '
                     radius='md'
                     {...form.getInputProps('note')}
                 />
@@ -227,7 +214,7 @@ const DeliveryNote = () => {
 
     useEffect(() => {
 
-        Get('delivery-note').then(data => {
+        Get('deliveries/customer').then(data => {
             setDeliveryNote(data)
         })
 

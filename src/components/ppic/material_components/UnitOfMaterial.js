@@ -3,13 +3,14 @@ import { TextInput } from "@mantine/core";
 import { IconSignature } from "@tabler/icons";
 import { openModal, closeAllModals } from "@mantine/modals";
 
-import { useRequest, useConfirmDelete } from "../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks";
 import { BaseTable } from "../../tables";
-import { FailedNotif, SuccessNotif } from '../../notifications'
 import { ButtonEdit, ButtonAdd, ButtonDelete, HeadSection, ModalForm } from "../../custom_components";
+
 
 const EditUnitOfMaterial = ({ uom, setEditUom }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const [name, setName] = useState(uom.name)
     const { Put } = useRequest()
     const [errorName, setErrorName] = useState(false)
@@ -17,17 +18,17 @@ const EditUnitOfMaterial = ({ uom, setEditUom }) => {
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault()
         try {
-            const updatedUom = await Put(uom.id, { name: name }, 'uom-management')
+            const updatedUom = await Put(uom.id, { name: name }, 'uoms-management')
             setEditUom(updatedUom)
-            SuccessNotif('Edit unit of material success')
+            successNotif('Edit unit of material success')
             closeAllModals()
         } catch (e) {
             if (e.message.data.name) {
                 setErrorName(e.message.data.name)
             }
-            FailedNotif('Edit unit of material failed')
+            failedNotif(e, 'Edit unit of material failed')
         }
-    }, [setEditUom, name, uom.id])
+    }, [setEditUom, name, uom.id, successNotif, failedNotif])
 
     return (
         <>
@@ -52,6 +53,8 @@ const EditUnitOfMaterial = ({ uom, setEditUom }) => {
 }
 
 const PostUnitOfMaterial = ({ setAddUom }) => {
+
+    const { successNotif, failedNotif } = useNotification()
     const [name, setName] = useState('')
     const { Post } = useRequest()
     const [errorName, setErrorName] = useState(false)
@@ -59,18 +62,17 @@ const PostUnitOfMaterial = ({ setAddUom }) => {
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault()
         try {
-            const addedUom = await Post({ name: name }, 'uom-management')
+            const addedUom = await Post({ name: name }, 'uoms-management')
             setAddUom(addedUom)
-            SuccessNotif('Add unit of material success')
+            successNotif('Add unit of material success')
             closeAllModals()
         } catch (e) {
             if (e.message.data.name) {
                 setErrorName(e.message.data.name)
             }
-            FailedNotif('Add unit of material failed')
+            failedNotif(e, 'Add unit of material failed')
         }
-    }
-        , [setAddUom, name])
+    }, [setAddUom, name, successNotif, failedNotif])
 
 
 
@@ -101,6 +103,7 @@ const PostUnitOfMaterial = ({ setAddUom }) => {
 
 const UnitOfMaterial = () => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Get, Delete } = useRequest()
     const [uoms, setUoms] = useState([])
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Unit of material' })
@@ -129,15 +132,13 @@ const UnitOfMaterial = () => {
 
     const handleDeleteUom = useCallback(async (id) => {
         try {
-            await Delete(id, 'uom-management')
+            await Delete(id, 'uoms-management')
             setDeleteUom(id)
-            SuccessNotif('Delete unit of material success')
+            successNotif('Delete unit of material success')
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete unit of material failed')
         }
-    }, [setDeleteUom])
+    }, [setDeleteUom, successNotif, failedNotif])
 
     const openEditUomModal = useCallback((uom) => openModal({
         title: `Edit unit of material`,
@@ -156,7 +157,7 @@ const UnitOfMaterial = () => {
 
     const fetchUom = useCallback(async () => {
         try {
-            const uomList = await Get('uom-list')
+            const uomList = await Get('uoms')
             setUoms(uomList)
         } catch (e) {
             console.log(e)
@@ -175,7 +176,7 @@ const UnitOfMaterial = () => {
         },
         {
             name: 'Amount of material',
-            selector: row => row.materials ? row.materials : 0
+            selector: row => row.amount_of_material ? row.amount_of_material : 0
         },
         {
             name: '',

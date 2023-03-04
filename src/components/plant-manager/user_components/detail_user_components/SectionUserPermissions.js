@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react"
 import { useForm } from "@mantine/form"
 import { ModalForm, ButtonAdd, HeadSection, ButtonDelete } from "../../../custom_components"
-import { SuccessNotif, FailedNotif } from "../../../notifications"
-import { useRequest, useConfirmDelete } from "../../../../hooks"
+import { useRequest, useConfirmDelete, useNotification } from "../../../../hooks"
 
 import { Select } from "@mantine/core"
 import { IconAccessPoint } from "@tabler/icons"
@@ -11,6 +10,7 @@ import { BaseTable } from "../../../tables"
 
 const ModalAddPermission = ({ userId, setAddPermission }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Put, Retrieve } = useRequest()
     const [permissionList, setPermissionList] = useState([])
     const form = useForm({
@@ -29,15 +29,10 @@ const ModalAddPermission = ({ userId, setAddPermission }) => {
         try {
             const addedPermission = await Put(userId, value, 'user-add-permission-management')
             setAddPermission(addedPermission)
-            SuccessNotif('Permission added success')
+            successNotif('Add permission success')
             closeAllModals()
         } catch (e) {
-            console.log(e)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            } else {
-                FailedNotif('Add division failed')
-            }
+            failedNotif(e, 'Add permission failed')
         }
     }
 

@@ -4,9 +4,8 @@ import { openModal, closeAllModals } from "@mantine/modals";
 import { TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 
-import { useRequest, useConfirmDelete } from "../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks";
 import { BaseTable } from '../../tables'
-import { FailedNotif, SuccessNotif } from "../../notifications";
 import { ModalForm, ButtonAdd, ButtonDelete, ButtonEdit, HeadSection } from "../../custom_components";
 
 
@@ -18,18 +17,18 @@ const ModalEditOperator = ({ data, setUpdateOperator }) => {
         }
     })
     const { Put } = useRequest()
-
+    const { successNotif, failedNotif } = useNotification()
     const handleSubmit = useCallback(async (value) => {
         try {
             const updatedOperator = await Put(data.id, value, 'operator-management')
             setUpdateOperator(updatedOperator)
             closeAllModals()
-            SuccessNotif('Edit operator name success')
+            successNotif('Edit operator success')
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Edit operator name failed')
+            failedNotif(e, 'Edit operator failed')
         }
-    }, [setUpdateOperator, data.id])
+    }, [setUpdateOperator, data.id, successNotif, failedNotif])
 
 
     return (
@@ -59,17 +58,16 @@ const ModalAddOperator = ({ setAddOperator }) => {
         }
     })
     const { Post } = useRequest()
-
+    const { successNotif, failedNotif } = useNotification()
     const handleSubmit = async (value) => {
         try {
             const newOperator = await Post(value, 'operator-management')
             setAddOperator(newOperator)
             closeAllModals()
-            SuccessNotif('Add new operator success')
+            successNotif('Add operator success')
         } catch (e) {
             form.setErrors(e.message.data)
-            console.log(e)
-            FailedNotif('Add operator failed')
+            failedNotif(e, 'Add operator failed')
         }
     }
 
@@ -97,6 +95,7 @@ const Operator = () => {
 
     const [operator, setOperator] = useState([])
     const { Get, Delete } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Operator' })
 
     const setAddOperator = useCallback((newOperator) => {
@@ -137,16 +136,12 @@ const Operator = () => {
     const handleDeleteOperator = useCallback(async (id) => {
         try {
             await Delete(id, 'operator-management')
-            SuccessNotif('Delete data operator success')
+            successNotif('Delete operator success')
             setDeleteOperator(id)
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Delete operator failed')
+            failedNotif(e, 'Delete operator failed')
         }
-    }, [setDeleteOperator])
+    }, [setDeleteOperator, successNotif, failedNotif])
 
     const fetchOperator = useCallback(async () => {
         try {

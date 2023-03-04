@@ -4,8 +4,7 @@ import { ButtonDelete, ButtonEdit, ButtonAdd, HeadSection, } from '../../../cust
 import { ExpandedProcess } from "../../../layout";
 import ModalAddProcess from './ModalAddProcess'
 import ModalEditProcess from './ModalEditProcess'
-import { useConfirmDelete, useRequest } from "../../../../hooks";
-import { FailedNotif, SuccessNotif } from "../../../notifications";
+import { useConfirmDelete, useRequest, useNotification } from "../../../../hooks"
 import { BaseTableExpanded } from "../../../tables";
 
 const SectionManufacuringProcess = (
@@ -20,6 +19,7 @@ const SectionManufacuringProcess = (
 
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Manufacturing process' })
     const { Delete } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
 
     const generateDataProcessType = useCallback((dataProcess, processTypeList) => {
         const { process_type } = dataProcess
@@ -29,17 +29,13 @@ const SectionManufacuringProcess = (
 
     const handleDeleteProcess = useCallback(async (idProcess) => {
         try {
-            await Delete(idProcess, 'process-management')
+            await Delete(idProcess, 'process/management')
             setDeleteProcess(idProcess)
-            SuccessNotif('Delete manufacturing process success')
+            successNotif('Delete manufacturing process success')
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Delete manufacturing process failed')
+            failedNotif(e, 'Delete manufacturing process failed')
         }
-    }, [setDeleteProcess])
+    }, [setDeleteProcess, successNotif, failedNotif])
 
     const searchMaterial = useCallback((idReqMaterial, materialList) => {
         return materialList.find(material => material.id === idReqMaterial)

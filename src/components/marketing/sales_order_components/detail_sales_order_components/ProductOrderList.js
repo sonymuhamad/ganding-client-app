@@ -1,18 +1,17 @@
 
 //// List of product order from detail sales order 
 
-import { Group, NumberInput, Select, TextInput } from "@mantine/core";
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useRequest, useConfirmDelete } from "../../../../hooks";
-import { FailedNotif, SuccessNotif } from "../../../notifications";
-import { BaseTable } from "../../../tables";
+import { Group, NumberInput, Select, TextInput } from "@mantine/core"
+import React, { useState, useEffect, useMemo, useCallback } from "react"
+import { useRequest, useConfirmDelete, useNotification } from "../../../../hooks"
+import { BaseTable } from "../../../tables"
 
-import { closeAllModals, openModal } from "@mantine/modals";
-import { IconBarcode, IconClipboardCheck, IconCodeAsterix, IconTruckDelivery } from "@tabler/icons";
-import { useForm } from "@mantine/form";
-import { CustomSelectComponentProduct } from "../../../layout";
+import { closeAllModals, openModal } from "@mantine/modals"
+import { IconBarcode, IconClipboardCheck, IconCodeAsterix, IconTruckDelivery } from "@tabler/icons"
+import { useForm } from "@mantine/form"
+import { CustomSelectComponentProduct } from "../../../layout"
 
-import { HeadSection, ButtonAdd, ButtonDelete, ButtonEdit, ButtonSubmit, PriceTextInput } from "../../../custom_components";
+import { HeadSection, ButtonAdd, ButtonDelete, ButtonEdit, PriceTextInput, ModalForm } from "../../../custom_components"
 
 
 
@@ -21,6 +20,7 @@ const ModalEditProductOrder = ({ salesOrderId, data, handleChangeProductOrder })
     const { product, delivered, ...rest } = data
     const { name, code, id } = product
     const { Put } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
 
     const form = useForm({
         initialValues: {
@@ -33,26 +33,19 @@ const ModalEditProductOrder = ({ salesOrderId, data, handleChangeProductOrder })
     const handleSubmit = async (value) => {
         try {
             const updatedPo = await Put(value.id, value, 'product-order-management')
-            SuccessNotif('Update product order succedd')
+            successNotif('Edit product order success')
             handleChangeProductOrder(updatedPo)
             closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-                return
-            }
-            FailedNotif('Update product order failed')
+            failedNotif(e, 'Edit product order failed')
         }
     }
 
 
     return (
-        <form onSubmit={form.onSubmit(handleSubmit)} id='formEditProductOrder' >
+        <ModalForm
+            onSubmit={form.onSubmit(handleSubmit)} id='formEditProductOrder' >
 
             <TextInput
                 label='Product'
@@ -105,11 +98,7 @@ const ModalEditProductOrder = ({ salesOrderId, data, handleChangeProductOrder })
                 required
             />
 
-            <ButtonSubmit
-                formId='formEditProductOrder'
-            />
-
-        </form>
+        </ModalForm>
     )
 }
 
@@ -117,6 +106,7 @@ const ModalAddProductOrder = ({ handleAddProductOrder, salesOrderId, customerId 
 
     const [productList, setProductList] = useState([])
     const { Retrieve, Post } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
     const form = useForm({
         initialValues: {
             ordered: '',
@@ -148,25 +138,17 @@ const ModalAddProductOrder = ({ handleAddProductOrder, salesOrderId, customerId 
 
         try {
             const { sales_order, ...rest } = await Post(value, 'product-order-management')
-            SuccessNotif('Add product order success')
+            successNotif('Add product order success')
             handleAddProductOrder({ ...rest, product: selectedProduct })
             closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-                return
-            }
-            FailedNotif('Add product order failed')
+            failedNotif(e, 'Add product order failed')
         }
     }
 
     return (
-        <form
+        <ModalForm
             id="formAddProductOrder"
             onSubmit={form.onSubmit(handleSubmit)}
         >
@@ -201,11 +183,7 @@ const ModalAddProductOrder = ({ handleAddProductOrder, salesOrderId, customerId 
                 m='xs'
             />
 
-            <ButtonSubmit
-                formId='formAddProductOrder'
-            />
-
-        </form>
+        </ModalForm>
     )
 }
 
@@ -214,21 +192,18 @@ const ProductOrderList = ({ productOrderList, salesOrderId, handleAddProductOrde
 
     const { Delete } = useRequest()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Product order' })
+    const { successNotif, failedNotif } = useNotification()
 
     const handleDeletePo = useCallback(async (id) => {
 
         try {
             await Delete(id, 'product-order-management')
-            SuccessNotif('Delete product order success')
+            successNotif('Delete product order success')
             handleDeleteProductOrder(id)
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Delete product order failed')
+            failedNotif(e, 'Delete product order failed')
         }
-    }, [handleDeleteProductOrder])
+    }, [handleDeleteProductOrder, successNotif, failedNotif])
 
 
     const openModalDeletePo = useCallback((id) => openConfirmDeleteData(() => handleDeletePo(id)),

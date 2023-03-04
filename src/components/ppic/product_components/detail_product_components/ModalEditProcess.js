@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useRequest } from "../../../../hooks";
+import { useRequest, useNotification } from "../../../../hooks";
 import { useForm } from "@mantine/form";
 import { ModalForm } from "../../../custom_components";
 import { IconFileTypography, IconTrash, IconPlus, IconAsset, IconBarcode, IconTransferIn, IconTransferOut, IconLayoutKanban, IconArrowsSort } from "@tabler/icons"
 import { TextInput, Group, Paper, Button, Text, Divider, NumberInput, Select, Center } from "@mantine/core"
-import { FailedNotif, SuccessNotif } from "../../../notifications";
 import { closeAllModals } from "@mantine/modals";
 
 
@@ -12,6 +11,7 @@ const ModalEditProcess = (
     { data, generateDataProcess, setUpdateProcess }
 ) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Get, Put } = useRequest()
     const [productList, setProductList] = useState([])
     const [materialList, setMaterialList] = useState([])
@@ -22,15 +22,15 @@ const ModalEditProcess = (
     })
 
     useEffect(() => {
-        Get('material-lists').then(materialList => {
+        Get('materials').then(materialList => {
             setMaterialList(materialList)
         })
 
-        Get('product-lists').then(productList => {
+        Get('products').then(productList => {
             setProductList(productList)
         })
 
-        Get('process-type').then(processType => {
+        Get('type/process').then(processType => {
             setProcessTypeList(processType)
         })
 
@@ -38,18 +38,17 @@ const ModalEditProcess = (
 
     const handleSubmit = useCallback(async (value) => {
         try {
-            const updatedProcess = await Put(value.id, value, 'process-management')
+            const updatedProcess = await Put(value.id, value, 'process/management')
             const generatedProcess = generateDataProcess(updatedProcess, productList, materialList, processTypeList)
             setUpdateProcess(generatedProcess)
             closeAllModals()
-            SuccessNotif('Edit process success')
+            successNotif('Edit process success')
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Edit process failed')
-            console.log(e)
+            failedNotif(e, 'Edit process failed')
         }
 
-    }, [generateDataProcess, setUpdateProcess, productList, materialList, processTypeList])
+    }, [generateDataProcess, setUpdateProcess, productList, materialList, processTypeList, successNotif, failedNotif])
 
     return (
         <ModalForm

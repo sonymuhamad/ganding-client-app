@@ -34,7 +34,7 @@ const DeliveryScheduleList = () => {
     ], [])
 
     useEffect(() => {
-        Get('delivery-schedule').then(data => {
+        Get('schedules/delivery').then(data => {
             setDeliveryScheduleList(data)
         })
     }, [])

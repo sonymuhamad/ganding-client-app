@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useMemo, useCallback, } from "react";
-import { useRequest, useSearch } from "../../../hooks";
+import { useRequest, useSearch, useNotification } from "../../../hooks";
 import { BaseTable } from "../../tables";
 import { TextInput, NumberInput, Textarea } from "@mantine/core";
 import { IconUserCheck, IconAt, IconDeviceMobile, IconMapPins } from "@tabler/icons";
 
 import { closeAllModals, openModal } from "@mantine/modals";
 import { useForm } from "@mantine/form";
-import { SuccessNotif } from '../../notifications'
 
 import { ModalForm, ButtonAdd, NavigationDetailButton, SearchTextInput, HeadSection } from "../../custom_components";
 
 const ModalAddSupplier = ({ onAddSupplier }) => {
 
     const { Post } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
     const form = useForm({
         initialValues: {
             name: '',
@@ -27,9 +27,10 @@ const ModalAddSupplier = ({ onAddSupplier }) => {
             const newSupplier = await Post(value, 'supplier-management')
             onAddSupplier(newSupplier)
             closeAllModals()
-            SuccessNotif('Add new supplier success')
+            successNotif('Add supplier success')
         } catch (e) {
             form.setErrors(e.message.data)
+            failedNotif(e, 'Add supplier failed')
         }
     }
 
@@ -142,7 +143,7 @@ const SupplierList = () => {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const supplierList = await GetAndExpiredTokenHandler('supplier')
+                const supplierList = await GetAndExpiredTokenHandler('suppliers')
 
                 setSupplierList(supplierList)
 

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useRequest } from "../../../hooks";
+import { useRequest, useNotification } from "../../../hooks";
 import { useForm } from "@mantine/form";
-import { FailedNotif, SuccessNotif } from "../../notifications";
 
 import { SectionUserDivisions, SectionUserPermissions, SectionDetailUser } from "./detail_user_components/";
 import { BaseContent } from '../../layout'
@@ -10,6 +9,7 @@ import { BaseContent } from '../../layout'
 
 const DetailUser = () => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { userId } = useParams()
     const navigate = useNavigate()
     const { Retrieve, Delete, Put } = useRequest()
@@ -30,43 +30,35 @@ const DetailUser = () => {
     const handleDeleteUser = useCallback(async () => {
         try {
             await Delete(userId, 'user-management')
-            SuccessNotif('Delete user success')
+            successNotif('Delete user success')
             navigate('/home/plant-manager/users', { replace: true })
         } catch (e) {
-            FailedNotif(e.message.data)
+            failedNotif(e, 'Delete user failed')
         }
-    }, [navigate, userId])
+    }, [navigate, userId, successNotif, failedNotif])
 
     const handleDeleteGroup = useCallback(async (id_group) => {
         try {
             const deletedGroup = await Put(userId, { group: id_group }, 'user-remove-group')
-            SuccessNotif(`Remove division success, ${detailUser.username} no longer have access to ${deletedGroup.name}`)
+            successNotif(`Remove division success, ${detailUser.username} no longer have access to ${deletedGroup.name}`)
             setAction(prev => prev + 1)
 
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            } else {
-                FailedNotif()
-            }
+            failedNotif(e, 'Remove division failed')
         }
-    }, [userId, detailUser])
+    }, [userId, detailUser, successNotif, failedNotif])
 
     const handleDeletePermission = useCallback(async (id_permission) => {
         try {
             const deletedPermission = await Put(userId, { id_permission: id_permission }, 'user-remove-permission-management')
-            SuccessNotif(`Remove permission success, ${detailUser.username} no longer ${deletedPermission.name}`)
+            successNotif('Remove permission success')
             setPermissionList(prev => {
                 return prev.filter(permission => permission.id !== deletedPermission.id)
             })
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            } else {
-                FailedNotif('Delete permission failed')
-            }
+            failedNotif(e, 'Remove permission failed')
         }
-    }, [userId, detailUser])
+    }, [userId, detailUser, successNotif, failedNotif])
 
     const setAddGroup = useCallback((newGroup) => {
         setGroupList(prev => [...prev.filter(group => group.id !== newGroup.id), newGroup])
@@ -99,13 +91,13 @@ const DetailUser = () => {
     const handleSubmit = async (value) => {
         try {
             const updatedUser = await Put(userId, value, 'user-management')
-            SuccessNotif('Edit user success')
+            successNotif('Edit user success')
             setDetailUser(updatedUser)
             form.setValues(updatedUser)
             setEditAcces(prev => !prev)
             form.resetDirty()
         } catch (e) {
-            FailedNotif('Edit user failed')
+            failedNotif(e, 'Edit user failed')
             form.setErrors(e.message.data)
         }
     }

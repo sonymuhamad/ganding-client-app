@@ -46,7 +46,7 @@ const DeliveryNoteSubcontList = () => {
 
     useEffect(() => {
 
-        Get('delivery-note-subcont').then(data => {
+        Get('deliveries/subcont').then(data => {
             setDeliveryNoteSubcontList(data)
         })
 

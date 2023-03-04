@@ -2,16 +2,16 @@ import React, { useState, useEffect, useCallback } from "react"
 import { TextInput, NumberInput, Textarea, Group } from "@mantine/core"
 import { IconRegex, IconBarcode, IconCalendar, IconCodeAsterix, IconPackgeExport, IconClipboard } from "@tabler/icons"
 
-import { useRequest } from "../../../../hooks"
+import { useRequest, useNotification } from "../../../../hooks"
 import { ModalForm } from "../../../custom_components"
-import { SuccessNotif, FailedNotif } from "../../../notifications"
 import { closeAllModals } from "@mantine/modals"
-
 
 
 const ModalEditProductShipped = ({ data, idDeliveryNote, setEditProductShipped }) => {
 
     const { Put } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
+
     const [quantity, setQuantity] = useState('')
     const [description, setDescription] = useState('')
     const [errorQuantity, setErrorQuantity] = useState(false)
@@ -38,24 +38,18 @@ const ModalEditProductShipped = ({ data, idDeliveryNote, setEditProductShipped }
         }
 
         try {
-            const updatedProductShipped = await Put(data.id, dataSubmitted, 'product-delivery')
+            const updatedProductShipped = await Put(data.id, dataSubmitted, 'deliveries/products-shipped/customer')
             setEditProductShipped(updatedProductShipped)
-            SuccessNotif('Edit product shipped success')
+            successNotif('Edit product shipped success')
             closeAllModals()
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            } else if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-            } else {
-                FailedNotif('Edit product shipped failed')
-            }
+            failedNotif(e, 'Edit product shipped failed')
             if (e.message.data.quantity) {
                 setErrorQuantity(e.message.data.quantity)
             }
         }
 
-    }, [quantity, idDeliveryNote, data, description, product_order.id, setEditProductShipped])
+    }, [quantity, idDeliveryNote, data, description, product_order.id, setEditProductShipped, successNotif, failedNotif])
 
     return (
         <>
@@ -109,6 +103,7 @@ const ModalEditProductShipped = ({ data, idDeliveryNote, setEditProductShipped }
                         required
                         icon={<IconPackgeExport />}
                         min={0}
+                        hideControls
                         error={errorQuantity}
                         placeholder='Input quantity product to send'
                         label='Quantity product shipped'

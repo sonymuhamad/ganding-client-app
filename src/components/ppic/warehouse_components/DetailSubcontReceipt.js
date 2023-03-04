@@ -1,21 +1,21 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useForm } from "@mantine/form";
+import React, { useState, useEffect, useMemo, useCallback } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { useForm } from "@mantine/form"
 
-import { useRequest, useConfirmDelete } from "../../../hooks"
-import { BaseContent } from "../../layout";
-import { FailedNotif, SuccessNotif } from "../../notifications";
-import { generateDataWithDate, generateDataWithImage } from "../../../services";
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks"
+import { BaseContent } from "../../layout"
+import { generateDataWithDate, generateDataWithImage } from "../../../services"
 import {
     SectionDetailReceiptNoteSubcont,
     SectionProductSubcontReceived
-} from "./detail_receipt_note_subcont_components";
+} from "./detail_receipt_note_subcont_components"
 
 
 
 const DetailSubcontReceipt = () => {
 
     const { receiptNoteSubcontId } = useParams()
+    const { successNotif, failedNotif } = useNotification()
     const { Put, Delete, Retrieve } = useRequest()
     const navigate = useNavigate()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Receipt note subcont' })
@@ -57,15 +57,13 @@ const DetailSubcontReceipt = () => {
 
     const handleDeleteReceiptNote = useCallback(async () => {
         try {
-            await Delete(receiptNoteSubcontId, 'receipt-note-subcont-management')
-            SuccessNotif('Delete receipt note subconstruction success')
-            navigate('/home/ppic/warehouse')
+            await Delete(receiptNoteSubcontId, 'receipts/subcont-management')
+            successNotif('Delete receipt note subcont success')
+            navigate('/home/ppic/warehouse', { replace: true })
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete receipt note subcont failed')
         }
-    }, [navigate, receiptNoteSubcontId])
+    }, [navigate, receiptNoteSubcontId, successNotif, failedNotif])
 
     const setDataAfterUpdate = useCallback((updatedData) => {
         const { date, ...rest } = updatedData
@@ -80,25 +78,21 @@ const DetailSubcontReceipt = () => {
         const validated_data = generateDataWithDate(date, rest)
 
         try {
-            const updatedData = await Put(receiptNoteSubcontId, validated_data, 'receipt-note-subcont-management', 'multipart/form-data')
+            const updatedData = await Put(receiptNoteSubcontId, validated_data, 'receipts/subcont-management', 'multipart/form-data')
             setDataAfterUpdate(updatedData)
-            SuccessNotif('Edit receipt note success')
+            successNotif('Edit receipt note subcont success')
             setEditAccess(e => !e)
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Edit receipt note failed')
+            failedNotif(e, 'Edit receipt note subcont failed')
         }
 
-    }, [receiptNoteSubcontId, setDataAfterUpdate])
+    }, [receiptNoteSubcontId, setDataAfterUpdate, successNotif, failedNotif])
 
 
     useEffect(() => {
 
-        Retrieve(receiptNoteSubcontId, 'receipt-note-subcont').then(detailReceiptNote => {
+        Retrieve(receiptNoteSubcontId, 'receipts/subcont').then(detailReceiptNote => {
 
             const { date, subcontreceipt_set, supplier, ...restProps } = detailReceiptNote
             const receiptNote = { ...restProps, date: new Date(date), supplier: supplier.id }

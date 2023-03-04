@@ -1,14 +1,14 @@
 import { ModalForm } from "../../../custom_components"
 import { TextInput, Textarea, NumberInput, } from "@mantine/core"
-import { useRequest } from "../../../../hooks"
+import { useRequest, useNotification } from "../../../../hooks"
 import React, { useState } from "react"
-import { SuccessNotif, FailedNotif } from "../../../notifications"
 import { closeAllModals } from "@mantine/modals"
 import { IconPackgeExport, IconBarcode, IconRegex, IconClipboard } from "@tabler/icons"
 
 
-const ModalEditProductSubcont = ({ setUpdateProductShipped, data }) => {
+const ModalEditProductSubcont = ({ setUpdateProductShipped, data, deliveryNoteSubcontId }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Put } = useRequest()
     const [quantity, setQuantity] = useState(() => {
         return data.quantity
@@ -22,25 +22,19 @@ const ModalEditProductSubcont = ({ setUpdateProductShipped, data }) => {
     const handleSubmit = async (e) => {
         e.preventDefault()
         const validated_data = {
-            deliver_note_subcont: data.deliver_note_subcont.id,
+            deliver_note_subcont: deliveryNoteSubcontId,
             product: data.product.id,
             process: data.process.id,
             quantity: quantity,
             description: description
         }
         try {
-            const updatedProductShipped = await Put(data.id, validated_data, 'product-delivery-subcont-management')
+            const updatedProductShipped = await Put(data.id, validated_data, 'deliveries/products-shipped/subcont')
             setUpdateProductShipped(updatedProductShipped)
             closeAllModals()
-            SuccessNotif('Edit delivery product subconstruction success')
+            successNotif('Edit product shipped success')
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            } else if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-            } else {
-                FailedNotif('Edit delivery product subconstruction failed')
-            }
+            failedNotif(e, 'Edit product shipped failed')
         }
     }
 

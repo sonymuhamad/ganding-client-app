@@ -4,10 +4,9 @@ import { useForm } from "@mantine/form";
 import { openConfirmModal } from "@mantine/modals";
 import { Text } from "@mantine/core";
 
-import { useRequest, useConfirmDelete } from "../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks";
 import { BaseContent } from "../../layout";
-import { DetailComponentInvoice, ProductInvoiceList } from "./detail_invoice_components";
-import { FailedNotif, SuccessNotif } from "../../notifications";
+import { DetailComponentInvoice, ProductInvoiceList } from "./detail_invoice_components"
 
 import { generateDataWithDate } from "../../../services";
 
@@ -16,6 +15,7 @@ import { generateDataWithDate } from "../../../services";
 const DetailInvoice = () => {
 
     const { invoiceId } = useParams()
+    const { successNotif, failedNotif } = useNotification()
     const { Retrieve, Put, Delete } = useRequest()
     const navigate = useNavigate()
     const [editAccess, setEditAccess] = useState(false)
@@ -164,21 +164,17 @@ const DetailInvoice = () => {
         try {
             const changedInvoice = await Put(invoiceId, validate_data, 'invoice-management')
             handleChangeDataInvoice(changedInvoice)
-            SuccessNotif('Edit invoice success')
+            successNotif('Edit invoice success')
             setEditAccess(prev => !prev)
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Edit invoice failed')
+            failedNotif(e, 'Edit invoice failed')
         }
     }
 
     const generateInputStatus = useCallback((newStatus) => {
 
-        const data = { ...detailInvoice }
+        const data = { ...detailInvoice, sales_order: salesOrder.id }
 
         if (newStatus === 'closed') {
             data.closed = true
@@ -193,7 +189,7 @@ const DetailInvoice = () => {
         data.done = false
         return data
 
-    }, [detailInvoice])
+    }, [detailInvoice, salesOrder.id])
 
     const handleChangeStatus = useCallback(async (value) => {
         const dataAfterGenerateStatus = generateInputStatus(value)
@@ -203,15 +199,11 @@ const DetailInvoice = () => {
         try {
             const changedInvoice = await Put(invoiceId, validate_data, 'invoice-management')
             handleChangeDataInvoice(changedInvoice)
-            SuccessNotif('Update status invoice success')
+            successNotif('Update status invoice success')
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Update status invoice failed')
+            failedNotif(e, 'Update status invoice failed')
         }
-    }, [generateInputStatus, handleChangeDataInvoice, invoiceId])
+    }, [generateInputStatus, handleChangeDataInvoice, invoiceId, successNotif, failedNotif])
 
     const getWarningMessage = useCallback((value) => {
         if (value === 'closed') {
@@ -246,16 +238,12 @@ const DetailInvoice = () => {
     const handleDeleteInvoice = useCallback(async () => {
         try {
             await Delete(invoiceId, 'invoice-management')
-            SuccessNotif('Delete invoice success')
-            navigate('/home/marketing/invoice')
+            successNotif('Delete invoice success')
+            navigate('/home/marketing/invoice', { replace: true })
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Delete invoice failed')
+            failedNotif(e, 'Delete invoice failed')
         }
-    }, [invoiceId])
+    }, [invoiceId, successNotif, failedNotif])
 
     const openConfirmDeleteInvoice = useCallback(() => openConfirmDeleteData(handleDeleteInvoice), [handleDeleteInvoice, openConfirmDeleteData])
 

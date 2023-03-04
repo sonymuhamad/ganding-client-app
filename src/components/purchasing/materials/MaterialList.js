@@ -37,7 +37,7 @@ const MaterialList = () => {
     ], [])
 
     useEffect(() => {
-        GetAndExpiredTokenHandler('material-list').then(dataMaterialList => {
+        GetAndExpiredTokenHandler('materials').then(dataMaterialList => {
             setMaterialList(dataMaterialList)
         })
     }, [])

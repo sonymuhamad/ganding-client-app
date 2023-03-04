@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useRequest } from "../../../hooks";
+import { useRequest, useNotification } from "../../../hooks";
 
 import { DatePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { Button, NumberInput, Select, UnstyledButton, Paper, Group, Text, ThemeIcon, Title } from "@mantine/core";
 
 import { IconBarcode, IconAsset, IconCircleDotted, IconCircleCheck, IconXboxX, IconBuildingFactory, IconUser, IconCalendar, IconCodeAsterix, IconTimeline, IconFileTypography, IconSortAscending2, IconBuildingWarehouse, IconAssembly } from "@tabler/icons";
-import { SuccessNotif, FailedNotif } from "../../notifications";
 import { openConfirmModal } from "@mantine/modals";
 import { sectionStyle } from "../../../styles";
 import BreadCrumb from "../../BreadCrumb";
@@ -17,6 +16,7 @@ import { generateDataWithDate } from "../../../services";
 
 const NewProductionPriority = () => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { priorityId } = useParams()
     const navigate = useNavigate()
     const { Get, Post } = useRequest()
@@ -80,19 +80,13 @@ const NewProductionPriority = () => {
         const validate_data = generateDataWithDate(date, rest)
         try {
             await Post(validate_data, 'production-report-management')
-            SuccessNotif('Add new production success')
+            successNotif('Add production success')
             navigate('/home/ppic/production')
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            } else if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-            } else {
-                FailedNotif('New production failed')
-            }
+            failedNotif(e, 'Add production failed')
         }
-    }, [Post, navigate])
+    }, [Post, navigate, successNotif, failedNotif])
 
     const openConfirmSubmit = useCallback((data) => openConfirmModal({
         title: `Save new production`,
@@ -149,7 +143,7 @@ const NewProductionPriority = () => {
             setOperatorList(data)
         })
 
-    }, [Get, findPriority])
+    }, [findPriority])
 
     return (
         <>
@@ -280,7 +274,7 @@ const NewProductionPriority = () => {
                                 <ReadOnlyTextInput
                                     icon={<IconBuildingWarehouse />}
                                     label='Stock'
-                                    value={reqMat.material.warehousematerial}
+                                    value={reqMat.material.warehousematerial.quantity}
                                 />
 
                                 <ReadOnlyTextInput
@@ -298,11 +292,11 @@ const NewProductionPriority = () => {
                                 radius='xl'
                                 mt='md'
                                 color={form.values.quantity === null || form.values.quantity === 0 || form.values.quantity === undefined ? 'blue' :
-                                    Math.ceil(((form.values.quantity + form.values.quantity_not_good) / reqMat.output) * reqMat.input) > parseInt(reqMat.material.warehousematerial) ? 'red' : 'blue'}
+                                    Math.ceil(((form.values.quantity + form.values.quantity_not_good) / reqMat.output) * reqMat.input) > parseInt(reqMat.material.warehousematerial.quantity) ? 'red' : 'blue'}
                             >
 
                                 {form.values.quantity === null || form.values.quantity === 0 || form.values.quantity === undefined ? <IconCircleDotted /> :
-                                    Math.ceil(((form.values.quantity + form.values.quantity_not_good) / reqMat.output) * reqMat.input) > parseInt(reqMat.material.warehousematerial) ? <IconXboxX /> : <IconCircleCheck />
+                                    Math.ceil(((form.values.quantity + form.values.quantity_not_good) / reqMat.output) * reqMat.input) > parseInt(reqMat.material.warehousematerial.quantity) ? <IconXboxX /> : <IconCircleCheck />
                                 }
 
                             </ThemeIcon>

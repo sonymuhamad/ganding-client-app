@@ -1,8 +1,7 @@
 import React from "react"
 import { PriceTextInput, ModalForm, ReadOnlyTextInput } from "../../../custom_components"
-import { useRequest } from "../../../../hooks"
+import { useRequest, useNotification } from "../../../../hooks"
 import { useForm } from "@mantine/form"
-import { FailedNotif, SuccessNotif } from "../../../notifications"
 import { closeAllModals } from "@mantine/modals"
 import { Group, NumberInput } from "@mantine/core"
 import { IconClipboardList, IconClipboardCheck, IconCodeAsterix, IconAsset, IconBarcode } from "@tabler/icons"
@@ -12,6 +11,7 @@ const ModalEditMaterialOrder = ({ data, setEditMaterialOrder }) => {
 
     const { material, purchase_order_material, to_product, ...rest } = data
     const { Put } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
     const form = useForm({
         initialValues: {
             ...rest,
@@ -24,14 +24,11 @@ const ModalEditMaterialOrder = ({ data, setEditMaterialOrder }) => {
         try {
             const updatedMaterialOrder = await Put(data.id, value, 'material-order-management')
             setEditMaterialOrder(updatedMaterialOrder)
-            SuccessNotif('Edit material order success')
+            successNotif('Edit material order success')
             closeAllModals()
         } catch (e) {
-            if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-            } else {
-                FailedNotif('Edit material order failed')
-            }
+            form.setErrors(e.message.data)
+            failedNotif(e, 'Edit material order failed')
         }
     }
 

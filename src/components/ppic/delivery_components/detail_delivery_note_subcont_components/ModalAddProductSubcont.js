@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react"
-import { useRequest } from "../../../../hooks"
+import { useRequest, useNotification } from "../../../../hooks"
 import { ModalForm } from "../../../custom_components"
 import { Text, Select, TextInput, Group, NumberInput, Textarea, UnstyledButton, ThemeIcon, Paper } from "@mantine/core"
 
 import { IconBarcode, IconSortAscending2, IconTimeline, IconAsset, IconXboxX, IconCircleCheck, IconCircleDotted, IconClipboard } from "@tabler/icons";
-import { SuccessNotif, FailedNotif } from "../../../notifications";
 import { closeAllModals } from "@mantine/modals";
 import { CustomSelectComponentProcess, CustomSelectComponentProduct } from "../../../layout";
 
@@ -12,6 +11,7 @@ import { CustomSelectComponentProcess, CustomSelectComponentProduct } from "../.
 
 const ModalAddProductSubcont = ({ setAddProductShipped, deliveryNoteSubcontId }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Get, Post } = useRequest()
     const [productList, setProductList] = useState([])
     const [processList, setProcessList] = useState([])
@@ -27,7 +27,7 @@ const ModalAddProductSubcont = ({ setAddProductShipped, deliveryNoteSubcontId })
 
     const fetch = useCallback(async () => {
         try {
-            const productList = await Get('production-subcont-list')
+            const productList = await Get('products-subcont')
             setProductList(productList)
         } catch (e) {
             console.log(e)
@@ -61,36 +61,28 @@ const ModalAddProductSubcont = ({ setAddProductShipped, deliveryNoteSubcontId })
         const objSelectedProcess = getSelectedProcess(selectedProcess)
 
         try {
-            const newProductShipped = await Post(data, 'product-delivery-subcont-management')
+            const newProductShipped = await Post(data, 'deliveries/products-shipped/subcont')
             setAddProductShipped({ ...newProductShipped, product: objSelectedProduct, process: objSelectedProcess })
-            SuccessNotif('Add product subconstruction success')
+            successNotif('Add product shipped success')
             closeAllModals()
         } catch (e) {
             if (e.message.data) {
-
-                if (e.message.data.product) {
-                    setErrorProduct(e.message.data.product)
+                const { message } = e
+                const { data } = message
+                const { product, process, quantity } = data
+                if (product) {
+                    setErrorProduct(product)
                 }
 
-                if (e.message.data.process) {
-                    setErrorProcess(e.message.data.process)
+                if (process) {
+                    setErrorProcess(process)
                 }
 
-                if (e.message.data.quantity) {
-                    setErrorQuantity(e.message.data.quantity)
+                if (quantity) {
+                    setErrorQuantity(quantity)
                 }
-
-                if (e.message.data.constructor === Array) {
-                    FailedNotif(e.message.data)
-                }
-                else if (e.message.data.non_field_errors) {
-                    FailedNotif(e.message.data.non_field_errors)
-                }
-                else {
-                    FailedNotif('Add product subconstruction failed')
-                }
-
             }
+            failedNotif(e, 'Add product shipped failed')
 
         }
     }
@@ -215,7 +207,7 @@ const ModalAddProductSubcont = ({ setAddProductShipped, deliveryNoteSubcontId })
                                     variant="filled"
                                     label='Stock'
                                     readOnly
-                                    value={reqMat.material.warehousematerial}
+                                    value={reqMat.material.warehousematerial.quantity}
                                 />
 
                                 <TextInput

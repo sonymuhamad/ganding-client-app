@@ -2,26 +2,25 @@ import React, { useState, useEffect } from "react"
 import { closeAllModals, openConfirmModal } from "@mantine/modals"
 import { NumberInput, Text } from "@mantine/core"
 
-import { useRequest } from "../../hooks"
-import { SuccessNotif, FailedNotif } from "../notifications"
+import { useRequest, useNotification } from "../../hooks"
 import { ModalForm } from "../custom_components"
 import { IconBuildingWarehouse } from "@tabler/icons"
 
 
 const ModalEditStockProduct = ({ whProduct, setUpdateWarehouse }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const [quantity, setQuantity] = useState('')
     const { Put } = useRequest()
 
     const handleSubmit = async () => {
         try {
-            const updatedWarehouse = await Put(whProduct.id, { quantity: quantity }, 'warehouse-management-product')
+            const updatedWarehouse = await Put(whProduct.id, { quantity: quantity }, 'warehouse/product-management')
             closeAllModals()
             setUpdateWarehouse(updatedWarehouse)
-            SuccessNotif('Edit stock success')
+            successNotif('Edit stock warehouse success')
         } catch (e) {
-            console.log(e)
-            FailedNotif('Edit stock failed')
+            failedNotif(e, 'Edit stock warehouse failed')
         }
     }
 

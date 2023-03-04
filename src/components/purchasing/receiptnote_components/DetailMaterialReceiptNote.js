@@ -30,7 +30,7 @@ const DetailMaterialReceiptNote = () => {
 
     useEffect(() => {
 
-        Retrieve(materialReceiptId, 'delivery-note-material').then(data => {
+        Retrieve(materialReceiptId, 'receipts/material').then(data => {
             const { supplier, materialreceipt_set, ...rest } = data
             setDetailReceiptNote(rest)
             setSupplier(supplier)

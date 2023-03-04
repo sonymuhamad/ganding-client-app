@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Badge, Select, Textarea, TextInput } from "@mantine/core";
 
-import { useRequest, useSearch } from "../../../hooks";
+import { useRequest, useSearch, useNotification } from "../../../hooks";
 import { openModal, closeAllModals } from "@mantine/modals";
 import { BaseTableExpanded } from "../../tables";
 import { IconClipboard, IconUserCheck, IconCodeAsterix, IconCalendar, } from "@tabler/icons";
 import { DatePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useNavigate } from "react-router-dom";
-import { FailedNotif, SuccessNotif } from "../../notifications";
 
 import { HeadSection, SearchTextInput, ButtonAdd, NavigationDetailButton, ModalForm } from "../../custom_components";
 
@@ -17,6 +16,7 @@ import { generateDataWithDate } from "../../../services";
 
 const ModalAddSalesOrder = () => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { GetAndExpiredTokenHandler, Post } = useRequest()
     const [customerList, setCustomerList] = useState([])
     const navigate = useNavigate()
@@ -42,15 +42,13 @@ const ModalAddSalesOrder = () => {
 
         try {
             const newSo = await Post(validate_data, 'sales-order-management')
-            SuccessNotif('New sales order added successfully')
+            successNotif('Add sales order success')
             navigate(`/home/marketing/sales-order/${newSo.id}`)
             closeAllModals()
         } catch (e) {
 
-            form.setErrors({ ...e.message.data })
-            if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors[0])
-            }
+            form.setErrors(e.message.data)
+            failedNotif(e, 'Add sales order failed')
         }
 
     }
@@ -233,7 +231,7 @@ const SalesOrderList = () => {
     }), [])
 
     useEffect(() => {
-        GetAndExpiredTokenHandler('sales-order-list').then(data => {
+        GetAndExpiredTokenHandler('sales-orders').then(data => {
             setSalesOrderList(data)
         })
     }, [])

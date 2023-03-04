@@ -35,7 +35,7 @@ const ProductOrderList = () => {
 
     useEffect(() => {
 
-        Get('report-product-in-progress').then(data => {
+        Get('order/product-incomplete').then(data => {
             setProductOrderList(data)
         })
 

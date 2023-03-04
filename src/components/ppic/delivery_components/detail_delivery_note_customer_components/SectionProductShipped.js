@@ -64,7 +64,7 @@ export default function SectionProductShipped(
     const { Delete } = useRequest()
     const handleDeleteProductShipped = useCallback(async (id) => {
         try {
-            await Delete(id, 'product-delivery')
+            await Delete(id, 'deliveries/products-shipped/customer')
             setDeleteProductShipped(id)
             SuccessNotif('Delete product shipped success')
         } catch (e) {

@@ -2,8 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "@mantine/form";
 
-import { FailedNotif, SuccessNotif } from "../../notifications";
-import { useRequest, useConfirmDelete } from "../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../hooks";
 import { SectionDetailSupplier, SectionMaterialList, SectionPurchaseOrderList } from "./detail_supplier_components";
 import { BaseContent } from "../../layout";
 
@@ -15,6 +14,7 @@ const DetailSupplier = () => {
 
     const { supplierId } = useParams()
     const navigate = useNavigate()
+    const { successNotif, failedNotif } = useNotification()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Supplier' })
     const { Retrieve, Put, Delete } = useRequest()
     const [detailSupplier, setDetailSupplier] = useState({
@@ -68,30 +68,28 @@ const DetailSupplier = () => {
     const handleDeleteSupplier = useCallback(async () => {
         try {
             await Delete(supplierId, 'supplier-management')
-            navigate('/home/purchasing/suppliers')
-            SuccessNotif('Delete supplier success')
+            navigate('/home/purchasing/suppliers', { replace: true })
+            successNotif('Delete supplier success')
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-            }
+            failedNotif(e, 'Delete supplier failed')
         }
-    }, [navigate, supplierId])
+    }, [navigate, supplierId, successNotif, failedNotif])
 
     const handleClickDeleteButton = useCallback(() => openConfirmDeleteData(handleDeleteSupplier), [handleDeleteSupplier, openConfirmDeleteData])
 
     const handleEditSupplier = useCallback(async (value) => {
         try {
             await Put(value.id, value, 'supplier-management')
-            SuccessNotif('Edit supplier success')
+            successNotif('Edit supplier success')
             setDetailSupplier(value)
             form.setValues(value)
             form.resetDirty()
             setEditAccess(prev => !prev)
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Edit supplier failed')
+            failedNotif(e, 'Edit supplier failed')
         }
-    }, [])
+    }, [successNotif, failedNotif])
 
 
     const links = useMemo(() => [

@@ -8,7 +8,6 @@ const HeadSection = (props) => {
 
     return (
         <Group
-            m='xs'
             position="right"
         >
 

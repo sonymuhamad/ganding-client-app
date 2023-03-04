@@ -39,7 +39,7 @@ const DetailDeliveryNoteSubcont = () => {
 
     useEffect(() => {
 
-        Retrieve(deliverySubcontId, 'delivery-note-subcont').then(data => {
+        Retrieve(deliverySubcontId, 'deliveries/subcont').then(data => {
 
             const { supplier, driver, vehicle, productdeliversubcont_set, ...rest } = data
 

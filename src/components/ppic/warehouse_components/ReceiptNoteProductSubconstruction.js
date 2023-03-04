@@ -6,7 +6,7 @@ import { DatePicker } from "@mantine/dates";
 import { TextInput, Text, Textarea, Group, Button, Select, FileButton } from "@mantine/core";
 import { IconUserCheck, IconCodeAsterix, IconCalendarEvent, IconUpload, IconTrash } from "@tabler/icons";
 
-import { useRequest, useSearch } from "../../../hooks";
+import { useRequest, useSearch, useNotification } from "../../../hooks";
 import { BaseTable } from "../../tables";
 import { FailedNotif, SuccessNotif } from "../../notifications";
 import { generateDataWithDate } from "../../../services";
@@ -15,6 +15,7 @@ import { ModalForm, NavigationDetailButton, SearchTextInput, HeadSection, Button
 
 const ModalAddReceiptNoteSubcont = () => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Get, Post } = useRequest()
     const navigate = useNavigate()
 
@@ -31,7 +32,7 @@ const ModalAddReceiptNoteSubcont = () => {
 
     const fetch = useCallback(async () => {
         try {
-            const supplier = await Get('supplier-list')
+            const supplier = await Get('suppliers')
             setSupplierList(supplier)
         } catch (e) {
             console.log(e)
@@ -48,15 +49,15 @@ const ModalAddReceiptNoteSubcont = () => {
         const { date, ...rest } = value
         const validate_data = generateDataWithDate(date, rest)
         try {
-            const newReceiptNote = await Post(validate_data, 'receipt-note-subcont-management', 'multipart/form-data')
-            SuccessNotif('Add receipt note product subconstruction success')
+            const newReceiptNote = await Post(validate_data, 'receipts/subcont-management', 'multipart/form-data')
+            successNotif('Add receipt note subcont success')
             navigate(`/home/ppic/warehouse/subcont-receipt/${newReceiptNote.id}`)
             closeAllModals()
         } catch (e) {
-            FailedNotif('Add receipt note failed')
             form.setErrors(e.message.data)
+            failedNotif(e, 'Add receipt note subcont failed')
         }
-    }, [navigate, Post])
+    }, [navigate, Post, successNotif, failedNotif])
 
     return (
 
@@ -182,7 +183,7 @@ const ReceiptNoteProductSubconstruction = () => {
 
     const fetch = useCallback(async () => {
         try {
-            const receiptNoteSubcont = await Get('receipt-note-subcont')
+            const receiptNoteSubcont = await Get('receipts/subcont')
             setReceiptNoteSubcont(receiptNoteSubcont)
         } catch (e) {
             console.log(e)

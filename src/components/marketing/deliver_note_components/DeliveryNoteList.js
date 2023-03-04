@@ -57,7 +57,7 @@ const DeliveryNoteList = () => {
     useEffect(() => {
         const fetch = async () => {
             try {
-                const deliveryNotes = await GetAndExpiredTokenHandler('delivery-notes')
+                const deliveryNotes = await GetAndExpiredTokenHandler('deliveries/customer')
                 setDeliveryNotes(deliveryNotes)
 
             } catch (e) {

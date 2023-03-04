@@ -7,13 +7,13 @@ import { closeAllModals } from "@mantine/modals"
 
 import { generateDataWithDate } from "../../../../services"
 import { ModalForm } from "../../../custom_components"
-import { useRequest } from "../../../../hooks"
-import { FailedNotif, SuccessNotif } from "../../../notifications"
+import { useRequest, useNotification } from "../../../../hooks"
 
 
 
 const ModalAddReceiptSchedule = ({ materialOrderList, setAddSchedule }) => {
 
+    const { successNotif, failedNotif } = useNotification()
     const { Post } = useRequest()
     const form = useForm({
         initialValues: {
@@ -30,15 +30,11 @@ const ModalAddReceiptSchedule = ({ materialOrderList, setAddSchedule }) => {
         try {
             const newSchedule = await Post(validate_data, 'material-receipt-schedule-management')
             setAddSchedule(newSchedule)
-            SuccessNotif('Add schedule success')
+            successNotif('Add material receipt schedule success')
             closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.material_order) {
-                FailedNotif(e.message.data.material_order)
-            } else {
-                FailedNotif('Add schedule failed')
-            }
+            failedNotif(e, 'Add material receipt schedule failed')
         }
     }
 

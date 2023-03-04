@@ -8,10 +8,9 @@ import { useForm } from "@mantine/form";
 
 
 import { BaseTable } from "../../../tables";
-import { useRequest, useConfirmDelete } from "../../../../hooks";
+import { useRequest, useConfirmDelete, useNotification } from "../../../../hooks";
 
 import { CustomSelectComponentProduct } from "../../../layout";
-import { FailedNotif, SuccessNotif } from "../../../notifications"
 
 import { HeadSection, ButtonAdd, ButtonDelete, ButtonEdit, ModalForm } from "../../../custom_components";
 import { generateDataWithDate } from "../../../../services";
@@ -20,7 +19,7 @@ import { generateDataWithDate } from "../../../../services";
 const ModalAddDeliverySchedule = ({ handleAddDeliverySchedule, productOrderList }) => {
 
     const { Post } = useRequest()
-
+    const { successNotif, failedNotif } = useNotification()
     const form = useForm({
         initialValues: {
             quantity: '',
@@ -44,15 +43,11 @@ const ModalAddDeliverySchedule = ({ handleAddDeliverySchedule, productOrderList 
         try {
             const newSchedule = await Post(validate_data, 'delivery-schedule-management')
             handleAddDeliverySchedule({ ...newSchedule, product_order: selectedProductOrder })
-            SuccessNotif('Add schedule success')
+            successNotif('Add delivery schedule success')
             closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
-            FailedNotif('Add schedule failed')
-            if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-                return
-            }
+            failedNotif(e, 'Add delivery schedule failed')
         }
     }
 
@@ -105,7 +100,7 @@ const ModalEditDeliverySchedule = ({ handleChangeDeliverySchedule, data }) => {
     const { id, product } = product_order
     const { name, code } = product
     const { Put } = useRequest()
-
+    const { successNotif, failedNotif } = useNotification()
     const form = useForm({
         initialValues: {
             ...rest,
@@ -121,19 +116,11 @@ const ModalEditDeliverySchedule = ({ handleChangeDeliverySchedule, data }) => {
         try {
             const updatedSchedule = await Put(id, validate_data, 'delivery-schedule-management')
             handleChangeDeliverySchedule({ ...updatedSchedule, product_order: product_order })
-            SuccessNotif('Update schedule success')
+            successNotif('Edit delivery schedule succcess')
             closeAllModals()
         } catch (e) {
             form.setErrors(e.message.data)
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            if (e.message.data.non_field_errors) {
-                FailedNotif(e.message.data.non_field_errors)
-                return
-            }
-            FailedNotif('Update schedule failed')
+            failedNotif(e, 'Edit delivery schedule failed')
         }
     }
 
@@ -194,6 +181,7 @@ const ModalEditDeliverySchedule = ({ handleChangeDeliverySchedule, data }) => {
 const DeliveryScheduleList = ({ data, productOrderList, handleChangeDeliverySchedule, handleAddDeliverySchedule, handleDeleteDeliverySchedule }) => {
 
     const { Delete } = useRequest()
+    const { successNotif, failedNotif } = useNotification()
     const { openConfirmDeleteData } = useConfirmDelete({ entity: 'Delivery schedule' })
 
     const openModalEditDeliverySchedule = useCallback((data) => openModal({
@@ -215,16 +203,12 @@ const DeliveryScheduleList = ({ data, productOrderList, handleChangeDeliverySche
 
         try {
             await Delete(id, 'delivery-schedule-management')
-            SuccessNotif('Delete delivery schedule success')
+            successNotif('Delete delivery schedule success')
             handleDeleteDeliverySchedule(id)
         } catch (e) {
-            if (e.message.data.constructor === Array) {
-                FailedNotif(e.message.data)
-                return
-            }
-            FailedNotif('Delete delivery schedule failed')
+            failedNotif(e, 'Delete delivery schedule failed')
         }
-    }, [handleDeleteDeliverySchedule])
+    }, [handleDeleteDeliverySchedule, successNotif, failedNotif])
 
 
     const openModalDeleteSchedule = useCallback((id) => openConfirmDeleteData(() => handleDeleteSchedule(id)),
