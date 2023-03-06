@@ -33,7 +33,7 @@ npm start
 
 Here are some related projects, that is Server-app Supply Chain Management System
 
-[Server-app Supply chain management system](https://github.com/sonymuhamad/ganding-client-app)
+[Server-app Supply chain management system](https://github.com/sonymuhamad/ganding-server-app)
 
 
 ## Tech Stack
