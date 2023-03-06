@@ -1,6 +1,6 @@
 import { IconBuildingFactory2, IconChartInfographic, IconReportAnalytics, IconBuildingStore } from "@tabler/icons"
 
-export const Url = `http://127.0.0.1:8000`
+export const Url = `http://127.0.0.1:8000/api`
 
 export function AuthException(message) {
     this.message = message
