@@ -55,7 +55,7 @@ const ModalAddProductReceived = ({ idReceiptNoteSubcont, setAddProductReceived }
     const fetch = useCallback(async () => {
         try {
             const productSubcontList = await Get('order/subcont-incomplete')
-            const schedules = await Get('schedule/subcont-incomplete')
+            const schedules = await Get('schedules/subcont-incomplete')
 
             setProductSubcontList(productSubcontList)
             setScheduleList(schedules)
