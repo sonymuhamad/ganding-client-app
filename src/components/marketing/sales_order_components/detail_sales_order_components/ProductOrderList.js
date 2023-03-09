@@ -119,7 +119,7 @@ const ModalAddProductOrder = ({ handleAddProductOrder, salesOrderId, customerId 
     useEffect(() => {
         const fetch = async () => {
             try {
-                const products = await Retrieve(customerId, 'product-customer')
+                const products = await Retrieve(customerId, 'customer/products')
                 setProductList(products)
             } catch (e) {
                 console.log(e)
